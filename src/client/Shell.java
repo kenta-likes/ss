@@ -3,10 +3,9 @@ package client;
 import java.io.Console;
 
 public class Shell {
-    //    private Client client;
     private static Console con;
     
-    public static void main(String[] args) {
+    public static void run() {
         String command;
         String[] splitCommand;
         boolean loggedIn = true;
@@ -17,9 +16,6 @@ public class Shell {
         if (con == null)
             return;
         
-        /*client = new Client();
-          client.connect();*/
-
         do {
             command = con.readLine("PassHerd-0.1a$ ");
             splitCommand = command.split(" ");
@@ -50,7 +46,7 @@ public class Shell {
 
         password = con.readPassword("Password: ");
 
-        //err = client.login(username, password);
+        err = Client.login(username, password);
 
         if (err != 0)
             System.out.println("Error: incorrect username or password.");
@@ -79,8 +75,7 @@ public class Shell {
 
         if (samePassword) {
             System.out.println("Matching");
-            err = 0;
-            //            err = client.register(username, password0, email);
+            err = Client.register(username, password0, email);
         } else {
             System.out.println("Error: passwords do not match");
             err = 1;
@@ -98,11 +93,11 @@ public class Shell {
         username = con.readLine("Username: ");
         password = con.readLine("Password: ");
 
-        //err = client.addCreds(service, username, password);
+        err = Client.addCreds(service, username, password);
 
         System.out.println("Credentials added.");
         
-        return 0;//err;
+        return err;
     }
 
     private static int handleReq(String[] command) {
@@ -118,14 +113,14 @@ public class Shell {
         confirm = con.readLine("Are you sure? [y/n]: ");
 
         if ("y".equals(confirm)) {
-            //err = client.deleteCreds(service);
+            err = Client.deleteCreds(service);
             System.out.println("Credentials deleted.");
         } else {
             System.out.println("Credentials not deleted.");
             err = 0;
         }
 
-        return 0;//err;
+        return err;
     }
 
     private static int handleChange(String[] command) {
@@ -136,9 +131,9 @@ public class Shell {
         username = con.readLine("New username: ");
         password = con.readLine("New password: ");
 
-        //err = client.changeCreds(service, username, password);
+        err = Client.changeCreds(service, username, password);
 
-        return 0;//err;
+        return err;
     }
 
     private static int handleLogout() {
