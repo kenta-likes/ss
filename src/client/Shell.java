@@ -29,7 +29,7 @@ public class Shell {
             case "change": handleChange(splitCommand); break;
             case "logout": handleLogout(); break;
             case "help": help(); break;
-            default: errno = usage(splitCommand);
+            default: System.out.println("Command not recognized: " + splitCommand[0]);
             }
             
         } while (loggedIn);
@@ -85,63 +85,61 @@ public class Shell {
         
     }
 
-    private static int handleAdd(String[] command) {
-        int err;
+    private static void handleAdd(String[] command) {
         String service, username, password;
 
-        service = con.readLine("Name of service: ");
-        username = con.readLine("Username: ");
-        password = con.readLine("Password: ");
+        if (command.length != 4) {
+            System.out.println("Usage: add <service> <username> <password>");
+            return;
+        }
 
-        err = Client.addCreds(service, username, password);
+        service = command[1];
+        username = command[2];
+        password = command[3];
 
-        System.out.println("Credentials added.");
-        
-        return err;
+        Client.addCreds(service, username, password);
     }
 
-    private static int handleReq(String[] command) {
-        int err;
-        return 0;
+    private static void handleReq(String[] command) {
+        String service;
     }
 
-    private static int handleDel(String[] command) {
-        int err;
+    private static void handleDel(String[] command) {
         String service, confirm;
 
-        service = con.readLine("Name of service: ");
+        if (command.length != 2) {
+            System.out.println("Usage: delete <service>");
+            return;
+        }
+
+        service = command[1];
+
+        System.out.println("Deleting credentials for " + service);
         confirm = con.readLine("Are you sure? [y/n]: ");
 
         if ("y".equals(confirm)) {
-            err = Client.deleteCreds(service);
-            System.out.println("Credentials deleted.");
+            Client.deleteCreds(service);
         } else {
             System.out.println("Credentials not deleted.");
-            err = 0;
+        }
+    }
+
+    private static void handleChange(String[] command) {
+        String service, username, password;
+        if (command.length != 4) {
+            System.out.println("Usage: change <service> <username> <password>");
+            return;
         }
 
-        return err;
+        service = command[1];
+        username = command[2];
+        password = command[3];
+
+        Client.changeCreds(service, username, password);
     }
 
-    private static int handleChange(String[] command) {
-        int err;
-        String service, username, password;
+    private static void handleLogout() {
 
-        service = con.readLine("Name of service: ");
-        username = con.readLine("New username: ");
-        password = con.readLine("New password: ");
-
-        err = Client.changeCreds(service, username, password);
-
-        return err;
-    }
-
-    private static int handleLogout() {
-        return -1;
-    }
-
-    private static int usage(String[] command) {
-        return -1;
     }
 
     private static void help() {
