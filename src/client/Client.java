@@ -21,6 +21,9 @@ public class Client {
          BufferedReader r = new BufferedReader(
             new InputStreamReader(c.getInputStream()));
          String m = null;
+
+         // This is probably where we want to add our shell initialization
+         
          while ((m=r.readLine())!= null) {
             out.println(m);
             m = in.readLine();
@@ -51,4 +54,59 @@ public class Client {
       System.out.println("   Cipher suite = "+ss.getCipherSuite());
       System.out.println("   Protocol = "+ss.getProtocol());
    }
+
+    /* Login with the master username/password set. */
+    protected int login(String username, char[] password) {
+        return 0;
+    }
+
+    /* Register a new account.
+     * pre: user is not logged in
+     * post: creates an account on the server with the associated account data.
+     * It also authenticates that account immediately (user is logged in).
+     */
+    protected int register(String username, char[] password, String email) {
+        return 0;
+    }
+
+    /* Add a set of credentials to an account.
+     * pre: user is logged in
+     * post: server adds that set of credentials to the account.
+     */
+    protected int addCreds(String service, String username, String password) {
+        return 0;
+    }
+
+    /* Get credentials from the server.
+     * pre: user is logged in
+     * post: none
+     * returns: a list of the requested credentials, or all credentials.
+     */
+    protected String[] requestCreds(String service) {
+        return 0;
+    }
+
+    /* Deletes a set of credentials from the server.
+     * pre: user is logged in, credentials exist on the server
+     * post: that set of credentials no longer exists on the server
+     */
+    protected int deleteCreds(String service) {
+        return 0;
+    }
+
+    /* Changes the username and password for a certain set of credentials.
+     * pre: user is logged in, credentials exist on the server
+     * post: the username or password for that set of credentials is changed
+     */
+    protected int changeCreds(String service, String username, String password) {
+        return 0;
+    }
+
+    /* Logs out the user.
+     * pre: user is logged in
+     * post: user is no longer logged in
+     */
+    protected int logout() {
+        return 0;
+    }
 }

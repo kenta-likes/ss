@@ -149,4 +149,7 @@ public class Shell {
         return -1;
     }
 
+    private static void help() {
+        
+    }
 }
