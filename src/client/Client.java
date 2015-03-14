@@ -5,42 +5,60 @@ import java.net.*;
 import javax.net.ssl.*;
 
 public class Client {
-   public static void main(String[] args) {
-      PrintStream out = System.out;
-      SSLSocketFactory f = 
-         (SSLSocketFactory) SSLSocketFactory.getDefault();
-      try {
-         SSLSocket c =
-           (SSLSocket) f.createSocket("localhost", 8888);
-         printSocketInfo(c);
-         c.startHandshake();
+    
+    private static PrintWriter sockWriter;
+    private static BufferedReader sockReader;
+    
+    public static void main(String[] args) {
+        PrintStream out = System.out;
+        SSLSocketFactory f = 
+            (SSLSocketFactory) SSLSocketFactory.getDefault();
 
-         Shell.run();
+        sockReader = null;
+        sockWriter = null;
+      
+        try {
+            SSLSocket c =
+                (SSLSocket) f.createSocket("localhost", 8888);
+            printSocketInfo(c);
+            c.startHandshake();
+
+            sockReader = new BufferedReader(new InputStreamReader(c.getInputStream()));
+            sockWriter = new PrintWriter(c.getOutputStream(), true);
+
+            Shell.run();
          
-         c.close();
-      } catch (IOException e) {
-         System.err.println(e.toString());
-      }
-   }
-   private static void printSocketInfo(SSLSocket s) {
-      System.out.println("Socket class: "+s.getClass());
-      System.out.println("   Remote address = "
-         +s.getInetAddress().toString());
-      System.out.println("   Remote port = "+s.getPort());
-      System.out.println("   Local socket address = "
-         +s.getLocalSocketAddress().toString());
-      System.out.println("   Local address = "
-         +s.getLocalAddress().toString());
-      System.out.println("   Local port = "+s.getLocalPort());
-      System.out.println("   Need client authentication = "
-         +s.getNeedClientAuth());
-      SSLSession ss = s.getSession();
-      System.out.println("   Cipher suite = "+ss.getCipherSuite());
-      System.out.println("   Protocol = "+ss.getProtocol());
-   }
+            c.close();
+        } catch (IOException e) {
+            System.err.println(e.toString());
+        }
+    }
+    private static void printSocketInfo(SSLSocket s) {
+        System.out.println("Socket class: "+s.getClass());
+        System.out.println("   Remote address = "
+                           +s.getInetAddress().toString());
+        System.out.println("   Remote port = "+s.getPort());
+        System.out.println("   Local socket address = "
+                           +s.getLocalSocketAddress().toString());
+        System.out.println("   Local address = "
+                           +s.getLocalAddress().toString());
+        System.out.println("   Local port = "+s.getLocalPort());
+        System.out.println("   Need client authentication = "
+                           +s.getNeedClientAuth());
+        SSLSession ss = s.getSession();
+        System.out.println("   Cipher suite = "+ss.getCipherSuite());
+        System.out.println("   Protocol = "+ss.getProtocol());
+    }
 
     /* Login with the master username/password set. */
-    protected static int login(String username, char[] password) {
+    protected static int login(String username, char[] password) throws IOException {
+
+        String packet = "ATHN," + username + "," + new String(password);
+        int len = packet.length();
+
+        sockWriter.println(packet);
+        System.out.println(packet);
+            
         return 0;
     }
 
