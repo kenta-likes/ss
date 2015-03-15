@@ -20,8 +20,14 @@ public class ServerConnection implements Runnable {
 	static final int SALT_LEN = 32; //use # of bytes of SHA-256 output
 	
 	//response type
-	public enum Response{
-		SUCCESS, FAIL, WRONG_PASS, WRONG_USR, ACCOUNT_EXISTS, ACCOUNT_DNE
+	public enum Response {
+            SUCCESS,
+            FAIL,
+            WRONG_PASS,
+            WRONG_USR,
+            NO_SVC,/* used when the requested service is not found. */
+            ACCOUNT_EXISTS,
+            ACCOUNT_DNE
 	}
 	
 	SSLSocket socket;
