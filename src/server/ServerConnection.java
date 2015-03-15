@@ -85,7 +85,7 @@ public class ServerConnection implements Runnable {
                 if (timed_out) //TODO this is placeholder, change later for actual timeout check
                     break;
             }
-            w.close();
+
             r.close();
             socket.close();
     	} catch (Exception e)
