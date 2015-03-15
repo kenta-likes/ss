@@ -198,7 +198,7 @@ public class Shell {
             return;
             
         case WRONG_PASS: /* fall through.  Generic error message in this case. */
-        case USER_DNE:
+        case WRONG_USR:
             System.out.println("Failure: incorrect username or password.");
             break;
             

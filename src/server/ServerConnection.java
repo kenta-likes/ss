@@ -31,7 +31,6 @@ public class ServerConnection implements Runnable {
             NO_SVC,/* used when the requested service is not found. */
             NAUTH, /* used when the user is not logged in, but tries an op other than login */
             USER_EXISTS, /*when username is already taken at registration*/
-            USER_DNE /*when username doesn't exist when authenticating*/
 	}
 	
 	SSLSocket socket;
