@@ -6,7 +6,10 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 
 import javax.net.ssl.SSLSocket;
-
+import java.io.PrintWriter;
+import java.security.MessageDigest;
+import java.io.File;
+import java.security.SecureRandom;
 
 public class ServerConnection implements Runnable {
 	static final char REG = 0;
@@ -69,10 +72,36 @@ public class ServerConnection implements Runnable {
     }
     
     /*
-     * Create new account on server.
+     * Create new account on server
+     * Randomly generates a salt and stores a hashed
+     * master password.
      * */
-	public Response createAccount(String username, String password) {
-		return Response.FAIL;
+	public Response createAccount(String username, String password) throws Exception {
+		// Directory already exists
+		if (new File(username).isDirectory()){
+			return Response.FAIL;
+		}
+		// Create a new directory
+		new File(username).mkdirs();
+        
+		// Generate a salt randomly and append it to master password. 
+		// Salt = 32 bytes since we use SHA-256
+		byte[] toHash = new byte[32 + password.length()];
+		System.arraycopy(password.getBytes(), 0, toHash, 0, password.length());
+		byte[] salt = new SecureRandom().generateSeed(32);
+		System.arraycopy(salt, 0, toHash, password.length(), 32);
+		
+		// Hash the master password
+		MessageDigest messageDigest = MessageDigest.getInstance("SHA-256");
+        messageDigest.update(toHash);
+        String hashedpassword = new String(messageDigest.digest());
+        
+        // Write hashed master password and the salt to a file named "master.txt"
+        PrintWriter writer = new PrintWriter(username.concat("/master.txt"), "UTF-8");
+        writer.println(hashedpassword);
+        writer.println(salt);
+        writer.close();
+		return Response.SUCCESS;
 	}
     
     /*
