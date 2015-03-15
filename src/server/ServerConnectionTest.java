@@ -57,7 +57,9 @@ public class ServerConnectionTest {
 
 	@Test
 	public void testAddCredential() {
-		fail("Not yet implemented");
+	    ServerConnection sc = new ServerConnection(null);
+	    sc.addCredential("abc", "xyz", "1234");
+	    assertEquals(sc.getPassword("abc"), "123");
 	}
 
 	@Test
