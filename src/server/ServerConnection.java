@@ -13,6 +13,7 @@ import javax.net.ssl.SSLSocket;
 
 import client.Pair;
 
+import java.util.Date;
 import java.util.Hashtable;
 import java.io.PrintWriter;
 import java.security.MessageDigest;
@@ -87,6 +88,24 @@ public class ServerConnection implements Runnable {
     	}
     }
     
+    public String responseGetString(Response r){
+    	switch (r){
+	    	case SUCCESS: return "SUCCESS";
+	    	case FAIL: return "INTERNAL ERROR";
+	    	case WRONG_PASS: return "WRONG PASSWORD";
+	    	case WRONG_USR: return "USERNAME DOES NOT EXIST";
+	    	case NO_SVC: return "CREDENTIAL DOES NOT EXIST";
+	    	case NAUTH: return "USER NOT LOGGED IN";
+	    	case USER_EXISTS: return "USERNAME IS TAKEN";
+	    	case CRED_EXISTS: return "CREDENTIAL ALREADY TAKEN";
+	    	default: break;
+    	}
+    	return "";
+    }
+    
+    /*
+     * Helper function for salting and hashing master passwords
+     * */
     public String saltAndHash(String password, String salt) throws NoSuchAlgorithmException {
     	byte[] toHash = new byte[SALT_LEN + password.length()];
 		System.arraycopy(password, 0, toHash, 0, password.length());
@@ -95,6 +114,21 @@ public class ServerConnection implements Runnable {
 		MessageDigest messageDigest = MessageDigest.getInstance("SHA-256");
 		messageDigest.update(toHash);
 		return new String(messageDigest.digest());
+    }
+    
+    /*
+     * Helper function for logging
+     * */
+    public void log_result(String method_name, Response res){
+		try{
+			Date date = new Date();
+			PrintWriter logger = new PrintWriter(username.concat("/log.txt"), "UTF-8");
+			logger.println(date.toString() + ": " + responseGetString(res) + " on " + method_name);
+			logger.flush();
+			logger.close();
+		} catch (IOException e){
+			e.printStackTrace();
+		}
     }
     
     
@@ -108,6 +142,7 @@ public class ServerConnection implements Runnable {
 		// Note: Not thread-safe 
 		if (new File(username).isDirectory() || username == null || password == null
 				|| username.isEmpty() || password.isEmpty()){
+			log_result("Create Account", Response.FAIL);
 			return Response.FAIL;
 		}
 		// Create a new directory
@@ -120,17 +155,24 @@ public class ServerConnection implements Runnable {
 		try{
 			hashedpassword = saltAndHash(password, new String(salt));
 		} catch (NoSuchAlgorithmException e){
+			log_result("Create Account", Response.FAIL);
 			return Response.FAIL; //should never happen
 		}
 		// Write hashed master password and the salt to a file named "master.txt"
 		PrintWriter writer = new PrintWriter(username.concat("/master.txt"), "UTF-8");
 		writer.println(hashedpassword);
 		writer.println(salt);
+		writer.flush();
 		writer.close();
 		
-		/*create new file for credentials as well*/
+		/*create new file for credentials*/
 		PrintWriter creds_writer = new PrintWriter(username.concat("/stored_credentials.txt"), "UTF-8");
 		creds_writer.close();
+		/*create new file for log*/
+		PrintWriter log = new PrintWriter(username.concat("/log.txt"), "UTF-8");
+		log.close();
+
+		log_result("Create Account", Response.SUCCESS);
 		return Response.SUCCESS;
 	}
     
@@ -138,8 +180,9 @@ public class ServerConnection implements Runnable {
      * Change password for this user
      * */
     public Response changeAccountPassword(String old_password, String new_password){
-    	if (this.authAccount(this.username, old_password) == Response.FAIL){
-    		return Response.FAIL;
+    	if (this.authAccount(this.username, old_password) != Response.SUCCESS){
+				log_result("Change Master Password", Response.FAIL);
+    			return Response.FAIL;
     	}
     	
 		// Generate a salt randomly and append it to master password. 
@@ -149,6 +192,7 @@ public class ServerConnection implements Runnable {
 		try{
 			hashedpassword = saltAndHash(new_password, new String(salt));
 		} catch (NoSuchAlgorithmException e){
+			log_result("Change Master Password", Response.FAIL);
 			return Response.FAIL; //should never happen
 		}
 		
@@ -159,15 +203,19 @@ public class ServerConnection implements Runnable {
 			writer = new PrintWriter(username.concat("/master.txt"), "UTF-8");
 			writer.println(hashedpassword);
 			writer.println(salt);
+			writer.flush();
 			writer.close();
 		} catch (FileNotFoundException e1) {
 			e1.printStackTrace();
+			log_result("Change Master Password", Response.FAIL);
 			return Response.FAIL; //should never happen
 		} catch (UnsupportedEncodingException e2) {
 			e2.printStackTrace();
+			log_result("Change Master Password", Response.FAIL);
 			return Response.FAIL; //should never happen
 		}
-		
+
+		log_result("Change Master Password", Response.SUCCESS);
     	return Response.SUCCESS;
     }
     
@@ -207,7 +255,7 @@ public class ServerConnection implements Runnable {
 		String salt, stored_pass;
 		BufferedReader reader;
 		try {
-			reader = new BufferedReader(new FileReader("/master.txt"));
+			reader = new BufferedReader(new FileReader(username.concat("/master.txt")));
 			stored_pass = reader.readLine();
 			salt = reader.readLine();
 			reader.close();
@@ -217,7 +265,7 @@ public class ServerConnection implements Runnable {
 
 			this.username = username;
 			//load hash table with user's credentials
-			BufferedReader cred_reader = new BufferedReader(new FileReader("/stored_credentials.txt"));
+			BufferedReader cred_reader = new BufferedReader(new FileReader(username.concat("/stored_credentials.txt")));
 			String line;
 			while ( (line=cred_reader.readLine()) != null ){
 				String[] curr_cred = line.split(",");
