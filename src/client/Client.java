@@ -11,7 +11,8 @@ import server.ServerConnection.Response;
 
 public class Client {
     
-    private static JSONWriter sockWriter;
+    private static PrintWriter sockWriter;
+    private static JSONWriter sockJS;
     private static BufferedReader sockReader;
     
     public static void main(String[] args) {
@@ -30,7 +31,8 @@ public class Client {
 
             sockReader = new BufferedReader(new InputStreamReader(c.getInputStream()));
             
-            sockWriter = new JSONWriter(new PrintWriter(c.getOutputStream(), true));
+            sockWriter = new PrintWriter(c.getOutputStream(), true);
+            sockJS = new JSONWriter(sockWriter);
 
             Shell.run();
 
@@ -75,11 +77,13 @@ public class Client {
         JSONObject respPacket = null;
         Response err;
 
-        sockWriter.object()
+        sockJS.object()
             .key("command").value("ATHN")
             .key("username").value(username)
             .key("password").value(new String(password))
             .endObject();
+        sockWriter.println();
+        sockWriter.flush();
 
         try {
             respPacket = new JSONObject(sockReader.readLine());
@@ -112,12 +116,14 @@ public class Client {
         JSONObject respPacket = null;
         Response err;
 
-        sockWriter.object()
+        sockJS.object()
             .key("command").value("ADD")
             .key("service").value(service)
             .key("username").value(username)
             .key("password").value(password)
             .endObject();
+        sockWriter.println();
+        sockWriter.flush();
         
         try {
             respPacket = new JSONObject(sockReader.readLine());
@@ -143,10 +149,12 @@ public class Client {
         JSONObject respPacket = null;
         Response err;
 
-        sockWriter.object()
+        sockJS.object()
             .key("command").value("GET2")
             .key("service").value(service)
             .endObject();
+        sockWriter.println();
+        sockWriter.flush();
         
         try {
             respPacket = new JSONObject(sockReader.readLine());
@@ -172,9 +180,11 @@ public class Client {
         Response err;
         List<String> creds;
 
-        sockWriter.object()
+        sockJS.object()
             .key("command").value("GET1")
             .endObject();
+        sockWriter.println();
+        sockWriter.flush();
         
         try {
             respPacket = new JSONObject(sockReader.readLine());
@@ -205,10 +215,12 @@ public class Client {
         JSONObject respPacket = null;
         Response err;
 
-        sockWriter.object()
+        sockJS.object()
             .key("command").value("REMV")
             .key("service").value(service);
-
+        sockWriter.println();
+        sockWriter.flush();
+        
         try {
             respPacket = new JSONObject(sockReader.readLine());
         } catch (IOException e) {
@@ -230,12 +242,14 @@ public class Client {
         JSONObject respPacket = null;
         Response err;
 
-        sockWriter.object()
+        sockJS.object()
             .key("command").value("EDIT")
             .key("service").value(service)
             .key("username").value(username)
             .key("password").value(password)
             .endObject();
+        sockWriter.println();
+        sockWriter.flush();
         
         try {
             respPacket = new JSONObject(sockReader.readLine());

@@ -49,7 +49,8 @@ public class ServerConnection implements Runnable {
     
     public void run() {
     	try {
-            JSONWriter w = new JSONWriter(new OutputStreamWriter(socket.getOutputStream()));
+            BufferedWriter w = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
+            JSONWriter js = new JSONWriter(w);
             BufferedReader r = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             String m, command;
             JSONObject req;
@@ -58,9 +59,11 @@ public class ServerConnection implements Runnable {
 
                     req = new JSONObject(m);
                     command = req.getString("command");
+                    System.out.println("Received command " + command);
                     
                     //check for authenticated user
                     if (username != null){
+                        
                         switch (command) {
                         case "ADD":
                         case "GET1":
@@ -71,15 +74,21 @@ public class ServerConnection implements Runnable {
                         case "EDIT":
                         default:
                         }
+
+                        w.newLine();
+                        w.flush();
                         
                     } else { //only allow registration or authentication
                         switch (command) {
                         case "ATHN":
                         case "RGST":
-                        default: w.object()
+                        default: js.object()
                             .key("response").value("NAUTH")
                             .endObject();
                         }
+
+                        w.newLine();
+                        w.flush();
                     }
                 }
                 if (timed_out) //TODO this is placeholder, change later for actual timeout check
