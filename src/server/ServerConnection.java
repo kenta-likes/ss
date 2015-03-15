@@ -96,6 +96,7 @@ public class ServerConnection implements Runnable {
 		return new String(messageDigest.digest());
     }
     
+    
     /*
      * Create new account on server
      * Randomly generates a salt and stores a hashed
@@ -136,7 +137,27 @@ public class ServerConnection implements Runnable {
      * Change password for this user
      * */
     public Response changeAccountPassword(String old_password, String new_password){
-    	return Response.FAIL;
+    	if (this.authAccount(this.username, old_password) == Response.FAIL){
+    		return Response.FAIL;
+    	}
+    	
+		// Generate a salt randomly and append it to master password. 
+		// Salt = 32 bytes since we use SHA-256
+		byte[] salt = new SecureRandom().generateSeed(SALT_LEN);
+		String hashedpassword;
+		try{
+			hashedpassword = saltAndHash(password, new String(salt));
+		} catch (NoSuchAlgorithmException e){
+			return Response.FAIL; //should never happen
+		}
+		
+		// Write hashed master password and the salt to a file named "master.txt"
+		// Note: will overwrite the old file
+		PrintWriter writer = new PrintWriter(username.concat("/master.txt"), "UTF-8");
+		writer.println(hashedpassword);
+		writer.println(salt);
+		writer.close();
+    	return Response.SUCCESS;
     }
     
     /*
