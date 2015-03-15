@@ -178,11 +178,15 @@ public class ServerConnection implements Runnable {
         PrintWriter writer = new PrintWriter(username.concat("/master.txt"), "UTF-8");
         writer.println(hashedpassword);
         writer.println(salt);
+        writer.flush();
         writer.close();
 		
-        /*create new file for credentials as well*/
+        /*create new file for credentials*/
         PrintWriter creds_writer = new PrintWriter(username.concat("/stored_credentials.txt"), "UTF-8");
         creds_writer.close();
+        /*create new file for logs*/
+        PrintWriter logger = new PrintWriter(username.concat("/log.txt"), "UTF-8");
+        logger.close();
 
         log_result("Create Account", Response.SUCCESS);
         return Response.SUCCESS;
@@ -215,6 +219,7 @@ public class ServerConnection implements Runnable {
             writer = new PrintWriter(username.concat("/master.txt"), "UTF-8");
             writer.println(hashedpassword);
             writer.println(salt);
+            writer.flush();
             writer.close();
         } catch (FileNotFoundException e1) {
             e1.printStackTrace();
