@@ -2,37 +2,47 @@ package server;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 
 import javax.net.ssl.SSLSocket;
+
+import client.Pair;
+
+import java.util.Hashtable;
 import java.io.PrintWriter;
 import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.io.File;
 import java.security.SecureRandom;
 
 public class ServerConnection implements Runnable {
-	static final char REG = 0;
-	static final char AUTH = 1;
+	static final int SALT_LEN = 32; //use # of bytes of SHA-256 output
 	
 	//response type
 	public enum Response {
             SUCCESS,
-            FAIL,
-            WRONG_PASS,
-            WRONG_USR,
-            NO_SVC, /* used when the requested service is not found. */
-            NAUTH /* used when the user is not logged in, but tries an op other than login */
+            FAIL, /*for generic "server error" type responses*/
+            WRONG_PASS, /*user entered password is incorrect*/
+            WRONG_USR, /*wrong username entered for authentication*/
+            NO_SVC,/* used when the requested service is not found. */
+            NAUTH, /* used when the user is not logged in, but tries an op other than login */
+            USER_EXISTS, /*when username is already taken at registration*/
+            CRED_DNE, /*the credentials are not stored on service*/
+            CRED_EXISTS /*when adding, the credentials already exist for that service*/
 	}
 	
 	SSLSocket socket;
-	String username; //user associated with this account
-	boolean timed_out = false;
-
+	private String username; //user associated with this account
+	boolean timed_out = false; //TODO think about this later...
+	Hashtable<String,Pair<String,String>> user_table;
          
     public ServerConnection(SSLSocket s) {
     	this.socket = s;
-    	
+    	user_table = new Hashtable<String,Pair<String,String>>();
     }
     
     public void run() {
@@ -76,6 +86,16 @@ public class ServerConnection implements Runnable {
     	}
     }
     
+    public String saltAndHash(String password, String salt) throws NoSuchAlgorithmException {
+    	byte[] toHash = new byte[SALT_LEN + password.length()];
+		System.arraycopy(password, 0, toHash, 0, password.length());
+		System.arraycopy(salt, 0, toHash, password.length(), SALT_LEN);
+		// Hash the master password
+		MessageDigest messageDigest = MessageDigest.getInstance("SHA-256");
+		messageDigest.update(toHash);
+		return new String(messageDigest.digest());
+    }
+    
     /*
      * Create new account on server
      * Randomly generates a salt and stores a hashed
@@ -84,7 +104,8 @@ public class ServerConnection implements Runnable {
 	public Response createAccount(String username, String password) throws Exception {
 		// Directory already exists
 		// Note: Not thread-safe 
-		if (new File(username).isDirectory()){
+		if (new File(username).isDirectory() || username == null || password == null
+				|| username.isEmpty() || password.isEmpty()){
 			return Response.FAIL;
 		}
 		// Create a new directory
@@ -92,21 +113,22 @@ public class ServerConnection implements Runnable {
         
 		// Generate a salt randomly and append it to master password. 
 		// Salt = 32 bytes since we use SHA-256
-		byte[] toHash = new byte[32 + password.length()];
-		System.arraycopy(password.getBytes(), 0, toHash, 0, password.length());
-		byte[] salt = new SecureRandom().generateSeed(32);
-		System.arraycopy(salt, 0, toHash, password.length(), 32);
-		
-		// Hash the master password
-		MessageDigest messageDigest = MessageDigest.getInstance("SHA-256");
-		messageDigest.update(toHash);
-		String hashedpassword = new String(messageDigest.digest());
-        
+		byte[] salt = new SecureRandom().generateSeed(SALT_LEN);
+		String hashedpassword;
+		try{
+			hashedpassword = saltAndHash(password, new String(salt));
+		} catch (NoSuchAlgorithmException e){
+			return Response.FAIL; //should never happen
+		}
 		// Write hashed master password and the salt to a file named "master.txt"
 		PrintWriter writer = new PrintWriter(username.concat("/master.txt"), "UTF-8");
 		writer.println(hashedpassword);
 		writer.println(salt);
 		writer.close();
+		
+		/*create new file for credentials as well*/
+		PrintWriter creds_writer = new PrintWriter(username.concat("/stored_credentials.txt"), "UTF-8");
+		creds_writer.close();
 		return Response.SUCCESS;
 	}
     
@@ -128,54 +150,97 @@ public class ServerConnection implements Runnable {
      * Authenticate user to system
      * */
     public Response authAccount(String username, String password){
-    	return Response.FAIL;
+    	// Directory DNE TODO: check with other fxns
+		// Note: Not thread-safe 
+		if ( !(new File(username).isDirectory())){
+			return Response.FAIL;
+		}
+		String salt, stored_pass;
+		BufferedReader reader;
+		try {
+			reader = new BufferedReader(new FileReader("/master.txt"));
+			stored_pass = reader.readLine();
+			salt = reader.readLine();
+			reader.close();
+			String hashedpassword = saltAndHash(password, salt);
+			if (!hashedpassword.equals(stored_pass))
+				return Response.WRONG_PASS;
+
+			this.username = username;
+			//load hash table with user's credentials
+			BufferedReader cred_reader = new BufferedReader(new FileReader("/stored_credentials.txt"));
+			String line;
+			while ( (line=cred_reader.readLine()) != null ){
+				String[] curr_cred = line.split(",");
+				if (curr_cred.length != 3){
+					cred_reader.close();
+					return Response.FAIL;
+				}
+				user_table.put(curr_cred[0], new Pair<String,String>(curr_cred[1], curr_cred[2]));
+			}
+			cred_reader.close();
+			return Response.SUCCESS;
+		} catch (NoSuchAlgorithmException e1){ //should never happen
+			e1.printStackTrace();
+			return Response.FAIL;
+		} catch (IOException e2) {
+			e2.printStackTrace();
+			return Response.FAIL;
+		}
     }
     
     /*
      * Returns a list of services for which credentials stored on server.
-     * (Delimited by commas?)
+     * Delimited by commas
      * */
-    public String retrieveCredentials(){
-    	return "";
+    public Pair<Response,String> retrieveCredentials(){
+		String cred_list = "";
+		for (String k : user_table.keySet()){
+			if (!cred_list.isEmpty())
+				cred_list += "," + k;
+			else
+				cred_list = k;
+		}
+		return new Pair<Response,String>(Response.SUCCESS, cred_list);
     }
     
     /*
      * Get password for specific service
      * */
-    public String getPassword(String service_name){
-    	return "";
+    public Pair<Response,String> getPassword(String service_name){
+    	if (!user_table.containsKey(service_name)){ //credentials not listed in server
+    		return new Pair<Response,String>(Response.CRED_DNE, "");
+    	}
+    	return new Pair<Response,String>(Response.SUCCESS, user_table.get(service_name).second());
     }
     
     /*
      * Adds new credentials
      * */
     public Response addCredential(String service_name, String username, String password){
-    	return Response.FAIL;
+    	if (user_table.contains(service_name))
+    		return Response.CRED_EXISTS;
+    	user_table.put(service_name, new Pair<String,String>(username, password));
+    	return Response.SUCCESS;
     }
     
     /*
      * Updates credentials with new password
      * */
     public Response updateCredential(String service_name, String password){
-    	return Response.FAIL;
+		if (!user_table.contains(service_name))
+			return Response.CRED_DNE;
+		user_table.put(service_name, new Pair<String,String>(username, password));
+		return Response.SUCCESS;
     }
     
     /*
      * Deletes specific credential for specified service
      * */
     public Response deleteCredential(String service_name){
-    	return Response.FAIL;
+		if (!user_table.contains(service_name))
+			return Response.CRED_DNE;
+		user_table.remove(service_name);
+		return Response.SUCCESS;
     }
-    
-    /*
-     * Checks master password against salted + hashed value stored on server
-     * */
-    public boolean checkPassword(String password){
-    	return false;
-    }
-    
-	   
-	public void getAccountCredentialsList(String accountName) {
-		   
-	}
 }
