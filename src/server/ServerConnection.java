@@ -13,6 +13,7 @@ import javax.net.ssl.SSLSocket;
 
 import client.Pair;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.Hashtable;
 import java.io.PrintWriter;
@@ -157,8 +158,8 @@ public class ServerConnection implements Runnable {
     public Response createAccount(String username, String password) throws Exception {
         // Directory already exists
         // Note: Not thread-safe 
-        if (new File(username).isDirectory() || username == null || password == null
-            || username.isEmpty() || password.isEmpty()){
+        if (new File(username).isDirectory()){
+            log_result("Create Account", Response.FAIL);
             return Response.FAIL;
         }
         // Create a new directory
@@ -171,17 +172,24 @@ public class ServerConnection implements Runnable {
         try{
             hashedpassword = saltAndHash(password, new String(salt));
         } catch (NoSuchAlgorithmException e){
+            log_result("Create Account", Response.FAIL);
             return Response.FAIL; //should never happen
         }
         // Write hashed master password and the salt to a file named "master.txt"
         PrintWriter writer = new PrintWriter(username.concat("/master.txt"), "UTF-8");
         writer.println(hashedpassword);
         writer.println(salt);
+        writer.flush();
         writer.close();
 		
-        /*create new file for credentials as well*/
+        /*create new file for credentials*/
         PrintWriter creds_writer = new PrintWriter(username.concat("/stored_credentials.txt"), "UTF-8");
         creds_writer.close();
+        /*create new file for logs*/
+        PrintWriter logger = new PrintWriter(username.concat("/log.txt"), "UTF-8");
+        logger.close();
+
+        log_result("Create Account", Response.SUCCESS);
         return Response.SUCCESS;
     }
     
@@ -190,6 +198,7 @@ public class ServerConnection implements Runnable {
      * */
     public Response changeAccountPassword(String old_password, String new_password){
     	if (this.authAccount(this.username, old_password) == Response.FAIL){
+            log_result("Change Account Password", Response.FAIL);
             return Response.FAIL;
     	}
     	
@@ -200,6 +209,7 @@ public class ServerConnection implements Runnable {
         try{
             hashedpassword = saltAndHash(new_password, new String(salt));
         } catch (NoSuchAlgorithmException e){
+            log_result("Change Account Password", Response.FAIL);
             return Response.FAIL; //should never happen
         }
 		
@@ -210,14 +220,18 @@ public class ServerConnection implements Runnable {
             writer = new PrintWriter(username.concat("/master.txt"), "UTF-8");
             writer.println(hashedpassword);
             writer.println(salt);
+            writer.flush();
             writer.close();
         } catch (FileNotFoundException e1) {
             e1.printStackTrace();
+            log_result("Change Account Password", Response.FAIL);
             return Response.FAIL; //should never happen
         } catch (UnsupportedEncodingException e2) {
             e2.printStackTrace();
+            log_result("Change Account Password", Response.FAIL);
             return Response.FAIL; //should never happen
         }
+        log_result("Change Account Password", Response.SUCCESS);
     	return Response.SUCCESS;
     }
     
@@ -226,6 +240,7 @@ public class ServerConnection implements Runnable {
      * */
     public Response deleteAccount(String password){
     	if (this.authAccount(this.username, password) == Response.FAIL){
+            log_result("Delete Account", Response.FAIL);
             return Response.FAIL;
     	}
  
@@ -242,6 +257,7 @@ public class ServerConnection implements Runnable {
     	
     	// delete the directory 
     	directory.delete();
+        log_result("Delete Account", Response.SUCCESS);
     	return Response.SUCCESS;
     }
 	
@@ -252,6 +268,7 @@ public class ServerConnection implements Runnable {
     	// Directory DNE TODO: check with other fxns
         // Note: Not thread-safe 
         if ( !(new File(username).isDirectory())){
+            log_result("Authenticate Account", Response.FAIL);
             return Response.FAIL;
         }
         String salt, stored_pass;
@@ -262,8 +279,10 @@ public class ServerConnection implements Runnable {
             salt = reader.readLine();
             reader.close();
             String hashedpassword = saltAndHash(password, salt);
-            if (!hashedpassword.equals(stored_pass))
+            if (!hashedpassword.equals(stored_pass)){
+                log_result("Authenticate Account", Response.WRONG_PASS);
                 return Response.WRONG_PASS;
+            }
 
             this.username = username;
             //load hash table with user's credentials
@@ -273,17 +292,21 @@ public class ServerConnection implements Runnable {
                 String[] curr_cred = line.split(",");
                 if (curr_cred.length != 3){
                     cred_reader.close();
+                    log_result("Authenticate Account", Response.FAIL);
                     return Response.FAIL;
                 }
                 user_table.put(curr_cred[0], new Pair<String,String>(curr_cred[1], curr_cred[2]));
             }
             cred_reader.close();
+            log_result("Authenticate Account", Response.SUCCESS);
             return Response.SUCCESS;
         } catch (NoSuchAlgorithmException e1){ //should never happen
             e1.printStackTrace();
+            log_result("Authenticate Account", Response.FAIL);
             return Response.FAIL;
         } catch (IOException e2) {
             e2.printStackTrace();
+            log_result("Authenticate Account", Response.FAIL);
             return Response.FAIL;
         }
     }
@@ -292,15 +315,13 @@ public class ServerConnection implements Runnable {
      * Returns a list of services for which credentials stored on server.
      * Delimited by commas
      * */
-    public Pair<Response,String> retrieveCredentials(){
-        String cred_list = "";
+    public Pair<Response,ArrayList<String>> retrieveCredentials(){
+        ArrayList<String> cred_list = new ArrayList<String>();
         for (String k : user_table.keySet()){
-            if (!cred_list.isEmpty())
-                cred_list += "," + k;
-            else
-                cred_list = k;
+                cred_list.add(k);
         }
-        return new Pair<Response,String>(Response.SUCCESS, cred_list);
+        log_result("Get Credential List", Response.SUCCESS);
+        return new Pair<Response,ArrayList<String>>(Response.SUCCESS, cred_list);
     }
     
     /*
@@ -308,8 +329,10 @@ public class ServerConnection implements Runnable {
      * */
     public Pair<Response,String> getPassword(String service_name){
     	if (!user_table.containsKey(service_name)){ //credentials not listed in server
+            log_result("Get Credential", Response.NO_SVC);
             return new Pair<Response,String>(Response.NO_SVC, "");
     	}
+        log_result("Get Credential", Response.SUCCESS);
     	return new Pair<Response,String>(Response.SUCCESS, user_table.get(service_name).second());
     }
     
