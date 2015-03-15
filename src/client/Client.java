@@ -105,7 +105,32 @@ public class Client {
      * It also authenticates that account immediately (user is logged in).
      */
     protected static Response register(String username, char[] password, String email) {
-        return Response.SUCCESS;
+        JSONObject respPacket = null;
+        Response err;
+
+        sockJS.object()
+            .key("command").value("RGST")
+            .key("username").value(username)
+            .key("password").value(new String(password))
+            .key("email").value(email)
+            .endObject();
+
+        sockWriter.println();
+        sockWriter.flush();
+
+        try {
+            respPacket = new JSONObject(sockReader.readLine());
+            
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        if (respPacket == null)
+            return Response.FAIL;
+
+        err = responseFromString(respPacket.getString("response"));
+
+        return err;
     }
 
     /* Add a set of credentials to an account.
@@ -217,7 +242,8 @@ public class Client {
 
         sockJS.object()
             .key("command").value("REMV")
-            .key("service").value(service);
+            .key("service").value(service)
+            .endObject();
         sockWriter.println();
         sockWriter.flush();
         

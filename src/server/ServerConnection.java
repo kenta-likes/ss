@@ -66,6 +66,14 @@ public class ServerConnection implements Runnable {
                         
                         switch (command) {
                         case "ADD":
+                            String service = req.getString("service");
+                            String sName = req.getString("username");
+                            String sPass = req.getString("password");
+                            js.object()
+                                .key("response").value(addCredential(service, sName, sPass)
+                                                       .name())
+                                .endObject();
+                            break;
                         case "GET1":
                         case "GET2":
                         case "DEL":
@@ -81,7 +89,22 @@ public class ServerConnection implements Runnable {
                     } else { //only allow registration or authentication
                         switch (command) {
                         case "ATHN":
+                            String authName = req.getString("username");
+                            String authPass = req.getString("password");
+                            js.object()
+                                .key("response").value(authAccount(authName, authPass).name())
+                                .endObject();
+                            break;
+                            
                         case "RGST":
+                            String regName = req.getString("username");
+                            String regPass = req.getString("password");
+                            String email = req.getString("email");
+                            js.object()
+                                .key("response").value(createAccount(regName, regPass).name())
+                                .endObject();
+                            break;
+                            
                         default: js.object()
                             .key("response").value("NAUTH")
                             .endObject();
@@ -105,8 +128,8 @@ public class ServerConnection implements Runnable {
     
     public String saltAndHash(String password, String salt) throws NoSuchAlgorithmException {
     	byte[] toHash = new byte[SALT_LEN + password.length()];
-        System.arraycopy(password, 0, toHash, 0, password.length());
-        System.arraycopy(salt, 0, toHash, password.length(), SALT_LEN);
+        System.arraycopy(password.getBytes(), 0, toHash, 0, password.length());
+        System.arraycopy(salt.getBytes(), 0, toHash, password.length(), SALT_LEN);
         // Hash the master password
         MessageDigest messageDigest = MessageDigest.getInstance("SHA-256");
         messageDigest.update(toHash);
@@ -124,6 +147,7 @@ public class ServerConnection implements Runnable {
         // Note: Not thread-safe 
         if (new File(username).isDirectory() || username == null || password == null
             || username.isEmpty() || password.isEmpty()){
+            System.out.println("Failed here...");
             return Response.FAIL;
         }
         // Create a new directory
@@ -136,6 +160,7 @@ public class ServerConnection implements Runnable {
         try{
             hashedpassword = saltAndHash(password, new String(salt));
         } catch (NoSuchAlgorithmException e){
+            e.printStackTrace();
             return Response.FAIL; //should never happen
         }
         // Write hashed master password and the salt to a file named "master.txt"
