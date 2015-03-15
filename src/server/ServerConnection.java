@@ -78,6 +78,7 @@ public class ServerConnection implements Runnable {
      * */
 	public Response createAccount(String username, String password) throws Exception {
 		// Directory already exists
+		// Note: Not thread-safe 
 		if (new File(username).isDirectory()){
 			return Response.FAIL;
 		}
@@ -93,14 +94,14 @@ public class ServerConnection implements Runnable {
 		
 		// Hash the master password
 		MessageDigest messageDigest = MessageDigest.getInstance("SHA-256");
-        messageDigest.update(toHash);
-        String hashedpassword = new String(messageDigest.digest());
+		messageDigest.update(toHash);
+		String hashedpassword = new String(messageDigest.digest());
         
-        // Write hashed master password and the salt to a file named "master.txt"
-        PrintWriter writer = new PrintWriter(username.concat("/master.txt"), "UTF-8");
-        writer.println(hashedpassword);
-        writer.println(salt);
-        writer.close();
+		// Write hashed master password and the salt to a file named "master.txt"
+		PrintWriter writer = new PrintWriter(username.concat("/master.txt"), "UTF-8");
+		writer.println(hashedpassword);
+		writer.println(salt);
+		writer.close();
 		return Response.SUCCESS;
 	}
     
