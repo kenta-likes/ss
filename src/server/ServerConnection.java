@@ -31,7 +31,6 @@ public class ServerConnection implements Runnable {
             NO_SVC,/* used when the requested service is not found. */
             NAUTH, /* used when the user is not logged in, but tries an op other than login */
             USER_EXISTS, /*when username is already taken at registration*/
-            CRED_DNE, /*the credentials are not stored on service*/
             CRED_EXISTS /*when adding, the credentials already exist for that service*/
 	}
 	
@@ -143,7 +142,24 @@ public class ServerConnection implements Runnable {
      * Delete this account
      * */
     public Response deleteAccount(String password){
-    	return Response.FAIL;
+    	if (this.authAccount(this.username, password) == Response.FAIL){
+    		return Response.FAIL;
+    	}
+ 
+    	// Note: guaranteed that this account exists
+    	// Delete the account
+    	File directory = new File(username);
+    	String[] entries = directory.list();
+    	
+    	// Delete all the files in this directory
+    	for (String s: entries){
+    		File currentFile = new File(directory.getPath(), s);
+    		currentFile.delete();
+    	}
+    	
+    	// delete the directory 
+    	directory.delete();
+    	return Response.SUCCESS;
     }
 	
     /*
@@ -209,7 +225,7 @@ public class ServerConnection implements Runnable {
      * */
     public Pair<Response,String> getPassword(String service_name){
     	if (!user_table.containsKey(service_name)){ //credentials not listed in server
-    		return new Pair<Response,String>(Response.CRED_DNE, "");
+    		return new Pair<Response,String>(Response.NO_SVC, "");
     	}
     	return new Pair<Response,String>(Response.SUCCESS, user_table.get(service_name).second());
     }
@@ -229,7 +245,7 @@ public class ServerConnection implements Runnable {
      * */
     public Response updateCredential(String service_name, String password){
 		if (!user_table.contains(service_name))
-			return Response.CRED_DNE;
+			return Response.NO_SVC;
 		user_table.put(service_name, new Pair<String,String>(username, password));
 		return Response.SUCCESS;
     }
@@ -239,7 +255,7 @@ public class ServerConnection implements Runnable {
      * */
     public Response deleteCredential(String service_name){
 		if (!user_table.contains(service_name))
-			return Response.CRED_DNE;
+			return Response.NO_SVC;
 		user_table.remove(service_name);
 		return Response.SUCCESS;
     }
