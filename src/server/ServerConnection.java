@@ -10,6 +10,9 @@ import java.io.OutputStreamWriter;
 
 import javax.net.ssl.SSLSocket;
 
+import client.Pair;
+
+import java.util.Hashtable;
 import java.io.PrintWriter;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -22,21 +25,22 @@ public class ServerConnection implements Runnable {
 	//response type
 	public enum Response {
             SUCCESS,
-            FAIL,
-            WRONG_PASS,
-            WRONG_USR,
+            FAIL, /*for generic "server error" type responses*/
+            WRONG_PASS, /*user entered password is incorrect*/
             NO_SVC,/* used when the requested service is not found. */
-            ACCOUNT_EXISTS,
-            ACCOUNT_DNE
+            NAUTH, /* used when the user is not logged in, but tries an op other than login */
+            USER_EXISTS, /*when username is already taken at registration*/
+            USER_DNE /*when username doesn't exist when authenticating*/
 	}
 	
 	SSLSocket socket;
-	String username; //user associated with this account
+	private String username; //user associated with this account
 	boolean timed_out = false; //TODO think about this later...
+	Hashtable<String,Pair<String,String>> user_table;
          
     public ServerConnection(SSLSocket s) {
     	this.socket = s;
-    	
+    	user_table = new Hashtable<String,Pair<String,String>>();
     }
     
     public void run() {
@@ -118,6 +122,10 @@ public class ServerConnection implements Runnable {
 		writer.println(hashedpassword);
 		writer.println(salt);
 		writer.close();
+		
+		/*create new file for credentials as well*/
+		PrintWriter creds_writer = new PrintWriter(username.concat("/stored_credentials.txt"), "UTF-8");
+		creds_writer.close();
 		return Response.SUCCESS;
 	}
     
@@ -145,7 +153,6 @@ public class ServerConnection implements Runnable {
 				|| username.isEmpty() || password.isEmpty()){
 			return Response.FAIL;
 		}
-
 		String salt, stored_pass;
 		BufferedReader reader;
 		try {
@@ -153,21 +160,29 @@ public class ServerConnection implements Runnable {
 			stored_pass = reader.readLine();
 			salt = reader.readLine();
 			reader.close();
-		} catch (IOException e1) {
+			String hashedpassword = saltAndHash(password, salt);
+			if (!hashedpassword.equals(stored_pass))
+				return Response.WRONG_PASS;
+
+			this.username = username;
+			//load hash table with user's credentials
+			BufferedReader cred_reader = new BufferedReader(new FileReader("/stored_credentials.txt"));
+			String line;
+			while ( (line=cred_reader.readLine()) != null ){
+				String[] curr_cred = line.split(",");
+				if (curr_cred.length != 3){
+					cred_reader.close();
+					return Response.FAIL;
+				}
+				user_table.put(curr_cred[0], new Pair<String,String>(curr_cred[1], curr_cred[2]));
+			}
+			cred_reader.close();
+			return Response.SUCCESS;
+		} catch (NoSuchAlgorithmException e1){ //should never happen
 			e1.printStackTrace();
 			return Response.FAIL;
-		}
-		// Hash the master password
-		try{
-			String hashedpassword = saltAndHash(password, salt);
-			if (hashedpassword.equals(stored_pass)){
-				this.username = username;
-				return Response.SUCCESS;
-			} else {
-				return Response.FAIL;
-			}
-		} catch (NoSuchAlgorithmException e){ //should never happen
-			e.printStackTrace();
+		} catch (IOException e2) {
+			e2.printStackTrace();
 			return Response.FAIL;
 		}
     }
