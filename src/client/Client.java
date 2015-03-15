@@ -4,8 +4,8 @@ import java.io.*;
 import java.net.*;
 import javax.net.ssl.*;
 import java.util.List;
-import org.json.JSONWriter;
-import org.json.JSONTokener;
+import java.util.ArrayList;
+import org.json.*;
 
 import server.ServerConnection.Response;
 
@@ -28,7 +28,7 @@ public class Client {
             printSocketInfo(c);
             c.startHandshake();
 
-            sockReader = new BufferedReader(new InputStreamReader(c.getInputStream())));
+            sockReader = new BufferedReader(new InputStreamReader(c.getInputStream()));
             
             sockWriter = new JSONWriter(new PrintWriter(c.getOutputStream(), true));
 
@@ -63,6 +63,8 @@ public class Client {
         case "WRONG_USR": return Response.WRONG_USR;
         case "NO_SVC": return Response.NO_SVC;
         case "NAUTH": return Response.NAUTH;
+        case "CRED_EXISTS": return Response.CRED_EXISTS;
+        case "USER_EXISTS": return Response.USER_EXISTS;
         case "FAIL":
         default: return Response.FAIL;
         }
@@ -111,11 +113,11 @@ public class Client {
         Response err;
 
         sockWriter.object()
-        .key("command").value("ADD")
-        .key("service").value(service)
-        .key("username").value(username)
-        .key("password").value(password)
-        .endObject();
+            .key("command").value("ADD")
+            .key("service").value(service)
+            .key("username").value(username)
+            .key("password").value(password)
+            .endObject();
         
         try {
             respPacket = new JSONObject(sockReader.readLine());
@@ -142,9 +144,9 @@ public class Client {
         Response err;
 
         sockWriter.object()
-        .key("command").value("GET2")
-        .key("service").value(service)
-        .endObject();
+            .key("command").value("GET2")
+            .key("service").value(service)
+            .endObject();
         
         try {
             respPacket = new JSONObject(sockReader.readLine());
@@ -165,13 +167,14 @@ public class Client {
      * returns: a list of all credentials associated with the user's account
      */
     protected static Pair<Response, List<String>> requestAllCreds() {
-        String packet, respPacket = null;
-        String[] splitResp;
+        JSONObject respPacket = null;
+        JSONArray jsCreds = null;
         Response err;
+        List<String> creds;
 
         sockWriter.object()
-        .key("command").value("GET1")
-        .endObject();
+            .key("command").value("GET1")
+            .endObject();
         
         try {
             respPacket = new JSONObject(sockReader.readLine());
@@ -179,7 +182,19 @@ public class Client {
             e.printStackTrace();
         }
 
-        return new Pair<Response, List<String>>(Response.FAIL, null);
+        if (respPacket == null)
+            return new Pair<Response, List<String>>(Response.FAIL, null);
+
+        creds = new ArrayList<String>(jsCreds.length());
+        
+        err = responseFromString(respPacket.getString("response"));
+        jsCreds = respPacket.getJSONObject("data").getJSONArray("credentials");
+
+        for (int i = 0; i < creds.size(); i++) {
+            creds.add(jsCreds.getString(i));
+        }
+
+        return new Pair<Response, List<String>>(err, creds);
     }
 
     /* Deletes a set of credentials from the server.
@@ -187,12 +202,12 @@ public class Client {
      * post: that set of credentials no longer exists on the server
      */
     protected static Response deleteCreds(String service) {
-        String packet, respPacket = null;
+        JSONObject respPacket = null;
         Response err;
 
         sockWriter.object()
-        .key("command").value("DEL")
-        .key("service").value(service);
+            .key("command").value("REMV")
+            .key("service").value(service);
 
         try {
             respPacket = new JSONObject(sockReader.readLine());
@@ -216,11 +231,11 @@ public class Client {
         Response err;
 
         sockWriter.object()
-        .key("command").value("CHNG")
-        .key("service").value(service)
-        .key("username").value(username)
-        .key("password").value(password)
-        .endObject();
+            .key("command").value("EDIT")
+            .key("service").value(service)
+            .key("username").value(username)
+            .key("password").value(password)
+            .endObject();
         
         try {
             respPacket = new JSONObject(sockReader.readLine());
