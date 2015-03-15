@@ -3,12 +3,16 @@ package client;
 import java.io.*;
 import java.net.*;
 import javax.net.ssl.*;
-import server.ServerConnection.Response;
 import java.util.List;
+import java.util.ArrayList;
+import org.json.*;
+
+import server.ServerConnection.Response;
 
 public class Client {
     
     private static PrintWriter sockWriter;
+    private static JSONWriter sockJS;
     private static BufferedReader sockReader;
     
     public static void main(String[] args) {
@@ -26,7 +30,9 @@ public class Client {
             c.startHandshake();
 
             sockReader = new BufferedReader(new InputStreamReader(c.getInputStream()));
+            
             sockWriter = new PrintWriter(c.getOutputStream(), true);
+            sockJS = new JSONWriter(sockWriter);
 
             Shell.run();
 
@@ -59,6 +65,8 @@ public class Client {
         case "WRONG_USR": return Response.WRONG_USR;
         case "NO_SVC": return Response.NO_SVC;
         case "NAUTH": return Response.NAUTH;
+        case "CRED_EXISTS": return Response.CRED_EXISTS;
+        case "USER_EXISTS": return Response.USER_EXISTS;
         case "FAIL":
         default: return Response.FAIL;
         }
@@ -66,15 +74,20 @@ public class Client {
 
     /* Login with the master username/password set. */
     protected static Response login(String username, char[] password) {
-        String packet = "ATHN," + username + "," + new String(password);
-        String respPacket = null;
+        JSONObject respPacket = null;
         Response err;
 
-        sockWriter.println(packet);
-        System.out.println(packet);
+        sockJS.object()
+            .key("command").value("ATHN")
+            .key("username").value(username)
+            .key("password").value(new String(password))
+            .endObject();
+        sockWriter.println();
+        sockWriter.flush();
 
         try {
-            respPacket = sockReader.readLine();
+            respPacket = new JSONObject(sockReader.readLine());
+            
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -82,7 +95,7 @@ public class Client {
         if (respPacket == null)
             return Response.FAIL;
 
-        err = responseFromString(respPacket);
+        err = responseFromString(respPacket.getString("response"));
         return err;
     }
 
@@ -100,15 +113,21 @@ public class Client {
      * post: server adds that set of credentials to the account.
      */
     protected static Response addCreds(String service, String username, String password) {
-        String packet, respPacket = null;
+        JSONObject respPacket = null;
         Response err;
 
-        packet = "ADD," + service + "," + username + "," + password;
-        sockWriter.println(packet);
-        System.out.println(packet);
-
+        sockJS.object()
+            .key("command").value("ADD")
+            .key("service").value(service)
+            .key("username").value(username)
+            .key("password").value(password)
+            .endObject();
+        sockWriter.println();
+        sockWriter.flush();
+        
         try {
-            respPacket = sockReader.readLine();
+            respPacket = new JSONObject(sockReader.readLine());
+            
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -116,7 +135,7 @@ public class Client {
         if (respPacket == null)
             return Response.FAIL;
 
-        err = responseFromString(respPacket);
+        err = responseFromString(respPacket.getString("response"));
 
         return err;
     }
@@ -127,26 +146,27 @@ public class Client {
      * returns: error code + the requested credentials.
      */
     protected static Pair<Response, String> requestCreds(String service) {
-        String packet, respPacket = null;
-        String[] splitResp;
+        JSONObject respPacket = null;
         Response err;
 
-        packet = "GET2," + service;
-        sockWriter.println(packet);
-        System.out.println(packet);
-
+        sockJS.object()
+            .key("command").value("GET2")
+            .key("service").value(service)
+            .endObject();
+        sockWriter.println();
+        sockWriter.flush();
+        
         try {
-            respPacket = sockReader.readLine();
+            respPacket = new JSONObject(sockReader.readLine());
         } catch (IOException e) {
             e.printStackTrace();
         }
         if (respPacket == null)
             return new Pair<Response, String>(Response.FAIL, null);
 
-        splitResp = respPacket.split(",");
+        err = responseFromString(respPacket.getString("response"));
 
-        err = responseFromString(splitResp[0]);
-        return new Pair<Response, String>(err, splitResp[1]);
+        return new Pair<Response, String>(err, null);
     }
 
     /* Get all credentials from the server.
@@ -155,7 +175,36 @@ public class Client {
      * returns: a list of all credentials associated with the user's account
      */
     protected static Pair<Response, List<String>> requestAllCreds() {
-        return null;
+        JSONObject respPacket = null;
+        JSONArray jsCreds = null;
+        Response err;
+        List<String> creds;
+
+        sockJS.object()
+            .key("command").value("GET1")
+            .endObject();
+        sockWriter.println();
+        sockWriter.flush();
+        
+        try {
+            respPacket = new JSONObject(sockReader.readLine());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        if (respPacket == null)
+            return new Pair<Response, List<String>>(Response.FAIL, null);
+
+        creds = new ArrayList<String>(jsCreds.length());
+        
+        err = responseFromString(respPacket.getString("response"));
+        jsCreds = respPacket.getJSONObject("data").getJSONArray("credentials");
+
+        for (int i = 0; i < creds.size(); i++) {
+            creds.add(jsCreds.getString(i));
+        }
+
+        return new Pair<Response, List<String>>(err, creds);
     }
 
     /* Deletes a set of credentials from the server.
@@ -163,15 +212,17 @@ public class Client {
      * post: that set of credentials no longer exists on the server
      */
     protected static Response deleteCreds(String service) {
-        String packet, respPacket = null;
+        JSONObject respPacket = null;
         Response err;
 
-        packet = "DEL," + service;
-        sockWriter.println(packet);
-        System.out.println(packet);
-
+        sockJS.object()
+            .key("command").value("REMV")
+            .key("service").value(service);
+        sockWriter.println();
+        sockWriter.flush();
+        
         try {
-            respPacket = sockReader.readLine();
+            respPacket = new JSONObject(sockReader.readLine());
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -179,7 +230,7 @@ public class Client {
         if (respPacket == null)
             return Response.FAIL;
 
-        err = responseFromString(respPacket);
+        err = responseFromString(respPacket.getString("response"));
         return err;
     }
 
@@ -188,15 +239,20 @@ public class Client {
      * post: the username or password for that set of credentials is changed
      */
     protected static Response changeCreds(String service, String username, String password) {
-        String packet, respPacket = null;
+        JSONObject respPacket = null;
         Response err;
 
-        packet = "CHNG," + service + "," + username + "," + password;
-        sockWriter.println(packet);
-        System.out.println(packet);
-
+        sockJS.object()
+            .key("command").value("EDIT")
+            .key("service").value(service)
+            .key("username").value(username)
+            .key("password").value(password)
+            .endObject();
+        sockWriter.println();
+        sockWriter.flush();
+        
         try {
-            respPacket = sockReader.readLine();
+            respPacket = new JSONObject(sockReader.readLine());
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -204,7 +260,7 @@ public class Client {
         if (respPacket == null)
             return Response.FAIL;
 
-        err = responseFromString(respPacket);
+        err = responseFromString(respPacket.getString("response"));
         return err;
     }
 

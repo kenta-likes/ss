@@ -188,7 +188,7 @@ public class Shell {
         
     }
 
-    /* An error decoding function. */
+    /* An error decoding and reporting function. */
     private static void printErr(Response resp) {
         switch (resp) {
         case SUCCESS: return;
@@ -200,17 +200,25 @@ public class Shell {
         case WRONG_PASS: /* fall through.  Generic error message in this case. */
         case WRONG_USR:
             System.out.println("Failure: incorrect username or password.");
-            break;
+            return;
             
         case NO_SVC: /* We could not find the requested service stored in the user's account
                       * e.g. Netfilx
                       */
             System.out.println("Failure: the requested service was not found.");
-            break;
+            return;
+
+        case CRED_EXISTS: /* the credential that you tried to add is already in the server */
+            System.out.println("Failure: a set of credentials with that name already exists.");
+            return;
+
+        case USER_EXISTS: /* could not register an account with that username as one exists */
+            System.out.println("Failure: an account with that username already exists.");
+            return;
             
         case FAIL: /* Generic error */
             System.out.println("Failure: the system encountered an unknown error.");
-            break;
+            return;
         default: /* For recompilation purposes */
             System.out.println("Failure: unrecognized error code.  Please recompile.");
         }
