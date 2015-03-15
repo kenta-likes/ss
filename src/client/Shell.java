@@ -55,7 +55,7 @@ public class Shell {
         return 0;
     }
 
-    private static Response handleRegister() {
+    private static void handleRegister() {
         String username, email;
         char[] password0, password1;
         Response err;
@@ -69,7 +69,8 @@ public class Shell {
             samePassword = false;
         else {
             for (int i = 0; i < password0.length; i++) {
-                samePassword &= password0[i] == password1[i];
+                /* Make sure the user entered the password they intended - twice. */
+                samePassword &= (password0[i] == password1[i]);
             }
         }
 
@@ -77,17 +78,15 @@ public class Shell {
             email = con.readLine("Email address: ");
             
             err = Client.register(username, password0, email);
+            printErr(err);
         } else {
-            System.out.println("Error: passwords do not match");
-            err = Response.FAIL;
+            System.out.println("Error: passwords do not match.");
         }
-
-        return err;
-        
     }
 
     private static void handleAdd(String[] command) {
         String service, username, password;
+        Response err;
 
         if (command.length != 4) {
             System.out.println("Usage: add <service> <username> <password>");
@@ -98,7 +97,8 @@ public class Shell {
         username = command[2];
         password = command[3];
 
-        Client.addCreds(service, username, password);
+        err = Client.addCreds(service, username, password);
+        printErr(err);
     }
 
     private static void handleReq(String[] command) {
