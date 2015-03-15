@@ -1,6 +1,8 @@
 package client;
 
+import server.ServerConnection.Response;
 import java.io.Console;
+import java.util.List;
 
 public class Shell {
     private static Console con;
@@ -40,7 +42,7 @@ public class Shell {
     private static int handleLogin() {
         String username;
         char[] password;
-        int err = 0;
+        Response err;
         
         username = con.readLine("Username: ");
 
@@ -48,22 +50,20 @@ public class Shell {
 
         err = Client.login(username, password);
 
-        if (err != 0)
-            System.out.println("Error: incorrect username or password.");
+        printErr(err);
 
-        return err;
+        return 0;
     }
 
-    private static int handleRegister() {
+    private static Response handleRegister() {
         String username, email;
         char[] password0, password1;
-        int err;
+        Response err;
         boolean samePassword = true;
 
         username = con.readLine("Username: ");
         password0 = con.readPassword("Password: ");
         password1 = con.readPassword("Verify password: ");
-        email = con.readLine("Email address: ");
 
         if (password0.length != password1.length)
             samePassword = false;
@@ -74,11 +74,12 @@ public class Shell {
         }
 
         if (samePassword) {
-            System.out.println("Matching");
+            email = con.readLine("Email address: ");
+            
             err = Client.register(username, password0, email);
         } else {
             System.out.println("Error: passwords do not match");
-            err = 1;
+            err = Response.FAIL;
         }
 
         return err;
@@ -102,10 +103,47 @@ public class Shell {
 
     private static void handleReq(String[] command) {
         String service;
+        Response err;
+
+        if (command.length != 2) {
+            System.out.println("Usage: request <service | all>");
+            return;
+        }
+
+        service = command[1];
+
+        if (service.equals("all")) {
+            Pair<Response, List<String>> resp = Client.requestAllCreds();
+            List<String> creds;
+            
+            err = resp.first();
+            creds = resp.second();
+
+            if (err == Response.SUCCESS) {
+                for (String s : creds)
+                    System.out.println(s);
+
+                return;
+            }            
+        } else {
+            Pair<Response, String> resp = Client.requestCreds(service);
+            String creds;
+            
+            err = resp.first();
+            creds = resp.second();
+
+            if (err == Response.SUCCESS) {
+                System.out.println(creds);
+                return;
+            }
+        }
+
+        printErr(err);
     }
 
     private static void handleDel(String[] command) {
         String service, confirm;
+        Response err;
 
         if (command.length != 2) {
             System.out.println("Usage: delete <service>");
@@ -118,7 +156,8 @@ public class Shell {
         confirm = con.readLine("Are you sure? [y/n]: ");
 
         if ("y".equals(confirm)) {
-            Client.deleteCreds(service);
+            err = Client.deleteCreds(service);
+            printErr(err);
         } else {
             System.out.println("Credentials not deleted.");
         }
@@ -126,6 +165,8 @@ public class Shell {
 
     private static void handleChange(String[] command) {
         String service, username, password;
+        Response err;
+        
         if (command.length != 4) {
             System.out.println("Usage: change <service> <username> <password>");
             return;
@@ -135,7 +176,8 @@ public class Shell {
         username = command[2];
         password = command[3];
 
-        Client.changeCreds(service, username, password);
+        err = Client.changeCreds(service, username, password);
+        printErr(err);
     }
 
     private static void handleLogout() {
@@ -144,5 +186,29 @@ public class Shell {
 
     private static void help() {
         
+    }
+
+    /* An error decoding function. */
+    private static void printErr(Response resp) {
+        switch (resp) {
+        case SUCCESS: return;
+            
+        case WRONG_PASS: /* fall through.  Generic error message in this case. */
+        case WRONG_USR:
+            System.out.println("Failure: incorrect username or password.");
+            break;
+            
+        case NO_SVC: /* We could not find the requested service stored in the user's account
+                      * e.g. Netfilx
+                      */
+            System.out.println("Failure: the requested service was not found.");
+            break;
+            
+        case FAIL: /* Generic error */
+            System.out.println("Failure: the system encountered an unknown error.");
+            break;
+        default: /* For recompilation purposes */
+            System.out.println("Failure: unrecognized error code.  Please recompile.");
+        }
     }
 }

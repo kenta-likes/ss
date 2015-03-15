@@ -16,8 +16,12 @@ public class ServerConnection implements Runnable {
 	static final char AUTH = 1;
 	
 	//response type
-	public enum Response{
-		SUCCESS, FAIL, WRONG_PASS, WRONG_USR
+	public enum Response {
+            SUCCESS,
+            FAIL,
+            WRONG_PASS,
+            WRONG_USR,
+            NO_SVC /* used when the requested service is not found. */
 	}
 	
 	SSLSocket socket;
