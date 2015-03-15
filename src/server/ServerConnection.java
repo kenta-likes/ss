@@ -104,7 +104,8 @@ public class ServerConnection implements Runnable {
 	public Response createAccount(String username, String password) throws Exception {
 		// Directory already exists
 		// Note: Not thread-safe 
-		if (new File(username).isDirectory()){
+		if (new File(username).isDirectory() || username == null || password == null
+				|| username.isEmpty() || password.isEmpty()){
 			return Response.FAIL;
 		}
 		// Create a new directory
