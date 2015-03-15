@@ -141,7 +141,24 @@ public class ServerConnection implements Runnable {
      * Delete this account
      * */
     public Response deleteAccount(String password){
-    	return Response.FAIL;
+    	if (this.authAccount(this.username, password) == Response.FAIL){
+    		return Response.FAIL;
+    	}
+ 
+    	// Note: guaranteed that this account exists
+    	// Delete the account
+    	File directory = new File(username);
+    	String[] entries = directory.list();
+    	
+    	// Delete all the files in this directory
+    	for (String s: entries){
+    		File currentFile = new File(directory.getPath(), s);
+    		currentFile.delete();
+    	}
+    	
+    	// delete the directory 
+    	directory.delete();
+    	return Response.SUCCESS;
     }
 	
     /*
