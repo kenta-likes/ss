@@ -7,6 +7,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.io.UnsupportedEncodingException;
 
 import javax.net.ssl.SSLSocket;
 
@@ -145,17 +146,27 @@ public class ServerConnection implements Runnable {
 		byte[] salt = new SecureRandom().generateSeed(SALT_LEN);
 		String hashedpassword;
 		try{
-			hashedpassword = saltAndHash(password, new String(salt));
+			hashedpassword = saltAndHash(new_password, new String(salt));
 		} catch (NoSuchAlgorithmException e){
 			return Response.FAIL; //should never happen
 		}
 		
 		// Write hashed master password and the salt to a file named "master.txt"
 		// Note: will overwrite the old file
-		PrintWriter writer = new PrintWriter(username.concat("/master.txt"), "UTF-8");
-		writer.println(hashedpassword);
-		writer.println(salt);
-		writer.close();
+		PrintWriter writer;
+		try {
+			writer = new PrintWriter(username.concat("/master.txt"), "UTF-8");
+			writer.println(hashedpassword);
+			writer.println(salt);
+			writer.close();
+		} catch (FileNotFoundException e1) {
+			e1.printStackTrace();
+			return Response.FAIL; //should never happen
+		} catch (UnsupportedEncodingException e2) {
+			e2.printStackTrace();
+			return Response.FAIL; //should never happen
+		}
+		
     	return Response.SUCCESS;
     }
     
