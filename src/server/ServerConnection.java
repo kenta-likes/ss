@@ -2,6 +2,7 @@ package server;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
@@ -39,10 +40,10 @@ public class ServerConnection implements Runnable {
         CRED_EXISTS /*when adding, the credentials already exist for that service*/
     }
 	
-    SSLSocket socket;
-    private String username; //user associated with this account
-    boolean timed_out = false; //TODO think about this later...
-    Hashtable<String,Pair<String,String>> user_table;
+    protected SSLSocket socket;
+    protected String username; //user associated with this account
+    protected boolean timed_out = false; //TODO think about this later...
+    protected Hashtable<String,Pair<String,String>> user_table;
          
     public ServerConnection(SSLSocket s) {
     	this.socket = s;
@@ -151,14 +152,14 @@ public class ServerConnection implements Runnable {
     /*
      * Helper function for salting and hashing master passwords
      * */
-    public String saltAndHash(String password, String salt) throws NoSuchAlgorithmException {
+    public byte[] saltAndHash(String password, byte salt[]) throws NoSuchAlgorithmException {
     	byte[] toHash = new byte[SALT_LEN + password.length()];
         System.arraycopy(password.getBytes(), 0, toHash, 0, password.length());
-        System.arraycopy(salt.getBytes(), 0, toHash, password.length(), SALT_LEN);
+        System.arraycopy(salt, 0, toHash, password.length(), SALT_LEN);
         // Hash the master password
         MessageDigest messageDigest = MessageDigest.getInstance("SHA-256");
         messageDigest.update(toHash);
-        return new String(messageDigest.digest());
+        return messageDigest.digest();
     }
     
     /*
@@ -196,9 +197,9 @@ public class ServerConnection implements Runnable {
         // Generate a salt randomly and append it to master password. 
         // Salt = 32 bytes since we use SHA-256
         byte[] salt = new SecureRandom().generateSeed(SALT_LEN);
-        String hashedpassword;
+        byte[] hashedpassword;
         try{
-            hashedpassword = saltAndHash(password, new String(salt));
+            hashedpassword = saltAndHash(password, salt);
         } catch (NoSuchAlgorithmException e){
             log_result("Create Account", Response.FAIL);
             return Response.FAIL; //should never happen
@@ -238,9 +239,9 @@ public class ServerConnection implements Runnable {
         // Generate a salt randomly and append it to master password. 
         // Salt = 32 bytes since we use SHA-256
         byte[] salt = new SecureRandom().generateSeed(SALT_LEN);
-        String hashedpassword;
+        byte[] hashedpassword;
         try{
-            hashedpassword = saltAndHash(new_password, new String(salt));
+            hashedpassword = saltAndHash(new_password, salt);
         } catch (NoSuchAlgorithmException e){
             log_result("Change Account Password", Response.FAIL);
             return Response.FAIL; //should never happen
@@ -304,14 +305,17 @@ public class ServerConnection implements Runnable {
             log_result("Authenticate Account", Response.FAIL);
             return Response.FAIL;
         }
-        String salt, stored_pass;
-        BufferedReader reader;
+        byte salt[] = new byte[32];
+        byte stored_pass[] = new byte[32];
+        FileInputStream reader;
         try {
-            reader = new BufferedReader(new FileReader(username.concat("/master.txt")));
-            stored_pass = reader.readLine();
-            salt = reader.readLine();
+            reader = new FileInputStream(username.concat("/master.txt"));
+            reader.read(stored_pass, 0, 32);
+            reader.read(); //reads newline TODO: Fix later
+            reader.read(salt,0,32);
             reader.close();
-            String hashedpassword = saltAndHash(password, salt);
+            byte[] hashedpassword = saltAndHash(password, salt);
+            System.out.println("Length of hashed password stored in master.txt = " + hashedpassword.length);
             if (!hashedpassword.equals(stored_pass)){
                 log_result("Authenticate Account", Response.WRONG_PASS);
                 return Response.WRONG_PASS;
@@ -372,20 +376,20 @@ public class ServerConnection implements Runnable {
     /*
      * Adds new credentials
      * */
-    public Response addCredential(String service_name, String username, String password){
+    public Response addCredential(String service_name, String stored_username, String stored_password){
     	if (user_table.contains(service_name))
             return Response.CRED_EXISTS;
-    	user_table.put(service_name, new Pair<String,String>(username, password));
+    	user_table.put(service_name, new Pair<String,String>(stored_username, stored_password));
     	return Response.SUCCESS;
     }
     
     /*
      * Updates credentials with new password
      * */
-    public Response updateCredential(String service_name, String password){
+    public Response updateCredential(String service_name, String new_stored_pass){
         if (!user_table.contains(service_name))
             return Response.NO_SVC;
-        user_table.put(service_name, new Pair<String,String>(username, password));
+        user_table.put(service_name, new Pair<String,String>(username, new_stored_pass)); //TODO FIX username!!
         return Response.SUCCESS;
     }
     
