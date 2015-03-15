@@ -32,7 +32,6 @@ public class Client {
             sockReader = new BufferedReader(new InputStreamReader(c.getInputStream()));
             
             sockWriter = new PrintWriter(c.getOutputStream(), true);
-            sockJS = new JSONWriter(sockWriter);
 
             Shell.run();
 
@@ -76,7 +75,8 @@ public class Client {
     protected static Response login(String username, char[] password) {
         JSONObject respPacket = null;
         Response err;
-
+        sockJS = new JSONWriter(sockWriter);
+        
         sockJS.object()
             .key("command").value("ATHN")
             .key("username").value(username)
@@ -107,7 +107,8 @@ public class Client {
     protected static Response register(String username, char[] password, String email) {
         JSONObject respPacket = null;
         Response err;
-
+        sockJS = new JSONWriter(sockWriter);
+        
         sockJS.object()
             .key("command").value("RGST")
             .key("username").value(username)
@@ -140,6 +141,7 @@ public class Client {
     protected static Response addCreds(String service, String username, String password) {
         JSONObject respPacket = null;
         Response err;
+        sockJS = new JSONWriter(sockWriter);
 
         sockJS.object()
             .key("command").value("ADD")
@@ -173,6 +175,7 @@ public class Client {
     protected static Pair<Response, String> requestCreds(String service) {
         JSONObject respPacket = null;
         Response err;
+        sockJS = new JSONWriter(sockWriter);
 
         sockJS.object()
             .key("command").value("GET2")
@@ -204,6 +207,7 @@ public class Client {
         JSONArray jsCreds = null;
         Response err;
         List<String> creds;
+        sockJS = new JSONWriter(sockWriter);
 
         sockJS.object()
             .key("command").value("GET1")
@@ -239,6 +243,7 @@ public class Client {
     protected static Response deleteCreds(String service) {
         JSONObject respPacket = null;
         Response err;
+        sockJS = new JSONWriter(sockWriter);
 
         sockJS.object()
             .key("command").value("REMV")
@@ -267,6 +272,7 @@ public class Client {
     protected static Response changeCreds(String service, String username, String password) {
         JSONObject respPacket = null;
         Response err;
+        sockJS = new JSONWriter(sockWriter);
 
         sockJS.object()
             .key("command").value("EDIT")

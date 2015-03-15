@@ -51,16 +51,16 @@ public class ServerConnection implements Runnable {
     public void run() {
     	try {
             BufferedWriter w = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
-            JSONWriter js = new JSONWriter(w);
+            JSONWriter js;
             BufferedReader r = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             String m, command;
             JSONObject req;
             while (true){
                 while ((m = r.readLine()) != null) {
 
+                    js = new JSONWriter(w);
                     req = new JSONObject(m);
                     command = req.getString("command");
-                    System.out.println("Received command " + command);
                     
                     //check for authenticated user
                     if (username != null){
@@ -92,18 +92,23 @@ public class ServerConnection implements Runnable {
                         case "ATHN":
                             String authName = req.getString("username");
                             String authPass = req.getString("password");
+                            Response resp = authAccount(authName, authPass);
                             js.object()
-                                .key("response").value(authAccount(authName, authPass).name())
+                                .key("response").value(resp.name())
                                 .endObject();
+                            
                             break;
                             
                         case "RGST":
                             String regName = req.getString("username");
                             String regPass = req.getString("password");
                             String email = req.getString("email");
+
+                            resp = createAccount(regName, regPass);
                             js.object()
-                                .key("response").value(createAccount(regName, regPass).name())
+                                .key("response").value(resp.name())
                                 .endObject();
+
                             break;
                             
                         default: js.object()
@@ -207,6 +212,10 @@ public class ServerConnection implements Runnable {
         /*create new file for credentials as well*/
         PrintWriter creds_writer = new PrintWriter(username.concat("/stored_credentials.txt"), "UTF-8");
         creds_writer.close();
+
+        /* set the session to be logged in successfully */
+        this.username = username;
+        
         return Response.SUCCESS;
     }
     
