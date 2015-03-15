@@ -21,7 +21,8 @@ public class ServerConnection implements Runnable {
             FAIL,
             WRONG_PASS,
             WRONG_USR,
-            NO_SVC /* used when the requested service is not found. */
+            NO_SVC, /* used when the requested service is not found. */
+            NAUTH /* used when the user is not logged in, but tries an op other than login */
 	}
 	
 	SSLSocket socket;

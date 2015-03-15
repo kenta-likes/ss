@@ -192,6 +192,10 @@ public class Shell {
     private static void printErr(Response resp) {
         switch (resp) {
         case SUCCESS: return;
+
+        case NAUTH:
+            System.out.println("Failure: you are not logged in!");
+            return;
             
         case WRONG_PASS: /* fall through.  Generic error message in this case. */
         case WRONG_USR:
