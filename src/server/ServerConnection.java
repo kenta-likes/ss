@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -253,9 +254,16 @@ public class ServerConnection implements Runnable {
             return Response.FAIL; //should never happen
         }
         // Write hashed master password and the salt to a file named "master.txt"
+        /*
         PrintWriter writer = new PrintWriter(username.concat("/master.txt"), "UTF-8");
         writer.println(hashedpassword);
         writer.println(salt);
+        writer.flush();
+        writer.close();
+        */
+        FileOutputStream writer = new FileOutputStream(username.concat("/master.txt"));
+        writer.write(hashedpassword);
+        writer.write(salt);
         writer.flush();
         writer.close();
 		
@@ -359,7 +367,7 @@ public class ServerConnection implements Runnable {
         try {
             reader = new FileInputStream(username.concat("/master.txt"));
             reader.read(stored_pass, 0, 32);
-            reader.read(); //reads newline TODO: Fix later
+            //reader.read(); //reads newline TODO: Fix later
             reader.read(salt,0,SALT_LEN);
             reader.close();
             byte[] hashedpassword = saltAndHash(password, salt);
