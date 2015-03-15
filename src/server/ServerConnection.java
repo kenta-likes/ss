@@ -105,8 +105,8 @@ public class ServerConnection implements Runnable {
     
     public String saltAndHash(String password, String salt) throws NoSuchAlgorithmException {
     	byte[] toHash = new byte[SALT_LEN + password.length()];
-        System.arraycopy(password, 0, toHash, 0, password.length());
-        System.arraycopy(salt, 0, toHash, password.length(), SALT_LEN);
+        System.arraycopy(password.getBytes(), 0, toHash, 0, password.length());
+        System.arraycopy(salt.getBytes(), 0, toHash, password.length(), SALT_LEN);
         // Hash the master password
         MessageDigest messageDigest = MessageDigest.getInstance("SHA-256");
         messageDigest.update(toHash);
