@@ -27,7 +27,7 @@ public class Client {
             sockWriter = new PrintWriter(c.getOutputStream(), true);
 
             Shell.run();
-         
+
             c.close();
         } catch (IOException e) {
             System.err.println(e.toString());
