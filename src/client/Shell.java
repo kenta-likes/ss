@@ -41,6 +41,10 @@ public class Shell {
         return;
     }
 
+    private static void handleUnregister() {
+
+    }
+
     private static void handleMasterChange() {
         char[] oldPassword;
         char[] password0;
@@ -62,7 +66,7 @@ public class Shell {
             return;
         }
 
-        err = Client.changeMaster(password0);
+        err = Client.changeMaster(oldPassword, password0);
     }
 
     private static int handleLogin() {
