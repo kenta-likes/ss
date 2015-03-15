@@ -13,6 +13,7 @@ import javax.net.ssl.SSLSocket;
 
 import client.Pair;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.Hashtable;
 import java.io.PrintWriter;
@@ -314,16 +315,13 @@ public class ServerConnection implements Runnable {
      * Returns a list of services for which credentials stored on server.
      * Delimited by commas
      * */
-    public Pair<Response,String> retrieveCredentials(){
-        String cred_list = "";
+    public Pair<Response,ArrayList<String>> retrieveCredentials(){
+        ArrayList<String> cred_list = new ArrayList<String>();
         for (String k : user_table.keySet()){
-            if (!cred_list.isEmpty())
-                cred_list += "," + k;
-            else
-                cred_list = k;
+                cred_list.add(k);
         }
         log_result("Get Credential List", Response.SUCCESS);
-        return new Pair<Response,String>(Response.SUCCESS, cred_list);
+        return new Pair<Response,ArrayList<String>>(Response.SUCCESS, cred_list);
     }
     
     /*
