@@ -12,9 +12,9 @@ import javax.net.ssl.*;
 public class Server {
 	
    public static void main(String[] args) {
-      String ksName = "herong.jks";
-      char ksPass[] = "HerongJKS".toCharArray();
-      char ctPass[] = "My1stKey".toCharArray();
+      String ksName = "server.jks";
+      char ksPass[] = "ServerJKS".toCharArray();
+      char ctPass[] = "ServerKey".toCharArray();
       try {
          KeyStore ks = KeyStore.getInstance("JKS");
          ks.load(new FileInputStream(ksName), ksPass);
