@@ -26,7 +26,7 @@ import java.security.SecureRandom;
 import org.json.*;
 
 public class ServerConnection implements Runnable {
-    static final int SALT_LEN = 32; //use # of bytes of SHA-256 output
+    static final int SALT_LEN = 1; //use # of bytes of SHA-256 output
 	
     //response type
     public enum Response {
@@ -242,7 +242,9 @@ public class ServerConnection implements Runnable {
         
         // Generate a salt randomly and append it to master password. 
         // Salt = 32 bytes since we use SHA-256
-        byte[] salt = new SecureRandom().generateSeed(SALT_LEN);
+        //byte[] salt = new SecureRandom().generateSeed(SALT_LEN);
+        byte[]salt = new byte[1];
+        salt[0] = (byte)1;
         byte[] hashedpassword;
         try{
             hashedpassword = saltAndHash(password, salt);
@@ -351,17 +353,19 @@ public class ServerConnection implements Runnable {
             log_result("Authenticate Account", Response.FAIL);
             return Response.FAIL;
         }
-        byte salt[] = new byte[32];
+        byte salt[] = new byte[SALT_LEN];
         byte stored_pass[] = new byte[32];
         FileInputStream reader;
         try {
             reader = new FileInputStream(username.concat("/master.txt"));
             reader.read(stored_pass, 0, 32);
             reader.read(); //reads newline TODO: Fix later
-            reader.read(salt,0,32);
+            reader.read(salt,0,SALT_LEN);
             reader.close();
             byte[] hashedpassword = saltAndHash(password, salt);
-            System.out.println("Length of hashed password stored in master.txt = " + hashedpassword.length);
+            System.out.println("hashed pass,len : " + hashedpassword + ", " + hashedpassword.length);
+            System.out.println("stored pass,len : " + stored_pass + ", " + stored_pass.length);
+            System.out.println("stored salt: " + salt);
             if (!hashedpassword.equals(stored_pass)){
                 //log_result("Authenticate Account", Response.WRONG_PASS);
                 return Response.WRONG_PASS;
