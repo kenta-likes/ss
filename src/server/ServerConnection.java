@@ -31,6 +31,8 @@ public class ServerConnection implements Runnable {
             NO_SVC,/* used when the requested service is not found. */
             NAUTH, /* used when the user is not logged in, but tries an op other than login */
             USER_EXISTS, /*when username is already taken at registration*/
+            CRED_DNE, /*the credentials are not stored on service*/
+            CRED_EXISTS /*when adding, the credentials already exist for that service*/
 	}
 	
 	SSLSocket socket;
@@ -149,8 +151,7 @@ public class ServerConnection implements Runnable {
     public Response authAccount(String username, String password){
     	// Directory DNE TODO: check with other fxns
 		// Note: Not thread-safe 
-		if ( !(new File(username).isDirectory()) || username == null || password == null
-				|| username.isEmpty() || password.isEmpty()){
+		if ( !(new File(username).isDirectory())){
 			return Response.FAIL;
 		}
 		String salt, stored_pass;
@@ -189,49 +190,56 @@ public class ServerConnection implements Runnable {
     
     /*
      * Returns a list of services for which credentials stored on server.
-     * (Delimited by commas?)
+     * Delimited by commas
      * */
-    public String retrieveCredentials(){
-    	return "";
+    public Pair<Response,String> retrieveCredentials(){
+		String cred_list = "";
+		for (String k : user_table.keySet()){
+			if (!cred_list.isEmpty())
+				cred_list += "," + k;
+			else
+				cred_list = k;
+		}
+		return new Pair<Response,String>(Response.SUCCESS, cred_list);
     }
     
     /*
      * Get password for specific service
      * */
-    public String getPassword(String service_name){
-    	return "";
+    public Pair<Response,String> getPassword(String service_name){
+    	if (!user_table.containsKey(service_name)){ //credentials not listed in server
+    		return new Pair<Response,String>(Response.CRED_DNE, "");
+    	}
+    	return new Pair<Response,String>(Response.SUCCESS, user_table.get(service_name).second());
     }
     
     /*
      * Adds new credentials
      * */
     public Response addCredential(String service_name, String username, String password){
-    	return Response.FAIL;
+    	if (user_table.contains(service_name))
+    		return Response.CRED_EXISTS;
+    	user_table.put(service_name, new Pair<String,String>(username, password));
+    	return Response.SUCCESS;
     }
     
     /*
      * Updates credentials with new password
      * */
     public Response updateCredential(String service_name, String password){
-    	return Response.FAIL;
+		if (!user_table.contains(service_name))
+			return Response.CRED_DNE;
+		user_table.put(service_name, new Pair<String,String>(username, password));
+		return Response.SUCCESS;
     }
     
     /*
      * Deletes specific credential for specified service
      * */
     public Response deleteCredential(String service_name){
-    	return Response.FAIL;
+		if (!user_table.contains(service_name))
+			return Response.CRED_DNE;
+		user_table.remove(service_name);
+		return Response.SUCCESS;
     }
-    
-    /*
-     * Checks master password against salted + hashed value stored on server
-     * */
-    public boolean checkPassword(String password){
-    	return false;
-    }
-    
-	   
-	public void getAccountCredentialsList(String accountName) {
-		   
-	}
 }
