@@ -19,6 +19,7 @@ import java.security.NoSuchAlgorithmException;
 import java.io.File;
 import java.security.SecureRandom;
 
+
 public class ServerConnection implements Runnable {
 	static final int SALT_LEN = 32; //use # of bytes of SHA-256 output
 	
