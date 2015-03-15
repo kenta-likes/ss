@@ -52,16 +52,36 @@ public class Client {
         System.out.println("   Protocol = "+ss.getProtocol());
     }
 
+    protected static Response responseFromString(String resp) {
+        switch (resp) {
+        case "SUCCESS": return Response.SUCCESS:
+        case "WRONG_PASS": return Response.WRONG_PASS;
+        case "WRONG_USR": return Response.WRONG_USR;
+        case "NO_SVC": return Response.NO_SVC;
+        case "NAUTH": return Response.NAUTH;
+        case "FAIL":
+        default: return Response.FAIL;
+        }
+    }
+
     /* Login with the master username/password set. */
     protected static Response login(String username, char[] password) {
 
         String packet = "ATHN," + username + "," + new String(password);
+        String respPacket;
+        String[] splitResp;
+        Response err;
         int len = packet.length();
 
         sockWriter.println(packet);
         System.out.println(packet);
-            
-        return Response.SUCCESS;
+
+        respPacket = sockReader.readLine();
+        if (respPacket == null)
+            return Response.FAIL;
+
+        err = responseFromString(respPacket);
+        return err;
     }
 
     /* Register a new account.
@@ -78,7 +98,20 @@ public class Client {
      * post: server adds that set of credentials to the account.
      */
     protected static Response addCreds(String service, String username, String password) {
-        return Response.SUCCESS;
+        String packet, respPacket;
+        Response err;
+
+        packet = "ADD," + service + "," + username + "," + password;
+        sockWriter.println(packet);
+        System.out.println(packet);
+
+        respPacket = sockReader.readLine();
+        if (respPacket == null)
+            return Response.FAIL;
+
+        err = responseFromString(respPacket);
+
+        return err;
     }
 
     /* Get credentials from the server.
@@ -87,7 +120,22 @@ public class Client {
      * returns: error code + the requested credentials.
      */
     protected static Pair<Response, String> requestCreds(String service) {
-        return null;
+        String packet, respPacket;
+        String[] splitResp;
+        Response err;
+
+        packet = "GET2," + service;
+        sockWriter.println(packet);
+        System.out.println(packet);
+
+        respPacket = sockReader.readLine();
+        if (respPacket == null)
+            return Response.FAIL;
+
+        splitResp = respPacket.split(",");
+
+        err = responseFromString(splitResp[0]);
+        return err;
     }
 
     /* Get all credentials from the server.
@@ -104,7 +152,19 @@ public class Client {
      * post: that set of credentials no longer exists on the server
      */
     protected static Response deleteCreds(String service) {
-        return Response.SUCCESS;
+        String packet, respPacket;
+        Response err;
+
+        packet = "DEL," + service;
+        sockWriter.println(packet);
+        System.out.println(packet);
+
+        respPacket = sockReader.readLine();
+        if (respPacket == null)
+            return Response.FAIL;
+
+        err = responseFromString(respPacket);
+        return err;
     }
 
     /* Changes the username and password for a certain set of credentials.
@@ -112,7 +172,19 @@ public class Client {
      * post: the username or password for that set of credentials is changed
      */
     protected static Response changeCreds(String service, String username, String password) {
-        return Response.SUCCESS;
+        String packet, respPacket;
+        Response err;
+
+        packet = "CHNG," + service + "," + username + "," + password;
+        sockWriter.println(packet);
+        System.out.println(packet);
+
+        respPacket = sockReader.readLine();
+        if (respPacket == null)
+            return Response.FAIL;
+
+        err = responseFromString(respPacket);
+        return err;
     }
 
     /* Logs out the user.
