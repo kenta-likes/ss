@@ -2,28 +2,31 @@ package server;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 
 import javax.net.ssl.SSLSocket;
+
 import java.io.PrintWriter;
 import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.io.File;
 import java.security.SecureRandom;
 
 public class ServerConnection implements Runnable {
-	static final char REG = 0;
-	static final char AUTH = 1;
+	static final int SALT_LEN = 32; //use # of bytes of SHA-256 output
 	
 	//response type
 	public enum Response{
-		SUCCESS, FAIL, WRONG_PASS, WRONG_USR
+		SUCCESS, FAIL, WRONG_PASS, WRONG_USR, ACCOUNT_EXISTS, ACCOUNT_DNE
 	}
 	
 	SSLSocket socket;
 	String username; //user associated with this account
-	boolean timed_out = false;
-
+	boolean timed_out = false; //TODO think about this later...
          
     public ServerConnection(SSLSocket s) {
     	this.socket = s;
@@ -71,6 +74,16 @@ public class ServerConnection implements Runnable {
     	}
     }
     
+    public String saltAndHash(String password, String salt) throws NoSuchAlgorithmException {
+    	byte[] toHash = new byte[SALT_LEN + password.length()];
+		System.arraycopy(password, 0, toHash, 0, password.length());
+		System.arraycopy(salt, 0, toHash, password.length(), SALT_LEN);
+		// Hash the master password
+		MessageDigest messageDigest = MessageDigest.getInstance("SHA-256");
+		messageDigest.update(toHash);
+		return new String(messageDigest.digest());
+    }
+    
     /*
      * Create new account on server
      * Randomly generates a salt and stores a hashed
@@ -87,16 +100,13 @@ public class ServerConnection implements Runnable {
         
 		// Generate a salt randomly and append it to master password. 
 		// Salt = 32 bytes since we use SHA-256
-		byte[] toHash = new byte[32 + password.length()];
-		System.arraycopy(password.getBytes(), 0, toHash, 0, password.length());
-		byte[] salt = new SecureRandom().generateSeed(32);
-		System.arraycopy(salt, 0, toHash, password.length(), 32);
-		
-		// Hash the master password
-		MessageDigest messageDigest = MessageDigest.getInstance("SHA-256");
-		messageDigest.update(toHash);
-		String hashedpassword = new String(messageDigest.digest());
-        
+		byte[] salt = new SecureRandom().generateSeed(SALT_LEN);
+		String hashedpassword;
+		try{
+			hashedpassword = saltAndHash(password, new String(salt));
+		} catch (NoSuchAlgorithmException e){
+			return Response.FAIL; //should never happen
+		}
 		// Write hashed master password and the salt to a file named "master.txt"
 		PrintWriter writer = new PrintWriter(username.concat("/master.txt"), "UTF-8");
 		writer.println(hashedpassword);
@@ -123,7 +133,37 @@ public class ServerConnection implements Runnable {
      * Authenticate user to system
      * */
     public Response authAccount(String username, String password){
-    	return Response.FAIL;
+    	// Directory DNE TODO: check with other fxns
+		// Note: Not thread-safe 
+		if ( !(new File(username).isDirectory()) || username == null || password == null
+				|| username.isEmpty() || password.isEmpty()){
+			return Response.FAIL;
+		}
+
+		String salt, stored_pass;
+		BufferedReader reader;
+		try {
+			reader = new BufferedReader(new FileReader("/master.txt"));
+			stored_pass = reader.readLine();
+			salt = reader.readLine();
+			reader.close();
+		} catch (IOException e1) {
+			e1.printStackTrace();
+			return Response.FAIL;
+		}
+		// Hash the master password
+		try{
+			String hashedpassword = saltAndHash(password, salt);
+			if (hashedpassword.equals(stored_pass)){
+				this.username = username;
+				return Response.SUCCESS;
+			} else {
+				return Response.FAIL;
+			}
+		} catch (NoSuchAlgorithmException e){ //should never happen
+			e.printStackTrace();
+			return Response.FAIL;
+		}
     }
     
     /*
