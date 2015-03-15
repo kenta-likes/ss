@@ -13,6 +13,7 @@ import javax.net.ssl.SSLSocket;
 
 import client.Pair;
 
+import java.util.Date;
 import java.util.Hashtable;
 import java.io.PrintWriter;
 import java.security.MessageDigest;
@@ -126,6 +127,24 @@ public class ServerConnection implements Runnable {
             }
     }
     
+    public String responseGetString(Response r){
+    	switch (r){
+	    	case SUCCESS: return "SUCCESS";
+	    	case FAIL: return "INTERNAL ERROR";
+	    	case WRONG_PASS: return "WRONG PASSWORD";
+	    	case WRONG_USR: return "USERNAME DOES NOT EXIST";
+	    	case NO_SVC: return "CREDENTIAL DOES NOT EXIST";
+	    	case NAUTH: return "USER NOT LOGGED IN";
+	    	case USER_EXISTS: return "USERNAME IS TAKEN";
+	    	case CRED_EXISTS: return "CREDENTIAL ALREADY TAKEN";
+	    	default: break;
+    	}
+    	return "";
+    }
+    
+    /*
+     * Helper function for salting and hashing master passwords
+     * */
     public String saltAndHash(String password, String salt) throws NoSuchAlgorithmException {
     	byte[] toHash = new byte[SALT_LEN + password.length()];
         System.arraycopy(password.getBytes(), 0, toHash, 0, password.length());
@@ -136,12 +155,28 @@ public class ServerConnection implements Runnable {
         return new String(messageDigest.digest());
     }
     
+    /*
+     * Helper function for logging
+     * */
+    public void log_result(String method_name, Response res){
+		try{
+			Date date = new Date();
+			PrintWriter logger = new PrintWriter(username.concat("/log.txt"), "UTF-8");
+			logger.println(date.toString() + ": " + responseGetString(res) + " on " + method_name);
+			logger.flush();
+			logger.close();
+		} catch (IOException e){
+			e.printStackTrace();
+		}
+    }
+    
     
     /*
      * Create new account on server
      * Randomly generates a salt and stores a hashed
      * master password.
      * */
+
     public Response createAccount(String username, String password) throws Exception {
         // Directory already exists
         // Note: Not thread-safe 
@@ -208,7 +243,6 @@ public class ServerConnection implements Runnable {
             e2.printStackTrace();
             return Response.FAIL; //should never happen
         }
-		
     	return Response.SUCCESS;
     }
     
@@ -248,7 +282,7 @@ public class ServerConnection implements Runnable {
         String salt, stored_pass;
         BufferedReader reader;
         try {
-            reader = new BufferedReader(new FileReader("/master.txt"));
+            reader = new BufferedReader(new FileReader(username.concat("/master.txt")));
             stored_pass = reader.readLine();
             salt = reader.readLine();
             reader.close();
@@ -258,7 +292,7 @@ public class ServerConnection implements Runnable {
 
             this.username = username;
             //load hash table with user's credentials
-            BufferedReader cred_reader = new BufferedReader(new FileReader("/stored_credentials.txt"));
+            BufferedReader cred_reader = new BufferedReader(new FileReader(username.concat("/stored_credentials.txt")));
             String line;
             while ( (line=cred_reader.readLine()) != null ){
                 String[] curr_cred = line.split(",");
