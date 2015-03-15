@@ -54,7 +54,7 @@ public class Client {
 
     protected static Response responseFromString(String resp) {
         switch (resp) {
-        case "SUCCESS": return Response.SUCCESS:
+        case "SUCCESS": return Response.SUCCESS;
         case "WRONG_PASS": return Response.WRONG_PASS;
         case "WRONG_USR": return Response.WRONG_USR;
         case "NO_SVC": return Response.NO_SVC;
