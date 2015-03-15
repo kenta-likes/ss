@@ -363,7 +363,7 @@ public class ServerConnection implements Runnable {
             byte[] hashedpassword = saltAndHash(password, salt);
             System.out.println("Length of hashed password stored in master.txt = " + hashedpassword.length);
             if (!hashedpassword.equals(stored_pass)){
-                log_result("Authenticate Account", Response.WRONG_PASS);
+                //log_result("Authenticate Account", Response.WRONG_PASS);
                 return Response.WRONG_PASS;
             }
 
@@ -375,21 +375,21 @@ public class ServerConnection implements Runnable {
                 String[] curr_cred = line.split(",");
                 if (curr_cred.length != 3){
                     cred_reader.close();
-                    log_result("Authenticate Account", Response.FAIL);
+                    //log_result("Authenticate Account", Response.FAIL);
                     return Response.FAIL;
                 }
                 user_table.put(curr_cred[0], new Pair<String,String>(curr_cred[1], curr_cred[2]));
             }
             cred_reader.close();
-            log_result("Authenticate Account", Response.SUCCESS);
+            //log_result("Authenticate Account", Response.SUCCESS);
             return Response.SUCCESS;
         } catch (NoSuchAlgorithmException e1){ //should never happen
             e1.printStackTrace();
-            log_result("Authenticate Account", Response.FAIL);
+            //log_result("Authenticate Account", Response.FAIL);
             return Response.FAIL;
         } catch (IOException e2) {
             e2.printStackTrace();
-            log_result("Authenticate Account", Response.FAIL);
+            //log_result("Authenticate Account", Response.FAIL);
             return Response.FAIL;
         }
     }

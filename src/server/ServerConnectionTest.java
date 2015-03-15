@@ -59,7 +59,7 @@ public class ServerConnectionTest {
 	public void testAddCredential() {
 	    ServerConnection sc = new ServerConnection(null);
 	    sc.addCredential("abc", "xyz", "1234");
-	    assertEquals(sc.getPassword("abc"), "123");
+	    assertEquals(sc.getPassword("abc"), "1234");
 	}
 
 	@Test
