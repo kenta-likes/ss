@@ -296,6 +296,32 @@ public class Client {
         return err;
     }
 
+    protected static Response changeMaster(char[] oldPassword, char[] newPassword) {
+        JSONObject respPacket = null;
+        Response err;
+        sockJS = new JSONWriter(sockWriter);
+
+        sockJS.object()
+            .key("command").value("CHNG")
+            .key("oldPassword").value(new String(oldPassword))
+            .key("newPassword").value(new String(newPassword))
+            .endObject();
+        sockWriter.println();
+        sockWriter.flush();
+
+        try {
+            respPacket = new JSONObject(sockReader.readLine());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        if (respPacket == null)
+            return Response.FAIL;
+
+        err = responseFromString(respPacket.getString("response"));
+        return err;
+    }
+
     /* Logs out the user.
      * pre: user is logged in
      * post: user is no longer logged in

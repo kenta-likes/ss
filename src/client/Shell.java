@@ -30,6 +30,8 @@ public class Shell {
             case "delete": handleDel(splitCommand); break;
             case "change": handleChange(splitCommand); break;
             case "logout": handleLogout(); break;
+            case "unregister": handleUnregister(); break;
+            case "chpass": handleMasterChange(); break;
             case "help": help(); break;
             default: System.out.println("Command not recognized: " + splitCommand[0]);
             }
@@ -37,6 +39,30 @@ public class Shell {
         } while (loggedIn);
 
         return;
+    }
+
+    private static void handleMasterChange() {
+        char[] oldPassword;
+        char[] password0;
+        char[] password1;
+        boolean samePassword = true;
+        Response err;
+
+        oldPassword = con.readPassword("Current password: ");
+        password0 = con.readPassword("New password: ");
+        password1 = con.readPassword("Retype new password: ");
+
+        for (int i = 0; i < password0.length; i++) {
+            /* Make sure the user entered the password they intended - twice. */
+            samePassword &= (password0[i] == password1[i]);
+        }
+
+        if (!samePassword) {
+            System.out.println("Error: passwords do not match.");
+            return;
+        }
+
+        err = Client.changeMaster(password0);
     }
 
     private static int handleLogin() {

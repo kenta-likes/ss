@@ -77,11 +77,57 @@ public class ServerConnection implements Runnable {
                                 .endObject();
                             break;
                         case "GET1":
+                            ArrayList<String> creds;
+                            Response resp;
+                            Pair<Response, ArrayList<String>> pair = retrieveCredentials();
+                            resp = pair.first();
+                            creds = pair.second();
+
+                            js.object()
+                                .key("response").value(resp.name());
+
+                            if (resp == Response.SUCCESS) {
+                                js.key("data").object()
+                                    .key("credentials").array();
+
+                                for (String s : creds)
+                                    js.value(s);
+
+                                js.endObject();
+                            }
+
+                            js.endObject();
+                            break;
+                            
                         case "GET2":
                         case "DEL":
                         case "CHNG":
+                            String oldPass = req.getString("oldPassword");
+                        String newPass = req.getString("newPassword");
+                        resp = changeAccountPassword(oldPass, newPass);
+
+                        js.object()
+                            .key("response").value(resp.name())
+                            .endObject();
+                        break;
+                        
                         case "REMV":
+                            service = req.getString("service");
+                        resp = deleteCredential(service);
+                        js.object()
+                            .key("response").value(resp.name())
+                            .endObject();
+                        break;
+                        
                         case "EDIT":
+                            service = req.getString("service");
+                            sPass = req.getString("password");
+                            resp = updateCredential(service, sPass);
+                            
+                            js.object()
+                                .key("response").value(resp.name())
+                                .endObject();
+                                
                         default:
                         }
 
