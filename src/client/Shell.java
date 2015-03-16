@@ -168,13 +168,15 @@ public class Shell {
             }            
         } else {
             Pair<Response, String> resp = Client.requestCreds(service);
-            String creds;
+            String[] creds;
             
             err = resp.first();
-            creds = resp.second();
+            creds = resp.second().split(",");
 
             if (err == Response.SUCCESS) {
-                System.out.println(creds);
+                System.out.println("Credentials for " + service + ":");
+                System.out.println("Username: " + creds[0]);
+                System.out.println("Password: " + creds[1]);
                 return;
             }
         }

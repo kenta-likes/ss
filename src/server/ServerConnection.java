@@ -105,6 +105,18 @@ public class ServerConnection implements Runnable {
                             break;
                             
                         case "GET2":
+                            Pair<Response, Pair<String, String>> cred;
+                            service = req.getString("service");
+                            cred = getPassword(service);
+                            resp = cred.first();
+
+                            js.object()
+                                .key("response").value(resp.name())
+                                .key("username").value(cred.second().first())
+                                .key("password").value(cred.second().second())
+                                .endObject();
+                            break;
+                            
                         case "DEL":
                             String password = req.getString("password");
                         resp = deleteAccount(password);
@@ -142,7 +154,6 @@ public class ServerConnection implements Runnable {
                                 .endObject();
 
                         case "CLOSE":
-                            System.out.println("Received logout request.");
                             resp = logout();
                             js.object()
                                 .key("response").value(resp.name())
@@ -420,6 +431,7 @@ public class ServerConnection implements Runnable {
                     //log_result("Authenticate Account", Response.FAIL);
                     return Response.FAIL;
                 }
+                System.out.println("Loaded creds for " + curr_cred[0]);
                 user_table.put(curr_cred[0], new Pair<String,String>(curr_cred[1], curr_cred[2]));
             }
             cred_reader.close();
@@ -452,13 +464,15 @@ public class ServerConnection implements Runnable {
     /*
      * Get password for specific service
      * */
-    public Pair<Response,String> getPassword(String service_name){
+    public Pair<Response, Pair<String, String>> getPassword(String service_name){
     	if (!user_table.containsKey(service_name)){ //credentials not listed in server
             log_result("Get Credential", Response.NO_SVC);
-            return new Pair<Response,String>(Response.NO_SVC, "");
+            return new Pair<Response,Pair<String, String>>(Response.NO_SVC,
+                                                           new Pair<String, String>("", ""));
     	}
         log_result("Get Credential", Response.SUCCESS);
-    	return new Pair<Response,String>(Response.SUCCESS, user_table.get(service_name).second());
+    	return new Pair<Response,
+            Pair<String, String>>(Response.SUCCESS, user_table.get(service_name));
     }
     
     /*
@@ -496,7 +510,7 @@ public class ServerConnection implements Runnable {
             (PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter
                                                                   (username +
                                                                    "/stored_credentials.txt"
-                                                                   , true))))
+                                                                   , false))))
             {
                 for (String s : user_table.keySet()) {
                     Pair<String, String> creds = user_table.get(s);

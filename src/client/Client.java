@@ -177,6 +177,7 @@ public class Client {
     protected static Pair<Response, String> requestCreds(String service) {
         JSONObject respPacket = null;
         Response err;
+        String username, password;
         sockJS = new JSONWriter(sockWriter);
 
         sockJS.object()
@@ -195,6 +196,13 @@ public class Client {
             return new Pair<Response, String>(Response.FAIL, null);
 
         err = responseFromString(respPacket.getString("response"));
+
+        if (err == Response.SUCCESS) {
+            username = respPacket.getString("username");
+            password = respPacket.getString("password");
+
+            return new Pair<Response, String>(err, username + "," + password);
+        }
 
         return new Pair<Response, String>(err, null);
     }
@@ -227,15 +235,20 @@ public class Client {
             return new Pair<Response, List<String>>(Response.FAIL, null);
         
         err = responseFromString(respPacket.getString("response"));
-        jsCreds = respPacket.getJSONObject("data").getJSONArray("credentials");
 
-        creds = new ArrayList<String>(jsCreds.length());
+        if (err == Response.SUCCESS) {
+            jsCreds = respPacket.getJSONObject("data").getJSONArray("credentials");
 
-        for (int i = 0; i < creds.size(); i++) {
-            creds.add(jsCreds.getString(i));
+            creds = new ArrayList<String>(jsCreds.length());
+
+            for (int i = 0; i < jsCreds.length(); i++) {
+                creds.add(jsCreds.getString(i));
+            }
+
+            return new Pair<Response, List<String>>(err, creds);
+        } else {
+            return new Pair<Response, List<String>>(err, null);
         }
-
-        return new Pair<Response, List<String>>(err, creds);
     }
 
     /* Deletes a set of credentials from the server.
