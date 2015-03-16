@@ -30,7 +30,7 @@ public class Shell {
             case "delete": handleDel(splitCommand); break;
             case "change": handleChange(splitCommand); break;
             case "exit":
-            case "logout": handleLogout(); break;
+            case "logout": handleLogout(); return;
             case "unregister": handleUnregister(); break;
             case "chpass": handleMasterChange(); break;
             case "help": help(); break;

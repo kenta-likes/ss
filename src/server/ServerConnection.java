@@ -6,6 +6,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
@@ -95,6 +96,8 @@ public class ServerConnection implements Runnable {
                                 for (String s : creds)
                                     js.value(s);
 
+                                js.endArray();
+
                                 js.endObject();
                             }
 
@@ -137,7 +140,21 @@ public class ServerConnection implements Runnable {
                             js.object()
                                 .key("response").value(resp.name())
                                 .endObject();
-                                
+
+                        case "CLOSE":
+                            System.out.println("Received logout request.");
+                            resp = logout();
+                            js.object()
+                                .key("response").value(resp.name())
+                                .endObject();
+
+                            if (resp == Response.SUCCESS) {
+                                w.newLine();
+                                w.flush();
+                                socket.close();
+                                return;
+                            }
+                            
                         default:
                         }
 
@@ -382,18 +399,13 @@ public class ServerConnection implements Runnable {
             //reader.read(); //reads newline TODO: Fix later
             reader.read(salt,0,SALT_LEN);
             reader.close();
-            byte[] hashedpassword = saltAndHash(password, salt);
-            System.out.println("hashed pass,len : " + hashedpassword + ", " + hashedpassword.length);
-            System.out.println("stored pass,len : " + stored_pass + ", " + stored_pass.length);
-            System.out.println("stored salt: " + salt);
-            boolean equal = true;
+            byte[] hashedPassword = saltAndHash(password, salt);
+            boolean sameHash;
+
+            sameHash = new String(hashedPassword).equals(new String(stored_pass));
             
-            for (int i = 0; i < 32; i++) {
-            	equal &= hashedpassword[i] == stored_pass[i];
-            }
-            
-            if (!equal){
-                //log_result("Authenticate Account", Response.WRONG_PASS);
+            if (!sameHash){
+                log_result("Authenticate Account", Response.WRONG_PASS);
                 return Response.WRONG_PASS;
             }
 
@@ -477,5 +489,26 @@ public class ServerConnection implements Runnable {
             return Response.NO_SVC;
         user_table.remove(service_name);
         return Response.SUCCESS;
+    }
+
+    public Response logout() {
+        try
+            (PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter
+                                                                  (username +
+                                                                   "/stored_credentials.txt"
+                                                                   , true))))
+            {
+                for (String s : user_table.keySet()) {
+                    Pair<String, String> creds = user_table.get(s);
+                    out.println(s + "," + creds.first() + "," + creds.second());
+                }
+            } catch (IOException e) {
+            // TODO: Need something to log here...
+            return Response.FAIL;
+        }
+
+        // Also should log here
+        return Response.SUCCESS;
+            
     }
 }

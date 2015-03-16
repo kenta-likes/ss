@@ -29,6 +29,8 @@ public class Client {
 
             c.startHandshake();
 
+            printSocketInfo(c);
+
             sockReader = new BufferedReader(new InputStreamReader(c.getInputStream()));
             
             sockWriter = new PrintWriter(c.getOutputStream(), true);
@@ -223,11 +225,11 @@ public class Client {
 
         if (respPacket == null)
             return new Pair<Response, List<String>>(Response.FAIL, null);
-
-        creds = new ArrayList<String>(jsCreds.length());
         
         err = responseFromString(respPacket.getString("response"));
         jsCreds = respPacket.getJSONObject("data").getJSONArray("credentials");
+
+        creds = new ArrayList<String>(jsCreds.length());
 
         for (int i = 0; i < creds.size(); i++) {
             creds.add(jsCreds.getString(i));
@@ -336,6 +338,9 @@ public class Client {
             .key("command").value("CLOSE")
             .endObject();
 
+        sockWriter.println();
+        sockWriter.flush();
+
         try {
             respPacket = new JSONObject(sockReader.readLine());
         } catch (IOException e) {
@@ -358,6 +363,9 @@ public class Client {
             .key("password").value(new String(password))
             .endObject();
 
+        sockWriter.println();
+        sockWriter.flush();
+        
         try {
             respPacket = new JSONObject(sockReader.readLine());
         } catch (IOException e) {
