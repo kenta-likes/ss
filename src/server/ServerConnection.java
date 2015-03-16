@@ -27,7 +27,7 @@ import java.security.SecureRandom;
 import org.json.*;
 
 public class ServerConnection implements Runnable {
-    static final int SALT_LEN = 1; //use # of bytes of SHA-256 output
+    static final int SALT_LEN = 32; //use # of bytes of SHA-256 output
 	
     //response type
     public enum Response {
@@ -246,7 +246,7 @@ public class ServerConnection implements Runnable {
         // Directory already exists
         // Note: Not thread-safe 
         if (new File(username).isDirectory()){
-            log_result("Create Account", Response.FAIL);
+            //log_result("Create Account", Response.FAIL);
             return Response.FAIL;
         }
         // Create a new directory
@@ -254,11 +254,11 @@ public class ServerConnection implements Runnable {
         
         // Generate a salt randomly and append it to master password. 
         // Salt = 32 bytes since we use SHA-256
-        //byte[] salt = new SecureRandom().generateSeed(SALT_LEN);
-        byte[]salt = new byte[1];
-        salt[0] = (byte)1;
+        byte[] salt = new SecureRandom().generateSeed(SALT_LEN);
+        //byte[]salt = new byte[1];
+        salt[0] = (byte) 1;
         byte[] hashedpassword;
-        try{
+        try {
             hashedpassword = saltAndHash(password, salt);
         } catch (NoSuchAlgorithmException e){
             log_result("Create Account", Response.FAIL);
@@ -386,7 +386,13 @@ public class ServerConnection implements Runnable {
             System.out.println("hashed pass,len : " + hashedpassword + ", " + hashedpassword.length);
             System.out.println("stored pass,len : " + stored_pass + ", " + stored_pass.length);
             System.out.println("stored salt: " + salt);
-            if (!hashedpassword.equals(stored_pass)){
+            boolean equal = true;
+            
+            for (int i = 0; i < 32; i++) {
+            	equal &= hashedpassword[i] == stored_pass[i];
+            }
+            
+            if (!equal){
                 //log_result("Authenticate Account", Response.WRONG_PASS);
                 return Response.WRONG_PASS;
             }
