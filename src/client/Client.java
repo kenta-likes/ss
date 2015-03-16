@@ -14,6 +14,7 @@ public class Client {
     private static PrintWriter sockWriter;
     private static JSONWriter sockJS;
     private static BufferedReader sockReader;
+    private static SSLSocket c;
     
     public static void main(String[] args) {
         PrintStream out = System.out;
@@ -24,9 +25,8 @@ public class Client {
         sockWriter = null;
       
         try {
-            SSLSocket c =
-                (SSLSocket) f.createSocket("localhost", 8888);
-            printSocketInfo(c);
+            c = (SSLSocket) f.createSocket("localhost", 8888);
+
             c.startHandshake();
 
             sockReader = new BufferedReader(new InputStreamReader(c.getInputStream()));
@@ -327,6 +327,45 @@ public class Client {
      * post: user is no longer logged in
      */
     protected static Response logout() {
-        return Response.SUCCESS;
+        Response err;
+        JSONObject respPacket = null;
+        
+        sockJS = new JSONWriter(sockWriter);
+
+        sockJS.object()
+            .key("command").value("CLOSE")
+            .endObject();
+
+        try {
+            respPacket = new JSONObject(sockReader.readLine());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        err = responseFromString(respPacket.getString("response"));
+        
+        return err;
+    }
+
+    protected static Response unregister(char[] password) {
+        Response err;
+        JSONObject respPacket = null;
+        
+        sockJS = new JSONWriter(sockWriter);
+
+        sockJS.object()
+            .key("command").value("DEL")
+            .key("password").value(new String(password))
+            .endObject();
+
+        try {
+            respPacket = new JSONObject(sockReader.readLine());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        err = responseFromString(respPacket.getString("response"));
+
+        return err;
     }
 }

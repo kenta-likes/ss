@@ -103,6 +103,14 @@ public class ServerConnection implements Runnable {
                             
                         case "GET2":
                         case "DEL":
+                            String password = req.getString("password");
+                        resp = deleteAccount(password);
+
+                        js.object()
+                            .key("response").value(resp.name())
+                            .endObject();
+                        break;
+                        
                         case "CHNG":
                             String oldPass = req.getString("oldPassword");
                         String newPass = req.getString("newPassword");
@@ -201,11 +209,14 @@ public class ServerConnection implements Runnable {
      * */
     public byte[] saltAndHash(String password, byte salt[]) throws NoSuchAlgorithmException {
     	byte[] toHash = new byte[SALT_LEN + password.length()];
+        
         System.arraycopy(password.getBytes(), 0, toHash, 0, password.length());
         System.arraycopy(salt, 0, toHash, password.length(), SALT_LEN);
+        
         // Hash the master password
         MessageDigest messageDigest = MessageDigest.getInstance("SHA-256");
         messageDigest.update(toHash);
+        
         return messageDigest.digest();
     }
     
@@ -213,15 +224,15 @@ public class ServerConnection implements Runnable {
      * Helper function for logging
      * */
     public void log_result(String method_name, Response res){
-		try{
-			Date date = new Date();
-			PrintWriter logger = new PrintWriter(username.concat("/log.txt"), "UTF-8");
-			logger.println(date.toString() + ": " + responseGetString(res) + " on " + method_name);
-			logger.flush();
-			logger.close();
-		} catch (IOException e){
-			e.printStackTrace();
-		}
+        try {
+            Date date = new Date();
+            PrintWriter logger = new PrintWriter(username.concat("/log.txt"), "UTF-8");
+            logger.println(date.toString() + ": " + responseGetString(res) + " on " + method_name);
+            logger.flush();
+            logger.close();
+        } catch (IOException e){
+            e.printStackTrace();
+        }
     }
     
     
@@ -326,7 +337,7 @@ public class ServerConnection implements Runnable {
     }
     
     /*
-     * Delete this account
+     * Delete this account and log out the user.
      * */
     public Response deleteAccount(String password){
     	if (this.authAccount(this.username, password) == Response.FAIL){
@@ -348,6 +359,7 @@ public class ServerConnection implements Runnable {
     	// delete the directory 
     	directory.delete();
         log_result("Delete Account", Response.SUCCESS);
+        username = null;
     	return Response.SUCCESS;
     }
 	
