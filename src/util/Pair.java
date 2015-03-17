@@ -1,4 +1,4 @@
-package client;
+package util;
 
 public class Pair<K, V> {
     private K k;

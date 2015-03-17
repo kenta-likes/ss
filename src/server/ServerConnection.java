@@ -14,7 +14,7 @@ import java.io.UnsupportedEncodingException;
 
 import javax.net.ssl.SSLSocket;
 
-import client.Pair;
+import util.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -30,19 +30,7 @@ import org.json.*;
 
 public class ServerConnection implements Runnable {
     static final int SALT_LEN = 32; //use # of bytes of SHA-256 output
-	
-    //response type
-    public enum Response {
-        SUCCESS,
-        FAIL, /*for generic "server error" type responses*/
-        WRONG_PASS, /*user entered password is incorrect*/
-        WRONG_USR, /*wrong username entered for authentication*/
-        NO_SVC,/* used when the requested service is not found. */
-        NAUTH, /* used when the user is not logged in, but tries an op other than login */
-        USER_EXISTS, /*when username is already taken at registration*/
-        CRED_EXISTS /*when adding, the credentials already exist for that service*/
-    }
-	
+		
     protected SSLSocket socket;
     protected String username; //user associated with this account
     protected boolean timed_out = false; //TODO think about this later...
@@ -149,12 +137,15 @@ public class ServerConnection implements Runnable {
                         
                         case "EDIT":
                             service = req.getString("service");
+                            sName = req.getString("username");
                             sPass = req.getString("password");
-                            resp = updateCredential(service, sPass);
+                            resp = updateCredential(service, sName, sPass);
                             
                             js.object()
                                 .key("response").value(resp.name())
                                 .endObject();
+
+                            break;
 
                         case "CLOSE":
                             resp = logout();
@@ -293,14 +284,7 @@ public class ServerConnection implements Runnable {
         byte[] hashedpassword;
         try {
             hashedpassword = saltAndHash(password, salt);
-            // Write hashed master password and the salt to a file named "master.txt"
-            /*
-            PrintWriter writer = new PrintWriter(username.concat("/master.txt"), "UTF-8");
-            writer.println(hashedpassword);
-            writer.println(salt);
-            writer.flush();
-            writer.close();
-            */
+            
             FileOutputStream writer = new FileOutputStream(username.concat("/master.txt"));
             writer.write(hashedpassword);
             writer.write(salt);
@@ -349,19 +333,16 @@ public class ServerConnection implements Runnable {
 		
         // Write hashed master password and the salt to a file named "master.txt"
         // Note: will overwrite the old file
-        PrintWriter writer;
+        FileOutputStream writer;
         try {
-            writer = new PrintWriter(username.concat("/master.txt"), "UTF-8");
-            writer.println(hashedpassword);
-            writer.println(salt);
+
+            writer = new FileOutputStream(username.concat("/master.txt"));
+            writer.write(hashedpassword);
+            writer.write(salt);
             writer.flush();
             writer.close();
-        } catch (FileNotFoundException e1) {
+        } catch (IOException e1) {
             e1.printStackTrace();
-            log_result("Change Account Password", Response.FAIL);
-            return Response.FAIL; //should never happen
-        } catch (UnsupportedEncodingException e2) {
-            e2.printStackTrace();
             log_result("Change Account Password", Response.FAIL);
             return Response.FAIL; //should never happen
         }
@@ -425,7 +406,8 @@ public class ServerConnection implements Runnable {
 
             this.username = username;
             //load hash table with user's credentials
-            BufferedReader cred_reader = new BufferedReader(new FileReader(username.concat("/stored_credentials.txt")));
+            BufferedReader cred_reader = new BufferedReader(
+                    new FileReader(username.concat("/stored_credentials.txt")));
             String line;
             while ( (line=cred_reader.readLine()) != null ){
                 String[] curr_cred = line.split(",");
@@ -482,7 +464,7 @@ public class ServerConnection implements Runnable {
      * Adds new credentials
      * */
     public Response addCredential(String service_name, String stored_username, String stored_password){
-    	if (user_table.contains(service_name))
+    	if (user_table.containsKey(service_name))
             return Response.CRED_EXISTS;
     	user_table.put(service_name, new Pair<String,String>(stored_username, stored_password));
     	return Response.SUCCESS;
@@ -491,10 +473,12 @@ public class ServerConnection implements Runnable {
     /*
      * Updates credentials with new password
      * */
-    public Response updateCredential(String service_name, String new_stored_pass){
-        if (!user_table.contains(service_name))
+    public Response updateCredential(String service_name, String new_username, String new_stored_pass){
+        if (!user_table.containsKey(service_name)) {
+            System.out.println("Service " + service_name + " not in table.");
             return Response.NO_SVC;
-        user_table.put(service_name, new Pair<String,String>(username, new_stored_pass)); //TODO FIX username!!
+        }
+        user_table.put(service_name, new Pair<String,String>(new_username, new_stored_pass)); //TODO FIX username!!
         return Response.SUCCESS;
     }
     
@@ -502,7 +486,7 @@ public class ServerConnection implements Runnable {
      * Deletes specific credential for specified service
      * */
     public Response deleteCredential(String service_name){
-        if (!user_table.contains(service_name))
+        if (!user_table.containsKey(service_name))
             return Response.NO_SVC;
         user_table.remove(service_name);
         return Response.SUCCESS;
