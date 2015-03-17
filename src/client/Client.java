@@ -1,6 +1,8 @@
 package client;
 
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.net.*;
 
 import javax.net.ssl.*;
@@ -13,12 +15,23 @@ import org.json.*;
 import java.security.*;
 import util.*;
 
+import java.util.Base64;
+
+import java.security.SecureRandom;
+import javax.crypto.KeyGenerator;
+import javax.crypto.SecretKey;
+import javax.crypto.Cipher;
+import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
+
 public class Client {
     
     private static PrintWriter sockWriter;
     private static JSONWriter sockJS;
     private static BufferedReader sockReader;
     private static SSLSocket c;
+    private static SecretKey key;
+    private static Cipher encoder, decoder;
     
     public static void main(String[] args) {
         PrintStream out = System.out;
@@ -71,6 +84,42 @@ public class Client {
         System.out.println("   Protocol = "+ss.getProtocol());
     }
 
+    protected static String encryptPassword(String password) {
+        byte[] encBytes;
+        String encPass = password;
+
+        try {
+            
+            encBytes = encoder.doFinal(password.getBytes("UTF-8"));
+            /* Encode to a Base64 String representation. */
+            encPass = Base64.getEncoder().encodeToString(encBytes);
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return encPass;
+    }
+
+    protected static String decryptPassword(String encPass) {
+        byte[] decBytes, encBytes;
+        String decPass = encPass;
+        
+        try {
+            System.out.println("Decoding " + encPass);
+
+            /* Decode bytes from Base64 String representation. */
+            encBytes = Base64.getDecoder().decode(encPass);
+            
+            decBytes = decoder.doFinal(encBytes);
+            decPass = new String(decBytes);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return decPass;
+    }
+
     protected static Response responseFromString(String resp) {
         switch (resp) {
         case "SUCCESS": return Response.SUCCESS;
@@ -114,6 +163,34 @@ public class Client {
             return Response.FAIL;
 
         err = responseFromString(respPacket.getString("response"));
+
+        if (err == Response.SUCCESS) {
+            try {
+                byte[] encPass, encKey, iv;
+                SecureRandom srand = SecureRandom.getInstance("SHA1PRNG");
+                iv = new byte[16];
+                srand.nextBytes(iv);
+                IvParameterSpec ivSpec = new IvParameterSpec(iv);
+
+                encKey = new byte[16];
+                FileInputStream fin = new FileInputStream(System.getProperty("user.home") +
+                                                          "/" + username + ".conf");
+                fin.read(encKey);
+            
+                key = new SecretKeySpec(encKey, 0, 16, "AES");
+
+                encoder = Cipher.getInstance("AES/CBC/PKCS5Padding");
+                encoder.init(Cipher.ENCRYPT_MODE, key, ivSpec);
+
+                decoder = Cipher.getInstance("AES/CBC/PKCS5Padding");
+                decoder.init(Cipher.DECRYPT_MODE, key, ivSpec);
+
+            } catch (Exception e) {
+                System.out.println("Issues finding the key!");
+                e.printStackTrace();
+            }
+        }
+        
         return err;
     }
 
@@ -149,6 +226,38 @@ public class Client {
 
         err = responseFromString(respPacket.getString("response"));
 
+        if (err == Response.SUCCESS) {
+            try {
+                KeyGenerator keyGen = KeyGenerator.getInstance("AES");
+                byte[] iv = new byte[16];
+                IvParameterSpec ivSpec;
+                SecureRandom srand = SecureRandom.getInstance("SHA1PRNG");
+
+                srand.nextBytes(iv);
+                ivSpec = new IvParameterSpec(iv);
+                
+                keyGen.init(128);
+                key = keyGen.generateKey();
+
+                FileOutputStream fos = new FileOutputStream
+                    (System.getProperty("user.home") + "/" + username +
+                     ".conf");
+
+                fos.write(key.getEncoded());
+                fos.close();
+                
+                encoder = Cipher.getInstance("AES/CBC/PKCS5Padding");
+                encoder.init(Cipher.ENCRYPT_MODE, key, ivSpec);
+
+                decoder = Cipher.getInstance("AES/CBC/PKCS5Padding");
+                decoder.init(Cipher.DECRYPT_MODE, key, ivSpec);
+
+            } catch (Exception e) {
+                System.out.println("Error in key generation and writeback!");
+                e.printStackTrace();
+            }
+        }
+
         return err;
     }
 
@@ -159,13 +268,15 @@ public class Client {
     protected static Response addCreds(String service, String username, String password) {
         JSONObject respPacket = null;
         Response err;
+        String encPass = encryptPassword(password);
         sockJS = new JSONWriter(sockWriter);
+        
 
         sockJS.object()
             .key("command").value("ADD")
             .key("service").value(service)
             .key("username").value(username)
-            .key("password").value(password)
+            .key("password").value(encPass)
             .endObject();
         sockWriter.println();
         sockWriter.flush();
@@ -217,7 +328,7 @@ public class Client {
             username = respPacket.getString("username");
             password = respPacket.getString("password");
 
-            return new Pair<Response, String>(err, username + "," + password);
+            return new Pair<Response, String>(err, username + "," + decryptPassword(password));
         }
 
         return new Pair<Response, String>(err, null);
@@ -309,7 +420,7 @@ public class Client {
             .key("command").value("EDIT")
             .key("service").value(service)
             .key("username").value(username)
-            .key("password").value(password)
+            .key("password").value(encryptPassword(password))
             .endObject();
         sockWriter.println();
         sockWriter.flush();
