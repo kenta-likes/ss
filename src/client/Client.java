@@ -9,7 +9,8 @@ import java.util.List;
 import java.util.ArrayList;
 import org.json.*;
 import util.*;
-import java.math.BigInteger;
+
+import java.util.Base64;
 
 import java.security.SecureRandom;
 import javax.crypto.KeyGenerator;
@@ -74,13 +75,12 @@ public class Client {
         byte[] encBytes;
         String encPass = password;
 
-        if (password.charAt(password.length() - 1) == '\n')
-            System.out.println("Found the newline!!!");
-
         try {
+            
             encBytes = encoder.doFinal(password.getBytes("UTF-8"));
-            encPass = bytesToHex(encBytes);
-            System.out.println("Encrypted password with " + encPass.length() + " bytes.");
+            /* Encode to a Base64 String representation. */
+            encPass = Base64.getEncoder().encodeToString(encBytes);
+            
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -89,42 +89,22 @@ public class Client {
     }
 
     protected static String decryptPassword(String encPass) {
-        byte[] decBytes;
+        byte[] decBytes, encBytes;
         String decPass = encPass;
-        byte[] encBytes;
-        byte[] properEncBytes;
-        BigInteger b;
-
+        
         try {
             System.out.println("Decoding " + encPass);
-            b = new BigInteger(encPass, 16);
-            encBytes = b.toByteArray();
 
-            int extraLen = encBytes.length % 16;
-            int properLen = encBytes.length - extraLen;
-            properEncBytes = new byte[properLen];
-
-            System.arraycopy((Object) encBytes, extraLen, (Object) properEncBytes, 0, properLen);
+            /* Decode bytes from Base64 String representation. */
+            encBytes = Base64.getDecoder().decode(encPass);
             
-            decBytes = decoder.doFinal(properEncBytes);
+            decBytes = decoder.doFinal(encBytes);
             decPass = new String(decBytes);
         } catch (Exception e) {
             e.printStackTrace();
         }
 
         return decPass;
-    }
-
-    /* Thanks StackOverflow! */
-    protected static String bytesToHex(byte[] bytes) {
-        char[] hexArray = "0123456789ABCDEF".toCharArray();
-        char[] hexChars = new char[bytes.length * 2];
-        for ( int j = 0; j < bytes.length; j++ ) {
-            int v = bytes[j] & 0xFF;
-            hexChars[j * 2] = hexArray[v >>> 4];
-            hexChars[j * 2 + 1] = hexArray[v & 0x0F];
-        }
-        return new String(hexChars);
     }
 
     protected static Response responseFromString(String resp) {
