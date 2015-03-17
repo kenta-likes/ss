@@ -19,14 +19,15 @@ public class Shell {
             return;
         
         while (true) {
-            command = con.readLine("PassHerd-0.1a$ ");
+            command = con.readLine("PassHerd-0.2a$ ");
             splitCommand = command.split(" ");
 
             switch (splitCommand[0]) {
             case "login": handleLogin(); break;
             case "register": handleRegister(); break;
             case "add": handleAdd(splitCommand); break;
-            case "request": handleReq(splitCommand); break;
+            case "get":
+            case "creds": handleReq(splitCommand); break;
             case "delete": handleDel(splitCommand); break;
             case "change": handleChange(splitCommand); break;
             case "exit":
@@ -44,12 +45,16 @@ public class Shell {
         Response err;
         char[] password;
 
-        conf = con.readLine("Delete account.  Are you sure?[y/n]");
+        conf = con.readLine("Delete account. Are you sure?[y/n]: ");
 
         password = con.readPassword("Password: ");
 
         if ("y".equals(conf)) {
             err = Client.unregister(password);
+
+            /* Clear the password from memory. */
+            java.util.Arrays.fill(password, ' ');
+            
             printErr(err);
         } else {
             System.out.println("Account not deleted.");
@@ -78,6 +83,11 @@ public class Shell {
         }
 
         err = Client.changeMaster(oldPassword, password0);
+        
+        /* Clear the passwords from memory. */
+        java.util.Arrays.fill(oldPassword, ' ');
+        java.util.Arrays.fill(password0, ' ');
+        java.util.Arrays.fill(password1, ' ');
     }
 
     private static int handleLogin() {
@@ -90,6 +100,9 @@ public class Shell {
         password = con.readPassword("Password: ");
 
         err = Client.login(username, password);
+
+        /* Clear the password from memory. */
+        java.util.Arrays.fill(password, ' ');
 
         printErr(err);
 
@@ -123,6 +136,11 @@ public class Shell {
         } else {
             System.out.println("Error: passwords do not match.");
         }
+
+        /* Clear the password from memory. */
+        java.util.Arrays.fill(password0, ' ');
+        java.util.Arrays.fill(password1, ' ');
+
     }
 
     private static void handleAdd(String[] command) {
@@ -147,7 +165,7 @@ public class Shell {
         Response err;
 
         if (command.length != 2) {
-            System.out.println("Usage: request <service | all>");
+            System.out.println("Usage: " + command[0] + " <service | all>");
             return;
         }
 
@@ -171,13 +189,16 @@ public class Shell {
             String[] creds;
             
             err = resp.first();
-            creds = resp.second().split(",");
 
-            if (err == Response.SUCCESS) {
-                System.out.println("Credentials for " + service + ":");
-                System.out.println("Username: " + creds[0]);
-                System.out.println("Password: " + creds[1]);
-                return;
+            if (resp.second() != null) {
+                creds = resp.second().split(",");
+
+                if (err == Response.SUCCESS) {
+                    System.out.println("Credentials for " + service + ":");
+                    System.out.println("Username: " + creds[0]);
+                    System.out.println("Password: " + creds[1]);
+                    return;
+                }
             }
         }
 
