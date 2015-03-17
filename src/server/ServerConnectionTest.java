@@ -16,6 +16,15 @@ public class ServerConnectionTest {
 		
 		fail("Not yet implemented");
 	}
+	
+	@Test
+	public void testLog_Center() {
+		ServerConnection sc = new ServerConnection(null);
+		//sc.createAccount("cs794", "helloworld");
+		sc.logCenter("cs794", "Create Account", Response.SUCCESS);
+		sc.logCenter("cs794", "Create Account", Response.FAIL);
+		sc.logCenter("cs794", "Create Account", Response.FAIL);
+	}
 
 	@Test
 	public void testCreateAccount() throws Exception{
@@ -25,17 +34,7 @@ public class ServerConnectionTest {
 		
 		// 2. Try to create a duplicate account
 		assertEquals(Response.FAIL, sc.createAccount("cs794", "helloworld"));
-		
-		// 3. password is empty
-		//assertEquals(Response.FAIL, sc.createAccount("kl459", ""));
-		
-		// 4. password is null
-		//assertEquals(Response.FAIL, sc.createAccount("kjd88", null));
-		
-		// 5. username is empty
-		//assertEquals(Response.FAIL, sc.createAccount("", "helloworld"));
-		
-		
+				
 		sc.deleteAccount("helloworld");
 	}
 
@@ -57,7 +56,6 @@ public class ServerConnectionTest {
 		// 5. Delete account
 		sc.deleteAccount("test1");
 		
-		
 	}
 
 	@Test
@@ -70,10 +68,9 @@ public class ServerConnectionTest {
 		assertEquals(Response.WRONG_INPT, sc.deleteAccount("kent"));
 		
 		// 3. Delete with correct password
-		assertEquals(Response.SUCCESS, sc.deleteAccount("kent"));
+		assertEquals(Response.SUCCESS, sc.deleteAccount("kenta"));
 		
 		
-		fail("Not yet implemented");
 	}
 
 	@Test
@@ -110,6 +107,11 @@ public class ServerConnectionTest {
 	@Test
 	public void testDeleteCredential() {
 		fail("Not yet implemented");
+	}
+	@Test
+	public void delte_all_dirs()
+	{
+	    //delete all directories
 	}
 
 }

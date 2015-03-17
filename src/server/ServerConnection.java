@@ -36,11 +36,13 @@ public class ServerConnection implements Runnable {
     protected boolean timed_out = false; //TODO think about this later...
     protected Hashtable<String,Pair<String,String>> user_table;
     MessageDigest messageDigest;
+    String curr_dir;
          
     public ServerConnection(SSLSocket s) {
     	this.socket = s;
     	user_table = new Hashtable<String,Pair<String,String>>();
     	messageDigest = null;
+    	curr_dir = "";
     }
     
     public void run() {
@@ -245,17 +247,35 @@ public class ServerConnection implements Runnable {
     }
     
     /*
-     * Helper function for logging
+     * Helper function for logging for a specific user
+     * Should be used for everything associated with the user
      * */
-    public void log_result(String method_name, Response res){
+    public void logUserResult(String method_name, Response res){
         try {
             Date date = new Date();
-            PrintWriter logger = new PrintWriter(username.concat("/log.txt"), "UTF-8");
+            //PrintWriter logger = new PrintWriter(curr_dir.concat("/log.txt"), "UTF-8");
+            PrintWriter logger = new PrintWriter(new BufferedWriter(new FileWriter(curr_dir.concat("user_log.txt"), true)));
             logger.println(date.toString() + ": " + responseGetString(res) + " on " + method_name);
             logger.flush();
             logger.close();
         } catch (IOException e){
             e.printStackTrace();
+        }
+    }
+    
+    /*
+     * Helper function for logging for the server
+     * */
+
+    public void logCenter(String user, String method_name, Response res){
+        try(PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter("centerlog.txt", true)))) {
+        	Date date = new Date();
+        	if (user==null){user = "N/A";}
+        	out.println(user +"\t"+date.toString()+"\t"+method_name+"\t"+ responseGetString(res));
+        	out.flush();
+        	out.close();
+        }catch (IOException e) {
+        	e.printStackTrace();
         }
     }
     
@@ -267,16 +287,16 @@ public class ServerConnection implements Runnable {
      * Assumes: username and password are not null
      * Assumes: username and password are valid (we haven't defined valid yet)
      * */
-
     public Response createAccount(String username, String password) {
         // Directory already exists
         // Note: Not thread-safe 
-        if (new File(username).isDirectory()){
-            //log_result("Create Account", Response.FAIL);
+        if (new File("users/" + username).isDirectory()){
+        	logCenter(username ,"Create Account", Response.FAIL);
             return Response.FAIL;
         }
         // Create a new directory
-        new File(username).mkdirs();
+        curr_dir = "users/" + username;
+        new File(curr_dir).mkdirs();
         
         // Generate a salt randomly and append it to master password. 
         // Salt = 32 bytes since we use SHA-256
@@ -286,18 +306,18 @@ public class ServerConnection implements Runnable {
         try {
             hashedpassword = saltAndHash(password, salt);
             
-            FileOutputStream writer = new FileOutputStream(username.concat("/master.txt"));
+            FileOutputStream writer = new FileOutputStream(curr_dir.concat("/master.txt"));
             writer.write(hashedpassword);
             writer.write(salt);
             writer.flush();
             writer.close();
     		
             /*create new file for credentials*/
-            PrintWriter creds_writer = new PrintWriter(username.concat("/stored_credentials.txt"), "UTF-8");
+            PrintWriter creds_writer = new PrintWriter(curr_dir.concat("/stored_credentials.txt"), "UTF-8");
             creds_writer.close();
             
             /*create new file for logs*/
-            PrintWriter logger = new PrintWriter(username.concat("/log.txt"), "UTF-8");
+            PrintWriter logger = new PrintWriter(curr_dir.concat("/log.txt"), "UTF-8");
             logger.close();
         } catch (Exception e){
             e.printStackTrace();
@@ -306,8 +326,10 @@ public class ServerConnection implements Runnable {
 
         /* set the session to be logged in successfully */
         this.username = username;
-
-        log_result("Create Account", Response.SUCCESS);
+        
+        //Logging
+		logCenter(this.username, "Create Account", Response.SUCCESS);
+        logUserResult("Create Account", Response.SUCCESS);
 
         return Response.SUCCESS;
     }
@@ -316,9 +338,11 @@ public class ServerConnection implements Runnable {
      * Change password for this user
      * */
     public Response changeAccountPassword(String old_password, String new_password){
-    	if (this.authAccount(this.username, old_password) == Response.FAIL){
-            log_result("Change Account Password", Response.FAIL);
-            return Response.FAIL;
+    	if (this.authAccount(this.username, old_password) != Response.SUCCESS){
+    		// Logging
+    		logCenter(this.username, "Change Account Password", Response.FAIL);
+    		//logUserResult("Change Account Password", Response.FAIL);
+    		return Response.FAIL;
     	}
     	
         // Generate a salt randomly and append it to master password. 
@@ -328,7 +352,7 @@ public class ServerConnection implements Runnable {
         try{
             hashedpassword = saltAndHash(new_password, salt);
         } catch (NoSuchAlgorithmException e){
-            log_result("Change Account Password", Response.FAIL);
+        	logCenter(this.username, "Change Account Password", Response.FAIL);
             return Response.FAIL; //should never happen
         }
 		
@@ -336,18 +360,18 @@ public class ServerConnection implements Runnable {
         // Note: will overwrite the old file
         FileOutputStream writer;
         try {
-
-            writer = new FileOutputStream(username.concat("/master.txt"));
+            writer = new FileOutputStream(curr_dir.concat("/master.txt"));
             writer.write(hashedpassword);
             writer.write(salt);
             writer.flush();
             writer.close();
         } catch (IOException e1) {
             e1.printStackTrace();
-            log_result("Change Account Password", Response.FAIL);
+            logCenter(this.username, "Change Account Password", Response.FAIL);
+            //logUserResult("Change Account Password", Response.FAIL);
             return Response.FAIL; //should never happen
         }
-        log_result("Change Account Password", Response.SUCCESS);
+        logUserResult("Change Account Password", Response.SUCCESS);
     	return Response.SUCCESS;
     }
     
@@ -355,14 +379,16 @@ public class ServerConnection implements Runnable {
      * Delete this account and log out the user.
      * */
     public Response deleteAccount(String password){
-    	if (this.authAccount(this.username, password) == Response.FAIL){
-            log_result("Delete Account", Response.FAIL);
-            return Response.FAIL;
+    	Response r = this.authAccount(this.username, password);
+    	if (r != Response.SUCCESS){
+    		// Logging
+    		logCenter(this.username,"Delete Account", r);
+            return r;
     	}
  
     	// Note: guaranteed that this account exists
     	// Delete the account
-    	File directory = new File(username);
+    	File directory = new File(curr_dir);
     	String[] entries = directory.list();
     	
     	// Delete all the files in this directory
@@ -373,8 +399,9 @@ public class ServerConnection implements Runnable {
     	
     	// delete the directory 
     	directory.delete();
-    	// TODO: implement a log for creating/deleting accounts?
-        //log_result("Delete Account", Response.SUCCESS);
+    	
+    	// Logging
+    	logCenter(this.username,"Delete Account", Response.SUCCESS);
         username = null;
     	return Response.SUCCESS;
     }
@@ -385,15 +412,17 @@ public class ServerConnection implements Runnable {
     public Response authAccount(String username, String password){
     	// Directory DNE TODO: check with other fxns
         // Note: Not thread-safe 
-        if ( !(new File(username).isDirectory())){
-            log_result("Authenticate Account", Response.FAIL);
-            return Response.FAIL;
+        if ( !(new File("users/" + username).isDirectory())){
+        	// Logging
+        	logCenter(username,"Authenticate Account", Response.WRONG_INPT);
+            return Response.WRONG_INPT;
         }
+        
         byte salt[] = new byte[SALT_LEN];
         byte stored_pass[] = new byte[32];
         FileInputStream reader;
         try {
-            reader = new FileInputStream(username.concat("/master.txt"));
+            reader = new FileInputStream(("users/" + username).concat("/master.txt"));
             reader.read(stored_pass, 0, 32);
             //reader.read(); //reads newline TODO: Fix later
             reader.read(salt,0,SALT_LEN);
@@ -401,36 +430,45 @@ public class ServerConnection implements Runnable {
             
             byte[] hashedpassword = saltAndHash(password, salt);
             if (!Arrays.equals(hashedpassword,stored_pass)){
-                log_result("Authenticate Account", Response.WRONG_INPT);
+            	// Logging
+            	logCenter(username, "Authenticate Account", Response.WRONG_INPT);
+                logUserResult("Authenticate Account", Response.WRONG_INPT);
                 return Response.WRONG_INPT;
             }
 
             this.username = username;
+            curr_dir = "users/" + username;
             //load hash table with user's credentials
             BufferedReader cred_reader = new BufferedReader(
-                    new FileReader(username.concat("/stored_credentials.txt")));
+                    new FileReader(curr_dir.concat("/stored_credentials.txt")));
             String line;
             while ( (line=cred_reader.readLine()) != null ){
                 String[] curr_cred = line.split(",");
 
                 if (curr_cred.length != 3){
                     cred_reader.close();
-                    log_result("Authenticate Account", Response.FAIL);
+                    logUserResult("Authenticate Account", Response.FAIL);
                     return Response.FAIL;
                 }
                 System.out.println("Loaded creds for " + curr_cred[0]);
                 user_table.put(curr_cred[0], new Pair<String,String>(curr_cred[1], curr_cred[2]));
             }
             cred_reader.close();
-            log_result("Authenticate Account", Response.SUCCESS);
+            
+            // Logging
+            logCenter(username,"Authenticate Account", Response.SUCCESS);
+            logUserResult("Authenticate Account", Response.SUCCESS);
             return Response.SUCCESS;
+        
         } catch (NoSuchAlgorithmException e1){ //should never happen
             e1.printStackTrace();
-            log_result("Authenticate Account", Response.FAIL);
+            logCenter(username,"Authenticate Account", Response.FAIL);
+            logUserResult("Authenticate Account", Response.FAIL);
             return Response.FAIL;
         } catch (IOException e2) {
             e2.printStackTrace();
-            log_result("Authenticate Account", Response.FAIL);
+            logCenter(username,"Authenticate Account", Response.FAIL);
+            logUserResult("Authenticate Account", Response.FAIL);
             return Response.FAIL;
         }
     }
@@ -444,7 +482,7 @@ public class ServerConnection implements Runnable {
         for (String k : user_table.keySet()){
                 cred_list.add(k);
         }
-        log_result("Get Credential List", Response.SUCCESS);
+        logUserResult("Get Credential List", Response.SUCCESS);
         return new Pair<Response,ArrayList<String>>(Response.SUCCESS, cred_list);
     }
     
@@ -453,11 +491,11 @@ public class ServerConnection implements Runnable {
      * */
     public Pair<Response, Pair<String, String>> getPassword(String service_name){
     	if (!user_table.containsKey(service_name)){ //credentials not listed in server
-            log_result("Get Credential", Response.NO_SVC);
+            logUserResult("Get Credential", Response.NO_SVC);
             return new Pair<Response,Pair<String, String>>(Response.NO_SVC,
                                                            new Pair<String, String>("", ""));
     	}
-        log_result("Get Credential", Response.SUCCESS);
+        logUserResult("Get Credential", Response.SUCCESS);
     	return new Pair<Response,
             Pair<String, String>>(Response.SUCCESS, user_table.get(service_name));
     }
@@ -497,7 +535,7 @@ public class ServerConnection implements Runnable {
     public Response logout() {
         try
             (PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter
-                                                                  (username +
+                                                                  (curr_dir +
                                                                    "/stored_credentials.txt"
                                                                    , false))))
             {
