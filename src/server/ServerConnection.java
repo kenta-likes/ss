@@ -433,7 +433,7 @@ public class ServerConnection implements Runnable {
         byte stored_pass[] = new byte[32];
         FileInputStream reader;
         try {
-            reader = new FileInputStream(curr_dir.concat("/master.txt"));
+            reader = new FileInputStream(("users/" + username).concat("/master.txt"));
             reader.read(stored_pass, 0, 32);
             //reader.read(); //reads newline TODO: Fix later
             reader.read(salt,0,SALT_LEN);
@@ -446,6 +446,7 @@ public class ServerConnection implements Runnable {
             }
 
             this.username = username;
+            curr_dir = "users/" + username;
             //load hash table with user's credentials
             BufferedReader cred_reader = new BufferedReader(
                     new FileReader(curr_dir.concat("/stored_credentials.txt")));
