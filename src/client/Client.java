@@ -79,6 +79,7 @@ public class Client {
         case "NAUTH": return Response.NAUTH;
         case "CRED_EXISTS": return Response.CRED_EXISTS;
         case "USER_EXISTS": return Response.USER_EXISTS;
+        case "DUP_LOGIN": return Response.DUP_LOGIN;
         case "FAIL":
         default: return Response.FAIL;
         }
@@ -100,6 +101,11 @@ public class Client {
 
         try {
             respPacket = new JSONObject(sockReader.readLine());
+        	
+        	//test:
+        	//String s = sockReader.readLine();
+        	//System.out.println("socket says:"+s);
+        	//respPacket =  new JSONObject(s);
         } catch (IOException e) {
             e.printStackTrace();
         }

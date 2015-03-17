@@ -318,9 +318,14 @@ public class Shell {
             System.out.println("Failure: an account with that username already exists.");
             return;
             
+        case DUP_LOGIN: /* duplicated login attempts */   
+        	System.out.println("Failure: you are already logged in.");
+        	return;
+        
         case FAIL: /* Generic error */
             System.out.println("Failure: the system encountered an unknown error.");
             return;
+        
         default: /* For recompilation purposes */
             System.out.println("Failure: unrecognized error code.  Please recompile.");
         }

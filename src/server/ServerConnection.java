@@ -60,9 +60,17 @@ public class ServerConnection implements Runnable {
                     command = req.getString("command");
                     
                     //check for authenticated user
+                    System.out.println("ServerConnection: command=" +command);
                     if (username != null){
                         
                         switch (command) {
+                        
+                        case "ATHN":
+                            js.object()
+                                .key("response").value(Response.DUP_LOGIN)
+                                .endObject();
+                            break;
+                            
                         case "ADD":
                             String service = req.getString("service");
                             String sName = req.getString("username");
@@ -163,6 +171,11 @@ public class ServerConnection implements Runnable {
                             }
                             
                         default:
+                        	System.out.println("username is not null: command is "+command);
+                        	// TODO: this is a stub to prevent json from breaking
+                        	js.object()
+                            .key("response").value("NAUTH")
+                            .endObject();
                         }
 
                         w.newLine();
@@ -222,6 +235,7 @@ public class ServerConnection implements Runnable {
 	    	case NAUTH: return "USER NOT LOGGED IN";
 	    	case USER_EXISTS: return "USERNAME IS TAKEN";
 	    	case CRED_EXISTS: return "CREDENTIAL ALREADY TAKEN";
+	    	case DUP_LOGIN: return "ALREADY LOGGED IN";
 	    	default: break;
     	}
     	return "";

@@ -70,7 +70,6 @@ public class ServerConnectionTest {
 		// 3. Delete with correct password
 		assertEquals(Response.SUCCESS, sc.deleteAccount("kenta"));
 		
-		
 	}
 
 	@Test
