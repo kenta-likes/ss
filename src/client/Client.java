@@ -1,17 +1,22 @@
 package client;
 
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.net.*;
 import javax.net.ssl.*;
 import java.util.List;
 import java.util.ArrayList;
 import org.json.*;
 import util.*;
+import java.math.BigInteger;
 
+import java.security.SecureRandom;
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
-import javax.crypto.SecretKeySpec;
 import javax.crypto.Cipher;
+import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
 
 public class Client {
     
@@ -20,7 +25,7 @@ public class Client {
     private static BufferedReader sockReader;
     private static SSLSocket c;
     private static SecretKey key;
-    private static Cipher cipher;
+    private static Cipher encoder, decoder;
     
     public static void main(String[] args) {
         PrintStream out = System.out;
@@ -67,12 +72,31 @@ public class Client {
 
     protected static String encryptPassword(String password) {
         byte[] encBytes;
-        String encPass;
+        String encPass = password;
 
-        encBytes = cipher.doFinal(password);
-        encPass = new String(encBytes);
+        try {
+            encBytes = encoder.doFinal(password.getBytes());
+            encPass = new String(encBytes);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
         return encPass;
+    }
+
+    protected static String decryptPassword(String encPass) {
+        byte[] decBytes;
+        String decPass = encPass;
+
+        try {
+            decBytes = decoder.doFinal(encPass.getBytes());
+            decPass = new String(decBytes);
+            System.out.println("Decoded to " + decPass);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return decPass;
     }
 
     protected static Response responseFromString(String resp) {
@@ -87,8 +111,6 @@ public class Client {
         default: return Response.FAIL;
         }
     }
-
-    protected static 
 
     /* Login with the master username/password set. */
     protected static Response login(String username, char[] password) {
@@ -119,22 +141,21 @@ public class Client {
         if (err == Response.SUCCESS) {
             try {
                 int len;
-                char[] encPass;
-                String encStr;
-                BufferedReader f = new BufferedReader
-                    (new FileReader(new File(System.getProperty("user.home") + "/" +
-                                             username + ".conf")));
+                byte[] encPass, encKey;
 
-                len = Integer.parseInt(f.readLine());
-                encPass = new char[len];
+                encKey = new byte[16];
+                FileInputStream fin = new FileInputStream(System.getProperty("user.home") +
+                                                          "/" + username + ".conf");
+                fin.read(encKey);
+            
+                key = new SecretKeySpec(encKey, 0, 16, "AES");
 
-                encPass = f.read(encPass, 0, len);
-                encStr = new String(encPass);
+                encoder = Cipher.getInstance("AES/CBC/PKCS5Padding");
+                encoder.init(Cipher.ENCRYPT_MODE, key);
 
-                key = new SecretKeySpec(encStr.getBytes(), "AES128");
+                decoder = Cipher.getInstance("AES/CBC/PKCS5Padding");
+                decoder.init(Cipher.DECRYPT_MODE, key);
 
-                cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
-                cipher.init(Cipher.ENCRYPT_MODE, key);
             } catch (Exception e) {
                 System.out.println("Issues finding the key!");
                 e.printStackTrace();
@@ -179,22 +200,29 @@ public class Client {
         if (err == Response.SUCCESS) {
             try {
                 KeyGenerator keyGen = KeyGenerator.getInstance("AES");
-                keyGen.init("128");
+                byte[] iv = new byte[16];
+                IvParameterSpec ivSpec;
+                SecureRandom srand = SecureRandom.getInstance("SHA1PRNG");
+
+                srand.nextBytes(iv);
+                ivSpec = new IvParameterSpec(iv);
+                
+                keyGen.init(128);
                 key = keyGen.generateKey();
 
-                PrintWriter w = new PrintWriter
-                    (new File(System.getProperty("user.home") + "/" + username +
-                              ".conf"));
+                FileOutputStream fos = new FileOutputStream
+                    (System.getProperty("user.home") + "/" + username +
+                     ".conf");
 
-                int len = key.getEncoded().length;
+                fos.write(key.getEncoded());
+                fos.close();
+                
+                encoder = Cipher.getInstance("AES/CBC/PKCS5Padding");
+                encoder.init(Cipher.ENCRYPT_MODE, key);
 
-                w.println(len);
-                w.println(new String(key.getEncoded()));
-                w.flush();
-                w.close();
+                decoder = Cipher.getInstance("AES/CBC/PKCS5Padding");
+                decoder.init(Cipher.DECRYPT_MODE, key, ivSpec);
 
-                cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
-                cipher.init(Cipher.ENCRYPT_MODE, key);
             } catch (Exception e) {
                 System.out.println("Error in key generation and writeback!");
                 e.printStackTrace();
@@ -211,13 +239,15 @@ public class Client {
     protected static Response addCreds(String service, String username, String password) {
         JSONObject respPacket = null;
         Response err;
+        String encPass = encryptPassword(password);
         sockJS = new JSONWriter(sockWriter);
+        
 
         sockJS.object()
             .key("command").value("ADD")
             .key("service").value(service)
             .key("username").value(username)
-            .key("password").value(password)
+            .key("password").value(encPass)
             .endObject();
         sockWriter.println();
         sockWriter.flush();
@@ -269,7 +299,7 @@ public class Client {
             username = respPacket.getString("username");
             password = respPacket.getString("password");
 
-            return new Pair<Response, String>(err, username + "," + password);
+            return new Pair<Response, String>(err, username + "," + decryptPassword(password));
         }
 
         return new Pair<Response, String>(err, null);
@@ -361,7 +391,7 @@ public class Client {
             .key("command").value("EDIT")
             .key("service").value(service)
             .key("username").value(username)
-            .key("password").value(password)
+            .key("password").value(encryptPassword(password))
             .endObject();
         sockWriter.println();
         sockWriter.flush();
