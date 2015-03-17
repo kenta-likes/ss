@@ -1,12 +1,13 @@
 package server;
 
+import util.*;
+
 import static org.junit.Assert.*;
 
 import java.io.File;
 
 import org.junit.Test;
 
-import server.ServerConnection.Response;
 
 public class ServerConnectionTest {
 
