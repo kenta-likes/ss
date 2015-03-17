@@ -333,19 +333,16 @@ public class ServerConnection implements Runnable {
 		
         // Write hashed master password and the salt to a file named "master.txt"
         // Note: will overwrite the old file
-        PrintWriter writer;
+        FileOutputStream writer;
         try {
-            writer = new PrintWriter(username.concat("/master.txt"), "UTF-8");
-            writer.println(hashedpassword);
-            writer.println(salt);
+
+            writer = new FileOutputStream(username.concat("/master.txt"));
+            writer.write(hashedpassword);
+            writer.write(salt);
             writer.flush();
             writer.close();
-        } catch (FileNotFoundException e1) {
+        } catch (IOException e1) {
             e1.printStackTrace();
-            log_result("Change Account Password", Response.FAIL);
-            return Response.FAIL; //should never happen
-        } catch (UnsupportedEncodingException e2) {
-            e2.printStackTrace();
             log_result("Change Account Password", Response.FAIL);
             return Response.FAIL; //should never happen
         }
@@ -408,7 +405,8 @@ public class ServerConnection implements Runnable {
 
             this.username = username;
             //load hash table with user's credentials
-            BufferedReader cred_reader = new BufferedReader(new FileReader(username.concat("/stored_credentials.txt")));
+            BufferedReader cred_reader = new BufferedReader(
+                    new FileReader(username.concat("/stored_credentials.txt")));
             String line;
             while ( (line=cred_reader.readLine()) != null ){
                 String[] curr_cred = line.split(",");
