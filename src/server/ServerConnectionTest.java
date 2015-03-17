@@ -20,9 +20,17 @@ public class ServerConnectionTest {
 	@Test
 	public void testLog_Center() {
 		ServerConnection sc = new ServerConnection(null);
+<<<<<<< HEAD
 		sc.log_center("cs794", "Create Account", Response.SUCCESS);
 		sc.log_center("cs794", "Create Account", Response.FAIL);
 		sc.log_center("cs794", "Create Account", Response.FAIL);
+=======
+		//sc.createAccount("cs794", "helloworld");
+		sc.logCenter("cs794", "Create Account", Response.SUCCESS);
+		sc.logCenter("cs794", "Create Account", Response.FAIL);
+		sc.logCenter("cs794", "Create Account", Response.FAIL);
+		
+>>>>>>> c0602edf92a811a93ae60edd43a111f45366ac55
 	}
 
 	@Test
