@@ -110,5 +110,10 @@ public class ServerConnectionTest {
 	public void testDeleteCredential() {
 		fail("Not yet implemented");
 	}
+	@Test
+	public void delte_all_dirs()
+	{
+	    //delete all directories
+	}
 
 }

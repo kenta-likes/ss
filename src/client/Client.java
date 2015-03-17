@@ -30,36 +30,21 @@ public class Client {
         sockWriter = null;
       
         try {
-            //SSLSocketFactory f = 
-                    //(SSLSocketFactory) SSLSocketFactory.getDefault();
-            
             KeyStore keystore = KeyStore.getInstance("JKS");
-            System.out.println("Working Directory = " +
-                    System.getProperty("user.dir"));
             keystore.load(new FileInputStream(ksName), passphrase);
-
             TrustManagerFactory tmf = TrustManagerFactory.getInstance("SunX509");
             tmf.init(keystore);
 
             SSLContext context = SSLContext.getInstance("TLS");
             TrustManager[] trustManagers = tmf.getTrustManagers();
-
             context.init(null, trustManagers, new SecureRandom());
-
             SSLSocketFactory sf = context.getSocketFactory();
-
             SSLSocket c = (SSLSocket)sf.createSocket("localhost", 8888);
-            
-            //c = (SSLSocket) f.createSocket("localhost", 8888);
-
             c.startHandshake();
-
             printSocketInfo(c);
 
             sockReader = new BufferedReader(new InputStreamReader(c.getInputStream()));
-            
             sockWriter = new PrintWriter(c.getOutputStream(), true);
-
             Shell.run();
 
             c.close();
@@ -115,7 +100,6 @@ public class Client {
 
         try {
             respPacket = new JSONObject(sockReader.readLine());
-            
         } catch (IOException e) {
             e.printStackTrace();
         }
