@@ -355,9 +355,10 @@ public class ServerConnection implements Runnable {
      * Delete this account and log out the user.
      * */
     public Response deleteAccount(String password){
-    	if (this.authAccount(this.username, password) == Response.FAIL){
-            log_result("Delete Account", Response.FAIL);
-            return Response.FAIL;
+    	Response r = this.authAccount(this.username, password);
+    	if (r != Response.SUCCESS){
+            log_result("Delete Account", r);
+            return r;
     	}
  
     	// Note: guaranteed that this account exists
