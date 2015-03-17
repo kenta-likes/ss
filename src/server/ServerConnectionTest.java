@@ -22,9 +22,9 @@ public class ServerConnectionTest {
 		// 1. Create an account
 		ServerConnection sc = new ServerConnection(null);
 		//sc.createAccount("cs794", "helloworld");
-		sc.log_center("cs794", "Create Account", Response.SUCCESS);
-		sc.log_center("cs794", "Create Account", Response.FAIL);
-		sc.log_center("cs794", "Create Account", Response.FAIL);
+		sc.logCenter("cs794", "Create Account", Response.SUCCESS);
+		sc.logCenter("cs794", "Create Account", Response.FAIL);
+		sc.logCenter("cs794", "Create Account", Response.FAIL);
 		
 	}
 
