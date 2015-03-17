@@ -412,6 +412,7 @@ public class ServerConnection implements Runnable {
             String line;
             while ( (line=cred_reader.readLine()) != null ){
                 String[] curr_cred = line.split(",");
+
                 if (curr_cred.length != 3){
                     cred_reader.close();
                     log_result("Authenticate Account", Response.FAIL);

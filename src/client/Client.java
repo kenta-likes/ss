@@ -74,9 +74,13 @@ public class Client {
         byte[] encBytes;
         String encPass = password;
 
+        if (password.charAt(password.length() - 1) == '\n')
+            System.out.println("Found the newline!!!");
+
         try {
-            encBytes = encoder.doFinal(password.getBytes());
-            encPass = new String(encBytes);
+            encBytes = encoder.doFinal(password.getBytes("UTF-8"));
+            encPass = bytesToHex(encBytes);
+            System.out.println("Encrypted password with " + encPass.length() + " bytes.");
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -87,16 +91,40 @@ public class Client {
     protected static String decryptPassword(String encPass) {
         byte[] decBytes;
         String decPass = encPass;
+        byte[] encBytes;
+        byte[] properEncBytes;
+        BigInteger b;
 
         try {
-            decBytes = decoder.doFinal(encPass.getBytes());
+            System.out.println("Decoding " + encPass);
+            b = new BigInteger(encPass, 16);
+            encBytes = b.toByteArray();
+
+            int extraLen = encBytes.length % 16;
+            int properLen = encBytes.length - extraLen;
+            properEncBytes = new byte[properLen];
+
+            System.arraycopy((Object) encBytes, extraLen, (Object) properEncBytes, 0, properLen);
+            
+            decBytes = decoder.doFinal(properEncBytes);
             decPass = new String(decBytes);
-            System.out.println("Decoded to " + decPass);
         } catch (Exception e) {
             e.printStackTrace();
         }
 
         return decPass;
+    }
+
+    /* Thanks StackOverflow! */
+    protected static String bytesToHex(byte[] bytes) {
+        char[] hexArray = "0123456789ABCDEF".toCharArray();
+        char[] hexChars = new char[bytes.length * 2];
+        for ( int j = 0; j < bytes.length; j++ ) {
+            int v = bytes[j] & 0xFF;
+            hexChars[j * 2] = hexArray[v >>> 4];
+            hexChars[j * 2 + 1] = hexArray[v & 0x0F];
+        }
+        return new String(hexChars);
     }
 
     protected static Response responseFromString(String resp) {
@@ -140,8 +168,11 @@ public class Client {
 
         if (err == Response.SUCCESS) {
             try {
-                int len;
-                byte[] encPass, encKey;
+                byte[] encPass, encKey, iv;
+                SecureRandom srand = SecureRandom.getInstance("SHA1PRNG");
+                iv = new byte[16];
+                srand.nextBytes(iv);
+                IvParameterSpec ivSpec = new IvParameterSpec(iv);
 
                 encKey = new byte[16];
                 FileInputStream fin = new FileInputStream(System.getProperty("user.home") +
@@ -151,10 +182,10 @@ public class Client {
                 key = new SecretKeySpec(encKey, 0, 16, "AES");
 
                 encoder = Cipher.getInstance("AES/CBC/PKCS5Padding");
-                encoder.init(Cipher.ENCRYPT_MODE, key);
+                encoder.init(Cipher.ENCRYPT_MODE, key, ivSpec);
 
                 decoder = Cipher.getInstance("AES/CBC/PKCS5Padding");
-                decoder.init(Cipher.DECRYPT_MODE, key);
+                decoder.init(Cipher.DECRYPT_MODE, key, ivSpec);
 
             } catch (Exception e) {
                 System.out.println("Issues finding the key!");
@@ -218,7 +249,7 @@ public class Client {
                 fos.close();
                 
                 encoder = Cipher.getInstance("AES/CBC/PKCS5Padding");
-                encoder.init(Cipher.ENCRYPT_MODE, key);
+                encoder.init(Cipher.ENCRYPT_MODE, key, ivSpec);
 
                 decoder = Cipher.getInstance("AES/CBC/PKCS5Padding");
                 decoder.init(Cipher.DECRYPT_MODE, key, ivSpec);
