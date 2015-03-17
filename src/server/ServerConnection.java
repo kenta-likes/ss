@@ -149,12 +149,15 @@ public class ServerConnection implements Runnable {
                         
                         case "EDIT":
                             service = req.getString("service");
+                            sName = req.getString("username");
                             sPass = req.getString("password");
-                            resp = updateCredential(service, sPass);
+                            resp = updateCredential(service, sName, sPass);
                             
                             js.object()
                                 .key("response").value(resp.name())
                                 .endObject();
+
+                            break;
 
                         case "CLOSE":
                             resp = logout();
@@ -293,14 +296,7 @@ public class ServerConnection implements Runnable {
         byte[] hashedpassword;
         try {
             hashedpassword = saltAndHash(password, salt);
-            // Write hashed master password and the salt to a file named "master.txt"
-            /*
-            PrintWriter writer = new PrintWriter(username.concat("/master.txt"), "UTF-8");
-            writer.println(hashedpassword);
-            writer.println(salt);
-            writer.flush();
-            writer.close();
-            */
+            
             FileOutputStream writer = new FileOutputStream(username.concat("/master.txt"));
             writer.write(hashedpassword);
             writer.write(salt);
@@ -479,7 +475,7 @@ public class ServerConnection implements Runnable {
      * Adds new credentials
      * */
     public Response addCredential(String service_name, String stored_username, String stored_password){
-    	if (user_table.contains(service_name))
+    	if (user_table.containsKey(service_name))
             return Response.CRED_EXISTS;
     	user_table.put(service_name, new Pair<String,String>(stored_username, stored_password));
     	return Response.SUCCESS;
@@ -488,10 +484,12 @@ public class ServerConnection implements Runnable {
     /*
      * Updates credentials with new password
      * */
-    public Response updateCredential(String service_name, String new_stored_pass){
-        if (!user_table.contains(service_name))
+    public Response updateCredential(String service_name, String new_username, String new_stored_pass){
+        if (!user_table.containsKey(service_name)) {
+            System.out.println("Service " + service_name + " not in table.");
             return Response.NO_SVC;
-        user_table.put(service_name, new Pair<String,String>(username, new_stored_pass)); //TODO FIX username!!
+        }
+        user_table.put(service_name, new Pair<String,String>(new_username, new_stored_pass)); //TODO FIX username!!
         return Response.SUCCESS;
     }
     
@@ -499,7 +497,7 @@ public class ServerConnection implements Runnable {
      * Deletes specific credential for specified service
      * */
     public Response deleteCredential(String service_name){
-        if (!user_table.contains(service_name))
+        if (!user_table.containsKey(service_name))
             return Response.NO_SVC;
         user_table.remove(service_name);
         return Response.SUCCESS;
