@@ -215,8 +215,7 @@ public class ServerConnection implements Runnable {
     	switch (r){
 	    	case SUCCESS: return "SUCCESS";
 	    	case FAIL: return "INTERNAL ERROR";
-	    	case WRONG_PASS: return "WRONG PASSWORD";
-	    	case WRONG_USR: return "USERNAME DOES NOT EXIST";
+	    	case WRONG_INPT: return "WRONG USERNAME OR PASSWORD";
 	    	case NO_SVC: return "CREDENTIAL DOES NOT EXIST";
 	    	case NAUTH: return "USER NOT LOGGED IN";
 	    	case USER_EXISTS: return "USERNAME IS TAKEN";
@@ -265,6 +264,8 @@ public class ServerConnection implements Runnable {
      * Create new account on server
      * Randomly generates a salt and stores a hashed
      * master password.
+     * Assumes: username and password are not null
+     * Assumes: username and password are valid (we haven't defined valid yet)
      * */
 
     public Response createAccount(String username, String password) {
@@ -400,8 +401,8 @@ public class ServerConnection implements Runnable {
             
             byte[] hashedpassword = saltAndHash(password, salt);
             if (!Arrays.equals(hashedpassword,stored_pass)){
-                log_result("Authenticate Account", Response.WRONG_PASS);
-                return Response.WRONG_PASS;
+                log_result("Authenticate Account", Response.WRONG_INPT);
+                return Response.WRONG_INPT;
             }
 
             this.username = username;

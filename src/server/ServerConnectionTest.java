@@ -29,7 +29,6 @@ public class ServerConnectionTest {
 		// 3. password is empty
 		//assertEquals(Response.FAIL, sc.createAccount("kl459", ""));
 		
-		
 		// 4. password is null
 		//assertEquals(Response.FAIL, sc.createAccount("kjd88", null));
 		
@@ -50,7 +49,7 @@ public class ServerConnectionTest {
 		assertEquals(Response.SUCCESS, sc.changeAccountPassword("test", "test1"));
 		
 		// 3. Authenticate with the old password
-		assertEquals(Response.WRONG_PASS, sc.authAccount("kjd88", "test"));
+		assertEquals(Response.WRONG_INPT, sc.authAccount("kjd88", "test"));
 		
 		// 4. Authenticate with the new password
 		assertEquals(Response.SUCCESS, sc.authAccount("kjd88", "test1"));
@@ -63,15 +62,24 @@ public class ServerConnectionTest {
 
 	@Test
 	public void testDeleteAccount() {
-		//ServerConnection sc = new ServerConnection(null);
-		//assertEquals(Response.SUCCESS, sc.deleteAccount("helloworld"))
+		// 1. Create an account
+		ServerConnection sc = new ServerConnection(null);
+		assertEquals(Response.SUCCESS, sc.createAccount("kl459", "kenta"));
+		
+		// 2. Delete with wrong password
+		assertEquals(Response.WRONG_INPT, sc.deleteAccount("kent"));
+		
+		// 3. Delete with correct password
+		assertEquals(Response.SUCCESS, sc.deleteAccount("kent"));
+		
+		
 		fail("Not yet implemented");
 	}
 
 	@Test
 	public void testAuthAccount() {
 		//ServerConnection sc = new ServerConnection(null);
-		//assertEquals(Response.WRONG_PASS, sc.authAccount("cs794", "halloworld"));
+		//assertEquals(Response.WRONG_INPT, sc.authAccount("cs794", "halloworld"));
 		//assertEquals(Response.SUCCESS, sc.authAccount("cs794", "helloworld"));
 		fail("Not yet implemented");
 	}

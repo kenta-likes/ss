@@ -300,8 +300,7 @@ public class Shell {
             System.out.println("Failure: you are not logged in!");
             return;
             
-        case WRONG_PASS: /* fall through.  Generic error message in this case. */
-        case WRONG_USR:
+        case WRONG_INPT: /* fall through.  Generic error message in this case. */
             System.out.println("Failure: incorrect username or password.");
             return;
             
