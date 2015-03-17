@@ -7,8 +7,6 @@ import java.util.concurrent.Executors;
 
 import javax.net.ssl.*;
 
-
-
 public class Server {
 	
    public static void main(String[] args) {
@@ -26,7 +24,9 @@ public class Server {
          SSLServerSocketFactory ssf = sc.getServerSocketFactory();
          SSLServerSocket s 
             = (SSLServerSocket) ssf.createServerSocket(8888);
+
          printServerSocketInfo(s);
+         
          ExecutorService executor = Executors.newFixedThreadPool(8);
          while (true) {
         	 SSLSocket c = (SSLSocket) s.accept();

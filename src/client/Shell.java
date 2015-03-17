@@ -18,7 +18,7 @@ public class Shell {
         if (con == null)
             return;
         
-        do {
+        while (true) {
             command = con.readLine("PassHerd-0.1a$ ");
             splitCommand = command.split(" ");
 
@@ -29,20 +29,31 @@ public class Shell {
             case "request": handleReq(splitCommand); break;
             case "delete": handleDel(splitCommand); break;
             case "change": handleChange(splitCommand); break;
-            case "logout": handleLogout(); break;
+            case "exit":
+            case "logout": handleLogout(); return;
             case "unregister": handleUnregister(); break;
             case "chpass": handleMasterChange(); break;
             case "help": help(); break;
             default: System.out.println("Command not recognized: " + splitCommand[0]);
             }
-            
-        } while (loggedIn);
-
-        return;
+        }
     }
 
     private static void handleUnregister() {
+        String conf;
+        Response err;
+        char[] password;
 
+        conf = con.readLine("Delete account.  Are you sure?[y/n]");
+
+        password = con.readPassword("Password: ");
+
+        if ("y".equals(conf)) {
+            err = Client.unregister(password);
+            printErr(err);
+        } else {
+            System.out.println("Account not deleted.");
+        }
     }
 
     private static void handleMasterChange() {
@@ -157,13 +168,15 @@ public class Shell {
             }            
         } else {
             Pair<Response, String> resp = Client.requestCreds(service);
-            String creds;
+            String[] creds;
             
             err = resp.first();
-            creds = resp.second();
+            creds = resp.second().split(",");
 
             if (err == Response.SUCCESS) {
-                System.out.println(creds);
+                System.out.println("Credentials for " + service + ":");
+                System.out.println("Username: " + creds[0]);
+                System.out.println("Password: " + creds[1]);
                 return;
             }
         }
@@ -211,7 +224,8 @@ public class Shell {
     }
 
     private static void handleLogout() {
-
+        Response err = Client.logout();
+        printErr(err);
     }
 
     private static void help() {
