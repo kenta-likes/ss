@@ -326,7 +326,8 @@ public class ServerConnection implements Runnable {
 
         /* set the session to be logged in successfully */
         this.username = username;
-
+        
+        //Logging
 		logCenter(this.username, "Create Account", Response.SUCCESS);
         logUserResult("Create Account", Response.SUCCESS);
 
@@ -337,12 +338,10 @@ public class ServerConnection implements Runnable {
      * Change password for this user
      * */
     public Response changeAccountPassword(String old_password, String new_password){
-    	if (this.authAccount(this.username, old_password) == Response.FAIL){
-    		
+    	if (this.authAccount(this.username, old_password) != Response.SUCCESS){
     		// Logging
     		logCenter(this.username, "Change Account Password", Response.FAIL);
     		//logUserResult("Change Account Password", Response.FAIL);
-            
     		return Response.FAIL;
     	}
     	
@@ -354,7 +353,6 @@ public class ServerConnection implements Runnable {
             hashedpassword = saltAndHash(new_password, salt);
         } catch (NoSuchAlgorithmException e){
         	logCenter(this.username, "Change Account Password", Response.FAIL);
-            //logUserResult("Change Account Password", Response.FAIL);
             return Response.FAIL; //should never happen
         }
 		
@@ -383,7 +381,8 @@ public class ServerConnection implements Runnable {
     public Response deleteAccount(String password){
     	Response r = this.authAccount(this.username, password);
     	if (r != Response.SUCCESS){
-            //logUserResult("Delete Account", r);
+    		// Logging
+    		logCenter(this.username,"Delete Account", r);
             return r;
     	}
  
@@ -400,8 +399,9 @@ public class ServerConnection implements Runnable {
     	
     	// delete the directory 
     	directory.delete();
-    	// TODO: implement a log for creating/deleting accounts?
-        //logUserResult("Delete Account", Response.SUCCESS);
+    	
+    	// Logging
+    	logCenter(this.username,"Delete Account", Response.SUCCESS);
         username = null;
     	return Response.SUCCESS;
     }
@@ -413,9 +413,11 @@ public class ServerConnection implements Runnable {
     	// Directory DNE TODO: check with other fxns
         // Note: Not thread-safe 
         if ( !(new File("users/" + username).isDirectory())){
-            //logUserResult("Authenticate Account", Response.FAIL);
+        	// Logging
+        	logCenter(username,"Authenticate Account", Response.WRONG_INPT);
             return Response.WRONG_INPT;
         }
+        
         byte salt[] = new byte[SALT_LEN];
         byte stored_pass[] = new byte[32];
         FileInputStream reader;
@@ -428,6 +430,8 @@ public class ServerConnection implements Runnable {
             
             byte[] hashedpassword = saltAndHash(password, salt);
             if (!Arrays.equals(hashedpassword,stored_pass)){
+            	// Logging
+            	logCenter(username, "Authenticate Account", Response.WRONG_INPT);
                 logUserResult("Authenticate Account", Response.WRONG_INPT);
                 return Response.WRONG_INPT;
             }
@@ -449,14 +453,20 @@ public class ServerConnection implements Runnable {
                 user_table.put(curr_cred[0], new Pair<String,String>(curr_cred[1], curr_cred[2]));
             }
             cred_reader.close();
+            
+            // Logging
+            logCenter(username,"Authenticate Account", Response.SUCCESS);
             logUserResult("Authenticate Account", Response.SUCCESS);
             return Response.SUCCESS;
+        
         } catch (NoSuchAlgorithmException e1){ //should never happen
             e1.printStackTrace();
+            logCenter(username,"Authenticate Account", Response.FAIL);
             logUserResult("Authenticate Account", Response.FAIL);
             return Response.FAIL;
         } catch (IOException e2) {
             e2.printStackTrace();
+            logCenter(username,"Authenticate Account", Response.FAIL);
             logUserResult("Authenticate Account", Response.FAIL);
             return Response.FAIL;
         }
