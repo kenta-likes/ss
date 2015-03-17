@@ -40,8 +40,8 @@ public class ServerConnectionTest {
 	@Test
 	public void testAuthAccount() {
 		ServerConnection sc = new ServerConnection(null);
-		assertEquals(Response.WRONG_PASS, sc.authAccount("cs794", "halloworld"));
-		assertEquals(Response.SUCCESS, sc.authAccount("cs794", "helloworld"));
+		//assertEquals(Response.WRONG_PASS, sc.authAccount("cs794", "halloworld"));
+		//assertEquals(Response.SUCCESS, sc.authAccount("cs794", "helloworld"));
 		fail("Not yet implemented");
 	}
 
@@ -58,8 +58,8 @@ public class ServerConnectionTest {
 	@Test
 	public void testAddCredential() {
 	    ServerConnection sc = new ServerConnection(null);
-	    sc.addCredential("abc", "xyz", "1234");
-	    assertEquals(sc.getPassword("abc"), "1234");
+	    sc.createAccount("kl459", "test");
+	    System.out.println(sc.responseGetString(sc.authAccount("kl459", "test")));
 	}
 
 	@Test

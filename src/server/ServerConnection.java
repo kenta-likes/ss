@@ -16,6 +16,7 @@ import javax.net.ssl.SSLSocket;
 import client.Pair;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.Hashtable;
 import java.io.PrintWriter;
@@ -27,7 +28,7 @@ import java.security.SecureRandom;
 import org.json.*;
 
 public class ServerConnection implements Runnable {
-    static final int SALT_LEN = 1; //use # of bytes of SHA-256 output
+    static final int SALT_LEN = 32; //use # of bytes of SHA-256 output
 	
     //response type
     public enum Response {
@@ -45,10 +46,12 @@ public class ServerConnection implements Runnable {
     protected String username; //user associated with this account
     protected boolean timed_out = false; //TODO think about this later...
     protected Hashtable<String,Pair<String,String>> user_table;
+    MessageDigest messageDigest;
          
     public ServerConnection(SSLSocket s) {
     	this.socket = s;
     	user_table = new Hashtable<String,Pair<String,String>>();
+    	messageDigest = null;
     }
     
     public void run() {
@@ -204,7 +207,10 @@ public class ServerConnection implements Runnable {
         System.arraycopy(password.getBytes(), 0, toHash, 0, password.length());
         System.arraycopy(salt, 0, toHash, password.length(), SALT_LEN);
         // Hash the master password
-        MessageDigest messageDigest = MessageDigest.getInstance("SHA-256");
+        //MessageDigest messageDigest = MessageDigest.getInstance("SHA-256");
+        if (messageDigest == null){
+            messageDigest = MessageDigest.getInstance("SHA-256");
+        }
         messageDigest.update(toHash);
         return messageDigest.digest();
     }
@@ -231,7 +237,7 @@ public class ServerConnection implements Runnable {
      * master password.
      * */
 
-    public Response createAccount(String username, String password) throws Exception {
+    public Response createAccount(String username, String password) {
         // Directory already exists
         // Note: Not thread-safe 
         if (new File(username).isDirectory()){
@@ -243,40 +249,39 @@ public class ServerConnection implements Runnable {
         
         // Generate a salt randomly and append it to master password. 
         // Salt = 32 bytes since we use SHA-256
-        //byte[] salt = new SecureRandom().generateSeed(SALT_LEN);
-        byte[]salt = new byte[1];
-        salt[0] = (byte)1;
+        byte[] salt = new byte[SALT_LEN];
+        new SecureRandom().nextBytes(salt); //get bytes for salt
         byte[] hashedpassword;
         try{
             hashedpassword = saltAndHash(password, salt);
-        } catch (NoSuchAlgorithmException e){
-            log_result("Create Account", Response.FAIL);
-            return Response.FAIL; //should never happen
+            // Write hashed master password and the salt to a file named "master.txt"
+            /*
+            PrintWriter writer = new PrintWriter(username.concat("/master.txt"), "UTF-8");
+            writer.println(hashedpassword);
+            writer.println(salt);
+            writer.flush();
+            writer.close();
+            */
+            FileOutputStream writer = new FileOutputStream(username.concat("/master.txt"));
+            writer.write(hashedpassword);
+            writer.write(salt);
+            writer.flush();
+            writer.close();
+    		
+            /*create new file for credentials*/
+            PrintWriter creds_writer = new PrintWriter(username.concat("/stored_credentials.txt"), "UTF-8");
+            creds_writer.close();
+            
+            /*create new file for logs*/
+            PrintWriter logger = new PrintWriter(username.concat("/log.txt"), "UTF-8");
+            logger.close();
+        } catch (Exception e){
+            e.printStackTrace();
+            return Response.FAIL;
         }
-        // Write hashed master password and the salt to a file named "master.txt"
-        /*
-        PrintWriter writer = new PrintWriter(username.concat("/master.txt"), "UTF-8");
-        writer.println(hashedpassword);
-        writer.println(salt);
-        writer.flush();
-        writer.close();
-        */
-        FileOutputStream writer = new FileOutputStream(username.concat("/master.txt"));
-        writer.write(hashedpassword);
-        writer.write(salt);
-        writer.flush();
-        writer.close();
-		
-        /*create new file for credentials*/
-        PrintWriter creds_writer = new PrintWriter(username.concat("/stored_credentials.txt"), "UTF-8");
-        creds_writer.close();
 
         /* set the session to be logged in successfully */
         this.username = username;
-        
-        /*create new file for logs*/
-        PrintWriter logger = new PrintWriter(username.concat("/log.txt"), "UTF-8");
-        logger.close();
 
         log_result("Create Account", Response.SUCCESS);
 
@@ -371,10 +376,15 @@ public class ServerConnection implements Runnable {
             reader.read(salt,0,SALT_LEN);
             reader.close();
             byte[] hashedpassword = saltAndHash(password, salt);
-            System.out.println("hashed pass,len : " + hashedpassword + ", " + hashedpassword.length);
-            System.out.println("stored pass,len : " + stored_pass + ", " + stored_pass.length);
-            System.out.println("stored salt: " + salt);
-            if (!hashedpassword.equals(stored_pass)){
+            for (byte b : hashedpassword){
+                System.out.print(b);
+            }
+            System.out.println();
+            for (byte b : stored_pass){
+                System.out.print(b);
+            }
+            System.out.println();
+            if (!Arrays.equals(hashedpassword,stored_pass)){
                 //log_result("Authenticate Account", Response.WRONG_PASS);
                 return Response.WRONG_PASS;
             }
