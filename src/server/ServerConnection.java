@@ -391,7 +391,8 @@ public class ServerConnection implements Runnable {
     	
     	// delete the directory 
     	directory.delete();
-        log_result("Delete Account", Response.SUCCESS);
+    	// TODO: implement a log for creating/deleting accounts?
+        //log_result("Delete Account", Response.SUCCESS);
         username = null;
     	return Response.SUCCESS;
     }
