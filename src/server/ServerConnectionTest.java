@@ -19,13 +19,10 @@ public class ServerConnectionTest {
 	
 	@Test
 	public void testLog_Center() {
-		// 1. Create an account
 		ServerConnection sc = new ServerConnection(null);
-		//sc.createAccount("cs794", "helloworld");
 		sc.log_center("cs794", "Create Account", Response.SUCCESS);
 		sc.log_center("cs794", "Create Account", Response.FAIL);
 		sc.log_center("cs794", "Create Account", Response.FAIL);
-		
 	}
 
 	@Test
@@ -36,17 +33,7 @@ public class ServerConnectionTest {
 		
 		// 2. Try to create a duplicate account
 		assertEquals(Response.FAIL, sc.createAccount("cs794", "helloworld"));
-		
-		// 3. password is empty
-		//assertEquals(Response.FAIL, sc.createAccount("kl459", ""));
-		
-		// 4. password is null
-		//assertEquals(Response.FAIL, sc.createAccount("kjd88", null));
-		
-		// 5. username is empty
-		//assertEquals(Response.FAIL, sc.createAccount("", "helloworld"));
-		
-		
+				
 		sc.deleteAccount("helloworld");
 	}
 
@@ -67,7 +54,6 @@ public class ServerConnectionTest {
 		
 		// 5. Delete account
 		sc.deleteAccount("test1");
-		
 		
 	}
 

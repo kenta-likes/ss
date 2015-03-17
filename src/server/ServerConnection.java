@@ -265,21 +265,7 @@ public class ServerConnection implements Runnable {
     /*
      * Helper function for logging for the server
      * */
-    public void log_center(String user, String method_name, Response res){
-//        try {
-//            Date date = new Date();
-//            PrintWriter logger = new PrintWriter("centerlog.txt", "UTF-8");
-//            // loggedin_as \t timestamp \t method \t response
-//            if (user==null){
-//            	user = "N/A";
-//            }
-//            logger.println(user +"\t"+date.toString()+"\t"+method_name+"\t"+ responseGetString(res));
-//            logger.flush();
-//            logger.close();
-//        } catch (IOException e){
-//            e.printStackTrace();
-//        }
-        
+    public void log_center(String user, String method_name, Response res){        
         try(PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter("centerlog.txt", true)))) {
         	Date date = new Date();
         	if (user==null){user = "N/A";}
@@ -287,7 +273,6 @@ public class ServerConnection implements Runnable {
         	out.flush();
         	out.close();
         }catch (IOException e) {
-        	System.out.println("ouch");
         	e.printStackTrace();
         }
     }
@@ -300,7 +285,6 @@ public class ServerConnection implements Runnable {
      * Assumes: username and password are not null
      * Assumes: username and password are valid (we haven't defined valid yet)
      * */
-
     public Response createAccount(String username, String password) {
         // Directory already exists
         // Note: Not thread-safe 
@@ -340,7 +324,7 @@ public class ServerConnection implements Runnable {
 
         /* set the session to be logged in successfully */
         this.username = username;
-
+        log_center(this.username, "Create Account", Response.SUCCESS);
         log_result("Create Account", Response.SUCCESS);
 
         return Response.SUCCESS;
