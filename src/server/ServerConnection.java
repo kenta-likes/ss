@@ -36,11 +36,13 @@ public class ServerConnection implements Runnable {
     protected boolean timed_out = false; //TODO think about this later...
     protected Hashtable<String,Pair<String,String>> user_table;
     MessageDigest messageDigest;
+    String curr_dir;
          
     public ServerConnection(SSLSocket s) {
     	this.socket = s;
     	user_table = new Hashtable<String,Pair<String,String>>();
     	messageDigest = null;
+    	curr_dir = "";
     }
     
     public void run() {
@@ -251,7 +253,7 @@ public class ServerConnection implements Runnable {
     public void log_result(String method_name, Response res){
         try {
             Date date = new Date();
-            PrintWriter logger = new PrintWriter(username.concat("/log.txt"), "UTF-8");
+            PrintWriter logger = new PrintWriter(curr_dir.concat("/log.txt"), "UTF-8");
             logger.println(date.toString() + ": " + responseGetString(res) + " on " + method_name);
             logger.flush();
             logger.close();
@@ -302,12 +304,13 @@ public class ServerConnection implements Runnable {
     public Response createAccount(String username, String password) {
         // Directory already exists
         // Note: Not thread-safe 
-        if (new File(username).isDirectory()){
-            log_center(username ,"Create Account", Response.FAIL);
+        if (new File("users/" + username).isDirectory()){
+        	log_center(username ,"Create Account", Response.FAIL);
             return Response.FAIL;
         }
         // Create a new directory
-        new File(username).mkdirs();
+        curr_dir = "users/" + username;
+        new File(curr_dir).mkdirs();
         
         // Generate a salt randomly and append it to master password. 
         // Salt = 32 bytes since we use SHA-256
@@ -317,18 +320,18 @@ public class ServerConnection implements Runnable {
         try {
             hashedpassword = saltAndHash(password, salt);
             
-            FileOutputStream writer = new FileOutputStream(username.concat("/master.txt"));
+            FileOutputStream writer = new FileOutputStream(curr_dir.concat("/master.txt"));
             writer.write(hashedpassword);
             writer.write(salt);
             writer.flush();
             writer.close();
     		
             /*create new file for credentials*/
-            PrintWriter creds_writer = new PrintWriter(username.concat("/stored_credentials.txt"), "UTF-8");
+            PrintWriter creds_writer = new PrintWriter(curr_dir.concat("/stored_credentials.txt"), "UTF-8");
             creds_writer.close();
             
             /*create new file for logs*/
-            PrintWriter logger = new PrintWriter(username.concat("/log.txt"), "UTF-8");
+            PrintWriter logger = new PrintWriter(curr_dir.concat("/log.txt"), "UTF-8");
             logger.close();
         } catch (Exception e){
             e.printStackTrace();
@@ -372,7 +375,7 @@ public class ServerConnection implements Runnable {
         // Note: will overwrite the old file
         FileOutputStream writer;
         try {
-            writer = new FileOutputStream(username.concat("/master.txt"));
+            writer = new FileOutputStream(curr_dir.concat("/master.txt"));
             writer.write(hashedpassword);
             writer.write(salt);
             writer.flush();
@@ -399,7 +402,7 @@ public class ServerConnection implements Runnable {
  
     	// Note: guaranteed that this account exists
     	// Delete the account
-    	File directory = new File(username);
+    	File directory = new File(curr_dir);
     	String[] entries = directory.list();
     	
     	// Delete all the files in this directory
@@ -422,7 +425,7 @@ public class ServerConnection implements Runnable {
     public Response authAccount(String username, String password){
     	// Directory DNE TODO: check with other fxns
         // Note: Not thread-safe 
-        if ( !(new File(username).isDirectory())){
+        if ( !(new File("users/" + username).isDirectory())){
             log_result("Authenticate Account", Response.FAIL);
             return Response.FAIL;
         }
@@ -430,7 +433,7 @@ public class ServerConnection implements Runnable {
         byte stored_pass[] = new byte[32];
         FileInputStream reader;
         try {
-            reader = new FileInputStream(username.concat("/master.txt"));
+            reader = new FileInputStream(curr_dir.concat("/master.txt"));
             reader.read(stored_pass, 0, 32);
             //reader.read(); //reads newline TODO: Fix later
             reader.read(salt,0,SALT_LEN);
@@ -445,7 +448,7 @@ public class ServerConnection implements Runnable {
             this.username = username;
             //load hash table with user's credentials
             BufferedReader cred_reader = new BufferedReader(
-                    new FileReader(username.concat("/stored_credentials.txt")));
+                    new FileReader(curr_dir.concat("/stored_credentials.txt")));
             String line;
             while ( (line=cred_reader.readLine()) != null ){
                 String[] curr_cred = line.split(",");
@@ -533,7 +536,7 @@ public class ServerConnection implements Runnable {
     public Response logout() {
         try
             (PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter
-                                                                  (username +
+                                                                  (curr_dir +
                                                                    "/stored_credentials.txt"
                                                                    , false))))
             {

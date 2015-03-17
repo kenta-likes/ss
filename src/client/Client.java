@@ -2,10 +2,15 @@ package client;
 
 import java.io.*;
 import java.net.*;
+
 import javax.net.ssl.*;
+
+import java.security.KeyStore;
 import java.util.List;
 import java.util.ArrayList;
+
 import org.json.*;
+import java.security.*;
 import util.*;
 
 public class Client {
@@ -17,28 +22,36 @@ public class Client {
     
     public static void main(String[] args) {
         PrintStream out = System.out;
-        SSLSocketFactory f = 
-            (SSLSocketFactory) SSLSocketFactory.getDefault();
+        
+        String ksName = System.getProperty("user.dir")+"/client/5430ts.jks"; //client side truststore
+        char passphrase[] = "security".toCharArray();
 
         sockReader = null;
         sockWriter = null;
       
         try {
-            c = (SSLSocket) f.createSocket("localhost", 8888);
+            KeyStore keystore = KeyStore.getInstance("JKS");
+            keystore.load(new FileInputStream(ksName), passphrase);
+            TrustManagerFactory tmf = TrustManagerFactory.getInstance("SunX509");
+            tmf.init(keystore);
 
+            SSLContext context = SSLContext.getInstance("TLS");
+            TrustManager[] trustManagers = tmf.getTrustManagers();
+            context.init(null, trustManagers, new SecureRandom());
+            SSLSocketFactory sf = context.getSocketFactory();
+            SSLSocket c = (SSLSocket)sf.createSocket("localhost", 8888);
             c.startHandshake();
-
             printSocketInfo(c);
 
             sockReader = new BufferedReader(new InputStreamReader(c.getInputStream()));
-            
             sockWriter = new PrintWriter(c.getOutputStream(), true);
-
             Shell.run();
 
             c.close();
         } catch (IOException e) {
             System.err.println(e.toString());
+        } catch (Exception e1){//security stuff
+            e1.printStackTrace();
         }
     }
     private static void printSocketInfo(SSLSocket s) {
@@ -87,7 +100,6 @@ public class Client {
 
         try {
             respPacket = new JSONObject(sockReader.readLine());
-            
         } catch (IOException e) {
             e.printStackTrace();
         }
