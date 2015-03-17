@@ -16,6 +16,17 @@ public class ServerConnectionTest {
 		
 		fail("Not yet implemented");
 	}
+	
+	@Test
+	public void testLog_Center() {
+		// 1. Create an account
+		ServerConnection sc = new ServerConnection(null);
+		//sc.createAccount("cs794", "helloworld");
+		sc.log_center("cs794", "Create Account", Response.SUCCESS);
+		sc.log_center("cs794", "Create Account", Response.FAIL);
+		sc.log_center("cs794", "Create Account", Response.FAIL);
+		
+	}
 
 	@Test
 	public void testCreateAccount() throws Exception{

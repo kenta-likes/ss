@@ -245,7 +245,8 @@ public class ServerConnection implements Runnable {
     }
     
     /*
-     * Helper function for logging
+     * Helper function for logging for a specific user
+     * Should be used for everything associated with the user
      * */
     public void log_result(String method_name, Response res){
         try {
@@ -256,6 +257,36 @@ public class ServerConnection implements Runnable {
             logger.close();
         } catch (IOException e){
             e.printStackTrace();
+        }
+    }
+    
+    /*
+     * Helper function for logging for the server
+     * */
+    public void log_center(String user, String method_name, Response res){
+//        try {
+//            Date date = new Date();
+//            PrintWriter logger = new PrintWriter("centerlog.txt", "UTF-8");
+//            // loggedin_as \t timestamp \t method \t response
+//            if (user==null){
+//            	user = "N/A";
+//            }
+//            logger.println(user +"\t"+date.toString()+"\t"+method_name+"\t"+ responseGetString(res));
+//            logger.flush();
+//            logger.close();
+//        } catch (IOException e){
+//            e.printStackTrace();
+//        }
+        
+        try(PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter("centerlog.txt", true)))) {
+        	Date date = new Date();
+        	if (user==null){user = "N/A";}
+        	out.println(user +"\t"+date.toString()+"\t"+method_name+"\t"+ responseGetString(res));
+        	out.flush();
+        	out.close();
+        }catch (IOException e) {
+        	System.out.println("ouch");
+        	e.printStackTrace();
         }
     }
     
@@ -272,7 +303,7 @@ public class ServerConnection implements Runnable {
         // Directory already exists
         // Note: Not thread-safe 
         if (new File(username).isDirectory()){
-            //log_result("Create Account", Response.FAIL);
+            log_center(username ,"Create Account", Response.FAIL);
             return Response.FAIL;
         }
         // Create a new directory
@@ -317,8 +348,12 @@ public class ServerConnection implements Runnable {
      * */
     public Response changeAccountPassword(String old_password, String new_password){
     	if (this.authAccount(this.username, old_password) == Response.FAIL){
-            log_result("Change Account Password", Response.FAIL);
-            return Response.FAIL;
+    		
+    		// Logging
+    		log_center(this.username, "Change Account Password", Response.FAIL);
+    		//log_result("Change Account Password", Response.FAIL);
+            
+    		return Response.FAIL;
     	}
     	
         // Generate a salt randomly and append it to master password. 
@@ -328,7 +363,8 @@ public class ServerConnection implements Runnable {
         try{
             hashedpassword = saltAndHash(new_password, salt);
         } catch (NoSuchAlgorithmException e){
-            log_result("Change Account Password", Response.FAIL);
+        	log_center(this.username, "Change Account Password", Response.FAIL);
+            //log_result("Change Account Password", Response.FAIL);
             return Response.FAIL; //should never happen
         }
 		
@@ -336,7 +372,6 @@ public class ServerConnection implements Runnable {
         // Note: will overwrite the old file
         FileOutputStream writer;
         try {
-
             writer = new FileOutputStream(username.concat("/master.txt"));
             writer.write(hashedpassword);
             writer.write(salt);
@@ -344,7 +379,8 @@ public class ServerConnection implements Runnable {
             writer.close();
         } catch (IOException e1) {
             e1.printStackTrace();
-            log_result("Change Account Password", Response.FAIL);
+            log_center(this.username, "Change Account Password", Response.FAIL);
+            //log_result("Change Account Password", Response.FAIL);
             return Response.FAIL; //should never happen
         }
         log_result("Change Account Password", Response.SUCCESS);
