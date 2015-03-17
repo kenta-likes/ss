@@ -1,6 +1,6 @@
 package client;
 
-import server.ServerConnection.Response;
+import util.*;
 import java.io.Console;
 import java.util.List;
 
@@ -10,8 +10,6 @@ public class Shell {
     public static void run() {
         String command;
         String[] splitCommand;
-        boolean loggedIn = true;
-        int errno;
         
         con = System.console();
         

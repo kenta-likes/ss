@@ -14,7 +14,7 @@ import java.io.UnsupportedEncodingException;
 
 import javax.net.ssl.SSLSocket;
 
-import client.Pair;
+import util.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -30,19 +30,7 @@ import org.json.*;
 
 public class ServerConnection implements Runnable {
     static final int SALT_LEN = 32; //use # of bytes of SHA-256 output
-	
-    //response type
-    public enum Response {
-        SUCCESS,
-        FAIL, /*for generic "server error" type responses*/
-        WRONG_PASS, /*user entered password is incorrect*/
-        WRONG_USR, /*wrong username entered for authentication*/
-        NO_SVC,/* used when the requested service is not found. */
-        NAUTH, /* used when the user is not logged in, but tries an op other than login */
-        USER_EXISTS, /*when username is already taken at registration*/
-        CRED_EXISTS /*when adding, the credentials already exist for that service*/
-    }
-	
+		
     protected SSLSocket socket;
     protected String username; //user associated with this account
     protected boolean timed_out = false; //TODO think about this later...

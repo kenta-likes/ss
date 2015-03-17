@@ -6,8 +6,7 @@ import javax.net.ssl.*;
 import java.util.List;
 import java.util.ArrayList;
 import org.json.*;
-
-import server.ServerConnection.Response;
+import util.*;
 
 public class Client {
     
