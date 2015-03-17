@@ -8,12 +8,19 @@ import java.util.ArrayList;
 import org.json.*;
 import util.*;
 
+import javax.crypto.KeyGenerator;
+import javax.crypto.SecretKey;
+import javax.crypto.SecretKeySpec;
+import javax.crypto.Cipher;
+
 public class Client {
     
     private static PrintWriter sockWriter;
     private static JSONWriter sockJS;
     private static BufferedReader sockReader;
     private static SSLSocket c;
+    private static SecretKey key;
+    private static Cipher cipher;
     
     public static void main(String[] args) {
         PrintStream out = System.out;
@@ -58,6 +65,16 @@ public class Client {
         System.out.println("   Protocol = "+ss.getProtocol());
     }
 
+    protected static String encryptPassword(String password) {
+        byte[] encBytes;
+        String encPass;
+
+        encBytes = cipher.doFinal(password);
+        encPass = new String(encBytes);
+
+        return encPass;
+    }
+
     protected static Response responseFromString(String resp) {
         switch (resp) {
         case "SUCCESS": return Response.SUCCESS;
@@ -71,6 +88,8 @@ public class Client {
         default: return Response.FAIL;
         }
     }
+
+    protected static 
 
     /* Login with the master username/password set. */
     protected static Response login(String username, char[] password) {
@@ -97,6 +116,32 @@ public class Client {
             return Response.FAIL;
 
         err = responseFromString(respPacket.getString("response"));
+
+        if (err == Response.SUCCESS) {
+            try {
+                int len;
+                char[] encPass;
+                String encStr;
+                BufferedReader f = new BufferedReader
+                    (new FileReader(new File(System.getProperty("user.home") + "/" +
+                                             username + ".conf")));
+
+                len = Integer.parseInt(f.readLine());
+                encPass = new char[len];
+
+                encPass = f.read(encPass, 0, len);
+                encStr = new String(encPass);
+
+                key = new SecretKeySpec(encStr.getBytes(), "AES128");
+
+                cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+                cipher.init(Cipher.ENCRYPT_MODE, key);
+            } catch (Exception e) {
+                System.out.println("Issues finding the key!");
+                e.printStackTrace();
+            }
+        }
+        
         return err;
     }
 
@@ -131,6 +176,31 @@ public class Client {
             return Response.FAIL;
 
         err = responseFromString(respPacket.getString("response"));
+
+        if (err == Response.SUCCESS) {
+            try {
+                KeyGenerator keyGen = KeyGenerator.getInstance("AES");
+                keyGen.init("128");
+                key = keyGen.generateKey();
+
+                PrintWriter w = new PrintWriter
+                    (new File(System.getProperty("user.home") + "/" + username +
+                              ".conf"));
+
+                int len = key.getEncoded().length;
+
+                w.println(len);
+                w.println(new String(key.getEncoded()));
+                w.flush();
+                w.close();
+
+                cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+                cipher.init(Cipher.ENCRYPT_MODE, key);
+            } catch (Exception e) {
+                System.out.println("Error in key generation and writeback!");
+                e.printStackTrace();
+            }
+        }
 
         return err;
     }
