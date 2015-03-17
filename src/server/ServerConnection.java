@@ -14,7 +14,7 @@ import java.io.UnsupportedEncodingException;
 
 import javax.net.ssl.SSLSocket;
 
-import client.Pair;
+import util.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -30,19 +30,7 @@ import org.json.*;
 
 public class ServerConnection implements Runnable {
     static final int SALT_LEN = 32; //use # of bytes of SHA-256 output
-	
-    //response type
-    public enum Response {
-        SUCCESS,
-        FAIL, /*for generic "server error" type responses*/
-        WRONG_PASS, /*user entered password is incorrect*/
-        WRONG_USR, /*wrong username entered for authentication*/
-        NO_SVC,/* used when the requested service is not found. */
-        NAUTH, /* used when the user is not logged in, but tries an op other than login */
-        USER_EXISTS, /*when username is already taken at registration*/
-        CRED_EXISTS /*when adding, the credentials already exist for that service*/
-    }
-	
+		
     protected SSLSocket socket;
     protected String username; //user associated with this account
     protected boolean timed_out = false; //TODO think about this later...
@@ -227,8 +215,7 @@ public class ServerConnection implements Runnable {
     	switch (r){
 	    	case SUCCESS: return "SUCCESS";
 	    	case FAIL: return "INTERNAL ERROR";
-	    	case WRONG_PASS: return "WRONG PASSWORD";
-	    	case WRONG_USR: return "USERNAME DOES NOT EXIST";
+	    	case WRONG_INPT: return "WRONG USERNAME OR PASSWORD";
 	    	case NO_SVC: return "CREDENTIAL DOES NOT EXIST";
 	    	case NAUTH: return "USER NOT LOGGED IN";
 	    	case USER_EXISTS: return "USERNAME IS TAKEN";
@@ -277,6 +264,8 @@ public class ServerConnection implements Runnable {
      * Create new account on server
      * Randomly generates a salt and stores a hashed
      * master password.
+     * Assumes: username and password are not null
+     * Assumes: username and password are valid (we haven't defined valid yet)
      * */
 
     public Response createAccount(String username, String password) {
@@ -384,7 +373,8 @@ public class ServerConnection implements Runnable {
     	
     	// delete the directory 
     	directory.delete();
-        log_result("Delete Account", Response.SUCCESS);
+    	// TODO: implement a log for creating/deleting accounts?
+        //log_result("Delete Account", Response.SUCCESS);
         username = null;
     	return Response.SUCCESS;
     }
@@ -411,8 +401,8 @@ public class ServerConnection implements Runnable {
             
             byte[] hashedpassword = saltAndHash(password, salt);
             if (!Arrays.equals(hashedpassword,stored_pass)){
-                log_result("Authenticate Account", Response.WRONG_PASS);
-                return Response.WRONG_PASS;
+                log_result("Authenticate Account", Response.WRONG_INPT);
+                return Response.WRONG_INPT;
             }
 
             this.username = username;

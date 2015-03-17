@@ -10,9 +10,8 @@ import java.util.List;
 import java.util.ArrayList;
 
 import org.json.*;
-
-import server.ServerConnection.Response;
 import java.security.*;
+import util.*;
 
 public class Client {
     
@@ -24,7 +23,7 @@ public class Client {
     public static void main(String[] args) {
         PrintStream out = System.out;
         
-        String ksName = "5430ts.jks"; //server side keystore
+        String ksName = System.getProperty("user.dir")+"/client/5430ts.jks"; //client side truststore
         char passphrase[] = "security".toCharArray();
 
         sockReader = null;
@@ -35,6 +34,8 @@ public class Client {
                     //(SSLSocketFactory) SSLSocketFactory.getDefault();
             
             KeyStore keystore = KeyStore.getInstance("JKS");
+            System.out.println("Working Directory = " +
+                    System.getProperty("user.dir"));
             keystore.load(new FileInputStream(ksName), passphrase);
 
             TrustManagerFactory tmf = TrustManagerFactory.getInstance("SunX509");
@@ -88,8 +89,7 @@ public class Client {
     protected static Response responseFromString(String resp) {
         switch (resp) {
         case "SUCCESS": return Response.SUCCESS;
-        case "WRONG_PASS": return Response.WRONG_PASS;
-        case "WRONG_USR": return Response.WRONG_USR;
+        case "WRONG_INPT": return Response.WRONG_INPT;
         case "NO_SVC": return Response.NO_SVC;
         case "NAUTH": return Response.NAUTH;
         case "CRED_EXISTS": return Response.CRED_EXISTS;

@@ -1,6 +1,6 @@
 package client;
 
-import server.ServerConnection.Response;
+import util.*;
 import java.io.Console;
 import java.util.List;
 
@@ -10,8 +10,6 @@ public class Shell {
     public static void run() {
         String command;
         String[] splitCommand;
-        boolean loggedIn = true;
-        int errno;
         
         con = System.console();
         
@@ -34,7 +32,8 @@ public class Shell {
             case "logout": handleLogout(); return;
             case "unregister": handleUnregister(); break;
             case "chpass": handleMasterChange(); break;
-            case "help": help(); break;
+            case "help": if (splitCommand.length == 1) help(); else help(splitCommand[1]);
+                break;
             default: System.out.println("Command not recognized: " + splitCommand[0]);
             }
         }
@@ -250,7 +249,46 @@ public class Shell {
     }
 
     private static void help() {
+        System.out.println("All commands: login register add get creds delete change exit logout unregister chpass help.\nType help <command> for more information.");
+    }
+
+    private static void help(String command) {
+        String helpMsg;
         
+        switch (command) {
+        case "login": helpMsg = "login: initiates a login prompt.  Enter your username and password to gain access to your stored credentials.";
+                break;
+            
+        case "register": helpMsg = "register: initiates the creation of a new account.";
+            break;
+            
+        case "add": helpMsg = "add <service> <username> <password>: stores the username and password for the service.";
+            break;
+                
+        case "get":
+        case "creds": helpMsg = command + " <all | service>: displays the names of all stored services, or the username and password associated with a certain service.";
+        break;
+                
+        case "delete": helpMsg = "delete <service>: deletes the credentials associated with the service.  Asks for confirmation before deleting.";
+            break;
+                
+        case "change": helpMsg = "change <service> <username> <password>: changes the username and password associated with the service.";
+            break;
+                
+        case "exit":
+        case "logout": helpMsg = command + ": logs you out and exits PassHerd.";
+        break;
+                
+        case "unregister": helpMsg = "unregister: deletes the logged-in account and all stored credentials.  Asks for confirmation before deleting.";
+            break;
+                
+        case "chpass": helpMsg = "chpass: initiates a change to your account master password.";
+            break;
+        case "help": helpMsg = "help <command>: display help about a certain command."; break;
+        default: helpMsg = "Failure: command not recognized.";
+        }
+
+        System.out.println(helpMsg);
     }
 
     /* An error decoding and reporting function. */
@@ -262,8 +300,7 @@ public class Shell {
             System.out.println("Failure: you are not logged in!");
             return;
             
-        case WRONG_PASS: /* fall through.  Generic error message in this case. */
-        case WRONG_USR:
+        case WRONG_INPT: /* fall through.  Generic error message in this case. */
             System.out.println("Failure: incorrect username or password.");
             return;
             
