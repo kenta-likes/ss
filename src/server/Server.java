@@ -10,9 +10,9 @@ import javax.net.ssl.*;
 public class Server {
 	
    public static void main(String[] args) {
-      String ksName = "server.jks";
-      char ksPass[] = "ServerJKS".toCharArray();
-      char ctPass[] = "ServerKey".toCharArray();
+      String ksName = "5430_keystore.jks"; //server side keystore
+      char ksPass[] = "security".toCharArray();
+      char ctPass[] = "security".toCharArray();
       try {
          KeyStore ks = KeyStore.getInstance("JKS");
          ks.load(new FileInputStream(ksName), ksPass);
@@ -20,7 +20,7 @@ public class Server {
          KeyManagerFactory.getInstance("SunX509");
          kmf.init(ks, ctPass);
          SSLContext sc = SSLContext.getInstance("TLS");
-         sc.init(kmf.getKeyManagers(), null, null);
+         sc.init(kmf.getKeyManagers(), null, new SecureRandom());
          SSLServerSocketFactory ssf = sc.getServerSocketFactory();
          SSLServerSocket s 
             = (SSLServerSocket) ssf.createServerSocket(8888);
@@ -35,7 +35,8 @@ public class Server {
          }
          
       } catch (Exception e) {
-         System.err.println(e.toString());
+         //System.err.println(e.toString());
+         e.printStackTrace();
       }
    }
 

@@ -2,12 +2,17 @@ package client;
 
 import java.io.*;
 import java.net.*;
+
 import javax.net.ssl.*;
+
+import java.security.KeyStore;
 import java.util.List;
 import java.util.ArrayList;
+
 import org.json.*;
 
 import server.ServerConnection.Response;
+import java.security.*;
 
 public class Client {
     
@@ -18,14 +23,33 @@ public class Client {
     
     public static void main(String[] args) {
         PrintStream out = System.out;
-        SSLSocketFactory f = 
-            (SSLSocketFactory) SSLSocketFactory.getDefault();
+        
+        String ksName = "5430ts.jks"; //server side keystore
+        char passphrase[] = "security".toCharArray();
 
         sockReader = null;
         sockWriter = null;
       
         try {
-            c = (SSLSocket) f.createSocket("localhost", 8888);
+            //SSLSocketFactory f = 
+                    //(SSLSocketFactory) SSLSocketFactory.getDefault();
+            
+            KeyStore keystore = KeyStore.getInstance("JKS");
+            keystore.load(new FileInputStream(ksName), passphrase);
+
+            TrustManagerFactory tmf = TrustManagerFactory.getInstance("SunX509");
+            tmf.init(keystore);
+
+            SSLContext context = SSLContext.getInstance("TLS");
+            TrustManager[] trustManagers = tmf.getTrustManagers();
+
+            context.init(null, trustManagers, new SecureRandom());
+
+            SSLSocketFactory sf = context.getSocketFactory();
+
+            SSLSocket c = (SSLSocket)sf.createSocket("localhost", 8888);
+            
+            //c = (SSLSocket) f.createSocket("localhost", 8888);
 
             c.startHandshake();
 
@@ -40,6 +64,8 @@ public class Client {
             c.close();
         } catch (IOException e) {
             System.err.println(e.toString());
+        } catch (Exception e1){//security stuff
+            e1.printStackTrace();
         }
     }
     private static void printSocketInfo(SSLSocket s) {

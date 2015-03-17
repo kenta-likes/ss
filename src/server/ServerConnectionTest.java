@@ -59,7 +59,7 @@ public class ServerConnectionTest {
 	public void testAddCredential() {
 	    ServerConnection sc = new ServerConnection(null);
 	    sc.createAccount("kl459", "test");
-	    System.out.println(sc.responseGetString(sc.authAccount("kl459", "test")));
+	    //sc.authAccount("kl459", "test");
 	}
 
 	@Test
