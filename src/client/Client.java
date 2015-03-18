@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import org.json.*;
 import util.*;
 
-import java.util.Base64;
+import javax.xml.bind.DatatypeConverter;
 
 import java.security.SecureRandom;
 import javax.crypto.KeyGenerator;
@@ -87,7 +87,7 @@ public class Client {
             
             encBytes = encoder.doFinal(password.getBytes("UTF-8"));
             /* Encode to a Base64 String representation. */
-            encPass = Base64.getEncoder().encodeToString(encBytes);
+            encPass = DatatypeConverter.printBase64Binary(encBytes);
             
         } catch (Exception e) {
             e.printStackTrace();
@@ -102,10 +102,10 @@ public class Client {
         
         try {
             /* Decode bytes from Base64 String representation. */
-            encBytes = Base64.getDecoder().decode(encPass);
+            encBytes = DatatypeConverter.parseBase64Binary(encPass);
             
             decBytes = decoder.doFinal(encBytes);
-            decPass = new String(decBytes);
+            decPass = new String(decBytes, "UTF-8");
         } catch (Exception e) {
             e.printStackTrace();
         }
