@@ -1,10 +1,6 @@
 package client;
 
 import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.net.*;
-
 import javax.net.ssl.*;
 
 import java.security.KeyStore;
@@ -12,7 +8,6 @@ import java.util.List;
 import java.util.ArrayList;
 
 import org.json.*;
-import java.security.*;
 import util.*;
 
 import java.util.Base64;
@@ -106,8 +101,6 @@ public class Client {
         String decPass = encPass;
         
         try {
-            System.out.println("Decoding " + encPass);
-
             /* Decode bytes from Base64 String representation. */
             encBytes = Base64.getDecoder().decode(encPass);
             
@@ -168,15 +161,32 @@ public class Client {
             try {
                 byte[] encPass, encKey, iv;
                 SecureRandom srand = SecureRandom.getInstance("SHA1PRNG");
-                iv = new byte[16];
-                srand.nextBytes(iv);
-                IvParameterSpec ivSpec = new IvParameterSpec(iv);
-
-                encKey = new byte[16];
+                IvParameterSpec ivSpec;
                 FileInputStream fin = new FileInputStream(System.getProperty("user.home") +
                                                           "/" + username + ".conf");
+
+                /* XXX Problem here.  Since we are determining a new IV *randomly* every
+                 * time the user logs in, the decryption cipher will be initialized
+                 * differently on each login.  This prevents us from being able to decrypt
+                 * stored passwords once the user terminates the session.  So we need to
+                 * either store the IV we used for the first encryption, or switch to ECB
+                 * mode.
+                 *
+                 * I am going to store the IV we generate on registration in the same
+                 * file as the key, but this is potentially a security issue.
+                 */
+
+                encKey = new byte[16];
                 fin.read(encKey);
-            
+
+                /* Skip the newline character. */
+                fin.skip(1);
+                
+                iv = new byte[16];
+                fin.read(iv);
+
+                ivSpec = new IvParameterSpec(iv);
+                
                 key = new SecretKeySpec(encKey, 0, 16, "AES");
 
                 encoder = Cipher.getInstance("AES/CBC/PKCS5Padding");
@@ -244,6 +254,8 @@ public class Client {
                      ".conf");
 
                 fos.write(key.getEncoded());
+                fos.write((int) '\n');
+                fos.write(iv);
                 fos.close();
                 
                 encoder = Cipher.getInstance("AES/CBC/PKCS5Padding");

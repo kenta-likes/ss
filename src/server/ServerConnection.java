@@ -3,18 +3,17 @@ package server;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
-import java.io.UnsupportedEncodingException;
 
 import javax.net.ssl.SSLSocket;
 
-import util.*;
+import util.Pair;
+import util.Response;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -34,13 +33,13 @@ public class ServerConnection implements Runnable {
     protected SSLSocket socket;
     protected String username; //user associated with this account
     protected boolean timed_out = false; //TODO think about this later...
-    protected Hashtable<String,Pair<String,String>> user_table;
+    protected Hashtable<String, Pair<String, String>> user_table;
     MessageDigest messageDigest;
     String curr_dir;
          
     public ServerConnection(SSLSocket s) {
     	this.socket = s;
-    	user_table = new Hashtable<String,Pair<String,String>>();
+    	user_table = new Hashtable<String, Pair<String, String>>();
     	messageDigest = null;
     	curr_dir = "";
     }
@@ -458,6 +457,9 @@ public class ServerConnection implements Runnable {
             String line;
             while ( (line=cred_reader.readLine()) != null ){
                 String[] curr_cred = line.split(",");
+
+                if (curr_cred[2].charAt(curr_cred[2].length() - 1) == '\n')
+                    System.out.println("Found a newline!!");
 
                 if (curr_cred.length != 3){
                     cred_reader.close();
