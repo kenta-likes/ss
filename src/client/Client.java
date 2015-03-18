@@ -47,7 +47,7 @@ public class Client {
             TrustManager[] trustManagers = tmf.getTrustManagers();
             context.init(null, trustManagers, new SecureRandom());
             SSLSocketFactory sf = context.getSocketFactory();
-            SSLSocket c = (SSLSocket)sf.createSocket("localhost", 8888);
+            SSLSocket c = (SSLSocket)sf.createSocket("en-cs-uglab03.coecis.cornell.edu", 8888);
             c.startHandshake();
             printSocketInfo(c);
 
