@@ -39,7 +39,6 @@ public class ServerConnection implements Runnable {
          
     public ServerConnection(SSLSocket s) {
     	this.socket = s;
-    	user_table = new Hashtable<String, Pair<String, String>>();
     	messageDigest = null;
     	curr_dir = "";
     }
@@ -216,7 +215,9 @@ public class ServerConnection implements Runnable {
                 if (timed_out) //TODO this is placeholder, change later for actual timeout check
                     break;
             }
-
+            
+            //remove reference to the hash table etc.
+            user_table = null;
             r.close();
             socket.close();
     	} catch (Exception e)
@@ -337,6 +338,7 @@ public class ServerConnection implements Runnable {
             return Response.FAIL;
         }
 
+        user_table = new Hashtable<String, Pair<String, String>>();
         /* set the session to be logged in successfully */
         this.username = username;
         
@@ -390,6 +392,7 @@ public class ServerConnection implements Runnable {
     
     /*
      * Delete this account and log out the user.
+     * TODO: clear out the hashtable!!
      * */
     public Response deleteAccount(String password){
     	Response r = this.authAccount(this.username, password);
@@ -416,6 +419,7 @@ public class ServerConnection implements Runnable {
     	// Logging
     	logCenter(this.username,"Delete Account", Response.SUCCESS);
         username = null;
+        user_table = null;
     	return Response.SUCCESS;
     }
 	
@@ -449,6 +453,8 @@ public class ServerConnection implements Runnable {
                 return Response.WRONG_INPT;
             }
 
+            //init hashtable
+            user_table = new Hashtable<String, Pair<String, String>>();
             this.username = username;
             curr_dir = "users/" + username;
             //load hash table with user's credentials
