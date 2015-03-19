@@ -218,6 +218,7 @@ public class ServerConnection implements Runnable {
             
             //remove reference to the hash table etc.
             user_table = null;
+            username = null;
             r.close();
             socket.close();
     	} catch (Exception e)
@@ -392,7 +393,6 @@ public class ServerConnection implements Runnable {
     
     /*
      * Delete this account and log out the user.
-     * TODO: clear out the hashtable!!
      * */
     public Response deleteAccount(String password){
     	Response r = this.authAccount(this.username, password);
@@ -441,7 +441,6 @@ public class ServerConnection implements Runnable {
         try {
             reader = new FileInputStream(("users/" + username).concat("/master.txt"));
             reader.read(stored_pass, 0, 32);
-            //reader.read(); //reads newline TODO: Fix later
             reader.read(salt,0,SALT_LEN);
             reader.close();
             
