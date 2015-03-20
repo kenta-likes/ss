@@ -221,7 +221,7 @@ public class ServerConnection implements Runnable {
             BufferedWriter writer = new BufferedWriter(
                     new FileWriter(curr_dir.concat("/stored_credentials.txt")));
             for (String k : user_table.keySet()){
-               writer.write(k + "," +  user_table.get(k).first() + "," + user_table.get(k).second() + "\n");
+               writer.write(k + "\t" +  user_table.get(k).first() + "\t" + user_table.get(k).second() + "\n");
             }
             writer.flush();
             writer.close();
@@ -503,7 +503,7 @@ public class ServerConnection implements Runnable {
                     new FileReader(curr_dir.concat("/stored_credentials.txt")));
             String line;
             while ( (line=cred_reader.readLine()) != null ){
-                String[] curr_cred = line.split(",");
+                String[] curr_cred = line.split("\t");
 
                 if (curr_cred.length != 3){
                     cred_reader.close();
@@ -579,7 +579,7 @@ public class ServerConnection implements Runnable {
             BufferedWriter writer = new BufferedWriter(
                     new FileWriter(curr_dir.concat("/stored_credentials.txt")));
             for (String k : user_table.keySet()){
-               writer.write(k + "," +  user_table.get(k).first() + "," + user_table.get(k).second() + "\n");
+               writer.write(k + "\t" +  user_table.get(k).first() + "\t" + user_table.get(k).second() + "\n");
             }
             writer.flush();
             writer.close();
@@ -607,7 +607,7 @@ public class ServerConnection implements Runnable {
             BufferedWriter writer = new BufferedWriter(
                     new FileWriter(curr_dir.concat("/stored_credentials.txt")));
             for (String k : user_table.keySet()){
-               writer.write(k + "," +  user_table.get(k).first() + "," + user_table.get(k).second() + "\n");
+               writer.write(k + "\t" +  user_table.get(k).first() + "\t" + user_table.get(k).second() + "\n");
             }
             writer.flush();
             writer.close();
@@ -631,7 +631,7 @@ public class ServerConnection implements Runnable {
             BufferedWriter writer = new BufferedWriter(
                     new FileWriter(curr_dir.concat("/stored_credentials.txt")));
             for (String k : user_table.keySet()){
-               writer.write(k + "," +  user_table.get(k).first() + "," + user_table.get(k).second() + "\n");
+               writer.write(k + "\t" +  user_table.get(k).first() + "\t" + user_table.get(k).second() + "\n");
             }
             writer.flush();
             writer.close();
@@ -651,7 +651,7 @@ public class ServerConnection implements Runnable {
             {
                 for (String s : user_table.keySet()) {
                     Pair<String, String> creds = user_table.get(s);
-                    out.println(s + "," + creds.first() + "," + creds.second());
+                    out.println(s + "\t" + creds.first() + "\t" + creds.second());
                 }
             } catch (IOException e) {
             // TODO: Need something to log here...

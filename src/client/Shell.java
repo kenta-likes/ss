@@ -44,7 +44,7 @@ public class Shell {
         Response err;
         char[] password;
 
-        conf = con.readLine("Delete account. Are you sure?[y/n]: ");
+        conf = con.readLine("Delete account. Are you sure? [y/n]: ");
 
         password = con.readPassword("Password: ");
 
@@ -187,18 +187,28 @@ public class Shell {
                 return;
             }            
         } else {
-            Pair<Response, String> resp = Client.requestCreds(service);
-            String[] creds;
+            Pair<Response, Pair<String, char[]>> resp = Client.requestCreds(service);
+            Pair<String, char[]> creds;
+            char[] pass;
             
             err = resp.first();
 
             if (resp.second() != null) {
-                creds = resp.second().split(",");
+                creds = resp.second();
 
                 if (err == Response.SUCCESS) {
                     System.out.println("Credentials for " + service + ":");
-                    System.out.println("Username: " + creds[0]);
-                    System.out.println("Password: " + creds[1]);
+                    System.out.println("Username: " + creds.first());
+                    System.out.print("Password: ");
+                    
+                    pass = creds.second();
+                    /* Print and zero out array. */
+                    for (int i = 0; i < pass.length; i++) {
+                        System.out.print(pass[i]);
+                        pass[i] = ' ';
+                    }
+                        
+                    System.out.println();
                     return;
                 }
             }
@@ -302,6 +312,9 @@ public class Shell {
         case NAUTH:
             System.out.println("Error: you are not logged in!");
             return;
+
+        case BAD_FORMAT:
+            System.out.println("Error: the / and \\ characters are not allowed."
             
         case WRONG_INPT: /* fall through.  Generic error message in this case. */
             System.out.println("Error: incorrect username or password.");
