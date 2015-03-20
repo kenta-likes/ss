@@ -354,9 +354,10 @@ public class Client {
              * We are prepending the service name associated with a password before encrypting that password
              * and storing it on the server.
              */
-            if (service.equals(decPass.substring(0, service.length() - 1))) {
+            if (service.equals(decPass.substring(0, service.length()))) {
                 return new Pair<Response, String>(err, username + "," + decPass.substring(service.length()));
             } else {
+                System.out.println("Substring is " + decPass.substring(0, service.length()));
                 System.out.println("Error: detected password for incorrect service!  Please contact a system administrator.");
                 return new Pair<Response, String>(Response.FAIL, null);
             }
