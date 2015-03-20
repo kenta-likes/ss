@@ -74,9 +74,9 @@ public class ServerConnection implements Runnable {
                             String service = req.getString("service");
                             String sName = req.getString("username");
                             String sPass = req.getString("password");
+                            String resp1 = responseGetString(addCredential(service, sName, sPass));
                             js.object()
-                                .key("response").value(addCredential(service, sName, sPass)
-                                                       .name())
+                                .key("response").value(resp1)
                                 .endObject();
                             break;
                         case "GET1":
@@ -222,6 +222,7 @@ public class ServerConnection implements Runnable {
                 if (timed_out) //TODO this is placeholder, change later for actual timeout check
                     break;
             }
+            //write back to file, then remove reference to the hash table etc.
             user_table = null;
             username = null;
             logCenter(username ,"Logout", Response.SUCCESS);
@@ -243,6 +244,7 @@ public class ServerConnection implements Runnable {
 	    	case USER_EXISTS: return "USERNAME IS TAKEN";
 	    	case CRED_EXISTS: return "CREDENTIAL ALREADY TAKEN";
 	    	case DUP_LOGIN: return "ALREADY LOGGED IN";
+	    	case BAD_FORMAT: return "BAD_FORMAT";
 	    	default: break;
     	}
     	return "";
@@ -263,7 +265,7 @@ public class ServerConnection implements Runnable {
      * Helper fxn for checking valid usernames
      * */
     protected boolean checkUsernameFormat(String usr){
-        return !(usr == null || usr.contains("/") || usr.contains("\\"));
+        return !(usr.contains("/") || usr.contains("\\"));
     }
     
     /*
@@ -353,7 +355,7 @@ public class ServerConnection implements Runnable {
         if (!checkInput(new String[]{new_usr, password})){
             return Response.WRONG_INPT;
         }
-        if (this.checkUsernameFormat(new_usr)){
+        if (!this.checkUsernameFormat(new_usr)){
             return Response.BAD_FORMAT;
         }
         // Directory already exists
@@ -487,7 +489,7 @@ public class ServerConnection implements Runnable {
         if (!checkInput(new String[]{auth_usr, password})){
             return Response.WRONG_INPT;
         }
-        if (this.checkUsernameFormat(auth_usr)){
+        if (!this.checkUsernameFormat(auth_usr)){
             return Response.BAD_FORMAT;
         }
         // Note: Not thread-safe 
@@ -523,7 +525,7 @@ public class ServerConnection implements Runnable {
                     new FileReader(curr_dir.concat("/stored_credentials.txt")));
             String line;
             while ( (line=cred_reader.readLine()) != null ){
-                String[] curr_cred = line.split(",");
+                String[] curr_cred = line.split("\t");
 
                 if (curr_cred.length != 3){
                     cred_reader.close();
@@ -573,7 +575,7 @@ public class ServerConnection implements Runnable {
         if (!checkInput(new String[]{service_name})){
             return new Pair<Response,Pair<String,String>>(Response.WRONG_INPT, null);
         }
-        if (this.checkDataFormat(new String[] {service_name})){
+        if (!this.checkDataFormat(new String[] {service_name})){
             return new Pair<Response,Pair<String,String>>(Response.BAD_FORMAT,null);
         }
     	if (!user_table.containsKey(service_name)){ //credentials not listed in server
@@ -593,7 +595,7 @@ public class ServerConnection implements Runnable {
         if (!checkInput(new String[]{stored_username, stored_password})){
             return Response.WRONG_INPT;
         }
-        if (this.checkDataFormat(new String[] {service_name, stored_username, stored_password})){
+        if (!this.checkDataFormat(new String[] {service_name, stored_username, stored_password})){
             return Response.BAD_FORMAT;
         }
     	if (user_table.containsKey(service_name))
@@ -610,7 +612,7 @@ public class ServerConnection implements Runnable {
         if (!checkInput(new String[]{new_username, new_stored_pass})){
             return Response.WRONG_INPT;
         }
-        if (this.checkDataFormat(new String[] {service_name, new_username, new_stored_pass})){
+        if (!this.checkDataFormat(new String[] {service_name, new_username, new_stored_pass})){
             return Response.BAD_FORMAT;
         }
         if (!user_table.containsKey(service_name)) {
@@ -628,7 +630,7 @@ public class ServerConnection implements Runnable {
         if (!checkInput(new String[]{service_name})){
             return Response.WRONG_INPT;
         }
-        if (this.checkDataFormat(new String[] {service_name})){
+        if (!this.checkDataFormat(new String[] {service_name})){
             return Response.BAD_FORMAT;
         }
         if (!user_table.containsKey(service_name))
@@ -637,20 +639,21 @@ public class ServerConnection implements Runnable {
         return Response.SUCCESS;
     }
 
+
     protected Response logout() {
+
         try{
             BufferedWriter writer = new BufferedWriter(
                     new FileWriter(curr_dir.concat("/stored_credentials.txt")));
             for (String k : user_table.keySet()){
-               writer.write(k + "," +  user_table.get(k).first() + "," + user_table.get(k).second() + "\n");
+               writer.write(k + "\t" +  user_table.get(k).first() + "\t" + user_table.get(k).second() + "\n");
             }
             writer.flush();
             writer.close();
         } catch (IOException e) {
-            // TODO: Need something to log here...
+            e.printStackTrace();
             return Response.FAIL;
         }
-
         // Also should log here
         return Response.SUCCESS;
             
