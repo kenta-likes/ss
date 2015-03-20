@@ -131,15 +131,6 @@ public class Shell {
         }
 
         if (samePassword) {
-            if (containsComma) {
-                System.out.println("Please do not enter commas in passwords.");
-
-                /* Clear the password from memory. */
-                java.util.Arrays.fill(password0, ' ');
-                java.util.Arrays.fill(password1, ' ');
-                return;
-            }
-
             email = con.readLine("Email address: ");
             
             err = Client.register(username, password0, email);

@@ -280,6 +280,8 @@ public class Client {
     /* Add a set of credentials to an account.
      * pre: user is logged in
      * post: server adds that set of credentials to the account.
+     *
+     * XXX TODO: ensure there are no commas (or delimit with non-printing characters!!!)
      */
     protected static Response addCreds(String service, String username, String password) {
         JSONObject respPacket = null;
