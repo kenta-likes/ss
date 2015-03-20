@@ -187,18 +187,28 @@ public class Shell {
                 return;
             }            
         } else {
-            Pair<Response, String> resp = Client.requestCreds(service);
-            String[] creds;
+            Pair<Response, Pair<String, char[]>> resp = Client.requestCreds(service);
+            Pair<String, char[]> creds;
+            char[] pass;
             
             err = resp.first();
 
             if (resp.second() != null) {
-                creds = resp.second().split(",");
+                creds = resp.second();
 
                 if (err == Response.SUCCESS) {
                     System.out.println("Credentials for " + service + ":");
-                    System.out.println("Username: " + creds[0]);
-                    System.out.println("Password: " + creds[1]);
+                    System.out.println("Username: " + creds.first());
+                    System.out.print("Password: ");
+                    
+                    pass = creds.second();
+                    /* Print and zero out array. */
+                    for (int i = 0; i < pass.length; i++) {
+                        System.out.print(pass[i]);
+                        pass[i] = (char) 0;
+                    }
+                        
+                    System.out.println();
                     return;
                 }
             }

@@ -7,6 +7,9 @@ import java.security.KeyStore;
 import java.util.List;
 import java.util.ArrayList;
 
+import java.nio.charset.Charset;
+import java.nio.ByteBuffer;
+
 import org.json.*;
 import util.*;
 
@@ -82,12 +85,15 @@ public class Client {
     }
 
     protected static String encryptPassword(String password) {
-        byte[] encBytes;
+        byte[] encBytes, decBytes;
         String encPass = password;
 
         try {
+            Charset charSet = Charset.forName("UTF-8");
+            decBytes = charSet.encode(password).array();
             
-            encBytes = encoder.doFinal(password.getBytes("UTF-8"));
+            encBytes = encoder.doFinal(decBytes);
+            
             /* Encode to a Base64 String representation. */
             encPass = DatatypeConverter.printBase64Binary(encBytes);
             
@@ -98,16 +104,20 @@ public class Client {
         return encPass;
     }
 
-    protected static String decryptPassword(String encPass) {
+    protected static char[] decryptPassword(String encPass) {
         byte[] decBytes, encBytes;
-        String decPass = encPass;
+        char[] decPass = null;
         
         try {
             /* Decode bytes from Base64 String representation. */
             encBytes = DatatypeConverter.parseBase64Binary(encPass);
             
             decBytes = decoder.doFinal(encBytes);
-            decPass = new String(decBytes, "UTF-8");
+
+            Charset charSet = Charset.forName("UTF-8");
+            /* Return a char array so we can zero it out after printing it. */
+            decPass = charSet.decode(ByteBuffer.wrap(decBytes)).array();
+            
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -319,10 +329,11 @@ public class Client {
      * post: none
      * returns: error code + the requested credentials.
      */
-    protected static Pair<Response, String> requestCreds(String service) {
+    protected static Pair<Response, Pair<String, char[]>> requestCreds(String service) {
         JSONObject respPacket = null;
         Response err;
-        String username, password, decPass;
+        String username, password;
+        char[] decPass;
         sockJS = new JSONWriter(sockWriter);
 
         sockJS.object()
@@ -338,15 +349,18 @@ public class Client {
             e.printStackTrace();
         }
         if (respPacket == null)
-            return new Pair<Response, String>(Response.FAIL, null);
+            return new Pair<Response, Pair<String, char[]>>(Response.FAIL, null);
 
         err = responseFromString(respPacket.getString("response"));
 
         if (err == Response.SUCCESS) {
+            boolean correctService = true;
+            char[] justPass;
             username = respPacket.getString("username");
             password = respPacket.getString("password");
 
             decPass = decryptPassword(password);
+            justPass = new char[decPass.length - service.length()];
 
             /* Make sure we are retrieving the password for the correct service! See details in design document
              * about the attack that would cause this.
@@ -354,16 +368,32 @@ public class Client {
              * We are prepending the service name associated with a password before encrypting that password
              * and storing it on the server.
              */
-            if (service.equals(decPass.substring(0, service.length()))) {
-                return new Pair<Response, String>(err, username + "," + decPass.substring(service.length()));
+
+            /* Substring for char array and string comparison */
+            for (int i = 0; i < service.length(); i++) {
+                correctService &= (decPass[i] == service.charAt(i));
+            }
+
+            if (correctService) {
+                
+                for (int i = service.length(); i < decPass.length; i++)
+                    justPass[i - service.length()] = decPass[i];
+
+                for (int i = 0; i < decPass.length; i++)
+                    decPass[i] = (char) 0;
+                
+                return new Pair<Response, Pair<String, char[]>>(err, new Pair<String, char[]>(username, justPass));
+                
             } else {
-                System.out.println("Substring is " + decPass.substring(0, service.length()));
+                for (int i = 0; i < decPass.length; i++)
+                    decPass[i] = (char) 0;
+
                 System.out.println("Error: detected password for incorrect service!  Please contact a system administrator.");
-                return new Pair<Response, String>(Response.FAIL, null);
+                return new Pair<Response, Pair<String, char[]>>(Response.FAIL, null);
             }
         }
 
-        return new Pair<Response, String>(err, null);
+        return new Pair<Response, Pair<String, char[]>>(err, null);
     }
 
     /* Get all credentials from the server.
