@@ -27,6 +27,7 @@ public class Client {
     private static SSLSocket c;
     private static SecretKey key;
     private static Cipher encoder, decoder;
+    private static String username;
     
     public static void main(String[] args) {
         PrintStream out = System.out;
@@ -36,6 +37,7 @@ public class Client {
 
         sockReader = null;
         sockWriter = null;
+        username = null;
       
         try {
             KeyStore keystore = KeyStore.getInstance("JKS");
@@ -47,7 +49,7 @@ public class Client {
             TrustManager[] trustManagers = tmf.getTrustManagers();
             context.init(null, trustManagers, new SecureRandom());
             SSLSocketFactory sf = context.getSocketFactory();
-            SSLSocket c = (SSLSocket)sf.createSocket("en-cs-uglab03.coecis.cornell.edu", 8888);
+            SSLSocket c = (SSLSocket)sf.createSocket("localhost", 8888);
             c.startHandshake();
             printSocketInfo(c);
 
@@ -158,6 +160,7 @@ public class Client {
         err = responseFromString(respPacket.getString("response"));
 
         if (err == Response.SUCCESS) {
+            Client.username = username;
             try {
                 byte[] encPass, encKey, iv;
                 SecureRandom srand = SecureRandom.getInstance("SHA1PRNG");
@@ -237,6 +240,7 @@ public class Client {
         err = responseFromString(respPacket.getString("response"));
 
         if (err == Response.SUCCESS) {
+            Client.username = username;
             try {
                 KeyGenerator keyGen = KeyGenerator.getInstance("AES");
                 byte[] iv = new byte[16];
@@ -280,7 +284,7 @@ public class Client {
     protected static Response addCreds(String service, String username, String password) {
         JSONObject respPacket = null;
         Response err;
-        String encPass = encryptPassword(password);
+        String encPass = encryptPassword(service + password);
         sockJS = new JSONWriter(sockWriter);
         
 
@@ -316,7 +320,7 @@ public class Client {
     protected static Pair<Response, String> requestCreds(String service) {
         JSONObject respPacket = null;
         Response err;
-        String username, password;
+        String username, password, decPass;
         sockJS = new JSONWriter(sockWriter);
 
         sockJS.object()
@@ -340,7 +344,20 @@ public class Client {
             username = respPacket.getString("username");
             password = respPacket.getString("password");
 
-            return new Pair<Response, String>(err, username + "," + decryptPassword(password));
+            decPass = decryptPassword(password);
+
+            /* Make sure we are retrieving the password for the correct service! See details in design document
+             * about the attack that would cause this.
+             *
+             * We are prepending the service name associated with a password before encrypting that password
+             * and storing it on the server.
+             */
+            if (service.equals(decPass.substring(0, service.length() - 1))) {
+                return new Pair<Response, String>(err, username + "," + decPass.substring(service.length()));
+            } else {
+                System.out.println("Error: detected password for incorrect service!  Please contact a system administrator.");
+                return new Pair<Response, String>(Response.FAIL, null);
+            }
         }
 
         return new Pair<Response, String>(err, null);
@@ -432,7 +449,7 @@ public class Client {
             .key("command").value("EDIT")
             .key("service").value(service)
             .key("username").value(username)
-            .key("password").value(encryptPassword(password))
+            .key("password").value(encryptPassword(service + password))
             .endObject();
         sockWriter.println();
         sockWriter.flush();
@@ -500,6 +517,7 @@ public class Client {
         }
 
         err = responseFromString(respPacket.getString("response"));
+        username = null;
         
         return err;
     }
@@ -525,6 +543,13 @@ public class Client {
         }
 
         err = responseFromString(respPacket.getString("response"));
+
+        if (err == Response.SUCCESS) {
+            File keyFile = new File(System.getProperty("user.home") + username + ".conf");
+            keyFile.delete();
+            username = null;
+            err = logout();
+        }
 
         return err;
     }
