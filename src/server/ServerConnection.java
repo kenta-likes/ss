@@ -580,8 +580,7 @@ public class ServerConnection implements Runnable {
         }
     	if (!user_table.containsKey(service_name)){ //credentials not listed in server
             logUserResult("Get Credential", Response.NO_SVC);
-            return new Pair<Response,Pair<String, String>>(Response.NO_SVC,
-                                                           new Pair<String, String>("", ""));
+            return new Pair<Response,Pair<String, String>>(Response.NO_SVC, null);
     	}
         logUserResult("Get Credential", Response.SUCCESS);
     	return new Pair<Response,
