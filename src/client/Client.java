@@ -23,6 +23,8 @@ import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
 public class Client {
+
+    private static final String HOSTNAME = "localhost";
     
     private static PrintWriter sockWriter;
     private static JSONWriter sockJS;
@@ -52,7 +54,7 @@ public class Client {
             TrustManager[] trustManagers = tmf.getTrustManagers();
             context.init(null, trustManagers, new SecureRandom());
             SSLSocketFactory sf = context.getSocketFactory();
-            SSLSocket c = (SSLSocket)sf.createSocket("localhost", 8888);
+            SSLSocket c = (SSLSocket)sf.createSocket(HOSTNAME, 8888);
             c.startHandshake();
 
             sockReader = new BufferedReader(new InputStreamReader(c.getInputStream()));

@@ -1,0 +1,8 @@
+To compile the system, enter the src/ directory and run 'make all'.  The client is configured
+to connect to a server running on the localhost; if you wish to change the server address find
+the variable HOSTNAME (the first static variable in the Client class) and change its value
+to the address of the server.
+
+To run the server, from the src/ directory run "java server.Server".
+
+To run the client, from the src/ directory run "java client.Client".
