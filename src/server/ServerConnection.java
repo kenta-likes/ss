@@ -64,6 +64,7 @@ public class ServerConnection implements Runnable {
                         switch (command) {
                         
                         case "ATHN":
+                        case "RGST":
                             js.object()
                                 .key("response").value(Response.DUP_LOGIN)
                                 .endObject();
@@ -123,6 +124,7 @@ public class ServerConnection implements Runnable {
                         js.object()
                             .key("response").value(resp.name())
                             .endObject();
+                        
                         break;
                         
                         case "CHNG":
@@ -202,7 +204,12 @@ public class ServerConnection implements Runnable {
                                 .endObject();
 
                             break;
-                            
+                        case "CLOSE":
+                            logout();
+                            js.object()
+                            .key("response").value("SUCCESS")
+                            .endObject();
+                            break;
                         default: js.object()
                             .key("response").value("NAUTH")
                             .endObject();
@@ -215,16 +222,6 @@ public class ServerConnection implements Runnable {
                 if (timed_out) //TODO this is placeholder, change later for actual timeout check
                     break;
             }
-            
-            //write back to file, then remove reference to the hash table etc.
-            BufferedWriter writer = new BufferedWriter(
-                    new FileWriter(curr_dir.concat("/stored_credentials.txt")));
-            for (String k : user_table.keySet()){
-               writer.write(k + "," +  user_table.get(k).first() + "," + user_table.get(k).second() + "\n");
-            }
-            writer.flush();
-            writer.close();
-            System.out.println("ended in socket end");
             user_table = null;
             username = null;
             logCenter(username ,"Logout", Response.SUCCESS);
@@ -254,9 +251,27 @@ public class ServerConnection implements Runnable {
     /*
      * Helper fxn for simple string input checking
      * */
-    protected boolean checkInputFormat(String inputs[]){
+    protected boolean checkInput(String inputs[]){
         for (String s : inputs){
-            if (s == null || s.isEmpty())
+            if (s == null || s.isEmpty()) //disallow directory
+                return false;
+        }
+        return true;
+    }
+    
+    /*
+     * Helper fxn for checking valid usernames
+     * */
+    protected boolean checkUsernameFormat(String usr){
+        return !(usr == null || usr.contains("/") || usr.contains("\\"));
+    }
+    
+    /*
+     * helper fxn for checking data format to not contain tab spaces
+     * */
+    protected boolean checkDataFormat(String data[]){
+        for (String d : data){
+            if (d.isEmpty() || d.contains("\t")) //disallow directory
                 return false;
         }
         return true;
@@ -335,8 +350,11 @@ public class ServerConnection implements Runnable {
      * Assumes: username and password are valid (we haven't defined valid yet)
      * */
     protected Response createAccount(String new_usr, String password) {
-        if (!checkInputFormat(new String[]{new_usr, password})){
+        if (!checkInput(new String[]{new_usr, password})){
             return Response.WRONG_INPT;
+        }
+        if (this.checkUsernameFormat(new_usr)){
+            return Response.BAD_FORMAT;
         }
         // Directory already exists
         // Note: Not thread-safe 
@@ -389,7 +407,7 @@ public class ServerConnection implements Runnable {
      * Change password for this user
      * */
     protected Response changeAccountPassword(String old_password, String new_password){
-        if (!checkInputFormat(new String[]{old_password, new_password})){
+        if (!checkInput(new String[]{old_password, new_password})){
             return Response.WRONG_INPT;
         }
     	if (this.authAccount(this.username, old_password) != Response.SUCCESS){
@@ -430,7 +448,7 @@ public class ServerConnection implements Runnable {
      * Delete this account and log out the user.
      * */
     protected Response deleteAccount(String password){
-        if (!checkInputFormat(new String[]{password})){
+        if (!checkInput(new String[]{password})){
             return Response.WRONG_INPT;
         }
     	Response r = this.authAccount(this.username, password);
@@ -466,8 +484,11 @@ public class ServerConnection implements Runnable {
      * Authenticate user to system
      * */
     protected Response authAccount(String auth_usr, String password){
-        if (!checkInputFormat(new String[]{auth_usr, password})){
+        if (!checkInput(new String[]{auth_usr, password})){
             return Response.WRONG_INPT;
+        }
+        if (this.checkUsernameFormat(auth_usr)){
+            return Response.BAD_FORMAT;
         }
         // Note: Not thread-safe 
         if ( !(new File("users/" + auth_usr).isDirectory())){
@@ -549,8 +570,11 @@ public class ServerConnection implements Runnable {
      * Get password for specific service
      * */
     protected Pair<Response, Pair<String, String>> getPassword(String service_name){
-        if (!checkInputFormat(new String[]{service_name})){
+        if (!checkInput(new String[]{service_name})){
             return new Pair<Response,Pair<String,String>>(Response.WRONG_INPT, null);
+        }
+        if (this.checkDataFormat(new String[] {service_name})){
+            return new Pair<Response,Pair<String,String>>(Response.BAD_FORMAT,null);
         }
     	if (!user_table.containsKey(service_name)){ //credentials not listed in server
             logUserResult("Get Credential", Response.NO_SVC);
@@ -566,25 +590,15 @@ public class ServerConnection implements Runnable {
      * Adds new credentials
      * */
     protected Response addCredential(String service_name, String stored_username, String stored_password){
-        if (!checkInputFormat(new String[]{stored_username, stored_password})){
+        if (!checkInput(new String[]{stored_username, stored_password})){
             return Response.WRONG_INPT;
+        }
+        if (this.checkDataFormat(new String[] {service_name, stored_username, stored_password})){
+            return Response.BAD_FORMAT;
         }
     	if (user_table.containsKey(service_name))
             return Response.CRED_EXISTS;
     	user_table.put(service_name, new Pair<String,String>(stored_username, stored_password));
-    	
-    	try {
-
-            BufferedWriter writer = new BufferedWriter(
-                    new FileWriter(curr_dir.concat("/stored_credentials.txt")));
-            for (String k : user_table.keySet()){
-               writer.write(k + "," +  user_table.get(k).first() + "," + user_table.get(k).second() + "\n");
-            }
-            writer.flush();
-            writer.close();
-    	} catch (Exception e) {
-    	    e.printStackTrace();
-    	}
     	
     	return Response.SUCCESS;
     }
@@ -593,26 +607,17 @@ public class ServerConnection implements Runnable {
      * Updates credentials with new password
      * */
     protected Response updateCredential(String service_name, String new_username, String new_stored_pass){
-        if (!checkInputFormat(new String[]{new_username, new_stored_pass})){
+        if (!checkInput(new String[]{new_username, new_stored_pass})){
             return Response.WRONG_INPT;
+        }
+        if (this.checkDataFormat(new String[] {service_name, new_username, new_stored_pass})){
+            return Response.BAD_FORMAT;
         }
         if (!user_table.containsKey(service_name)) {
             System.out.println("Service " + service_name + " not in table.");
             return Response.NO_SVC;
         }
         user_table.put(service_name, new Pair<String,String>(new_username, new_stored_pass));
-        try {
-
-            BufferedWriter writer = new BufferedWriter(
-                    new FileWriter(curr_dir.concat("/stored_credentials.txt")));
-            for (String k : user_table.keySet()){
-               writer.write(k + "," +  user_table.get(k).first() + "," + user_table.get(k).second() + "\n");
-            }
-            writer.flush();
-            writer.close();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
         return Response.SUCCESS;
     }
     
@@ -620,13 +625,20 @@ public class ServerConnection implements Runnable {
      * Deletes specific credential for specified service
      * */
     protected Response deleteCredential(String service_name){
-        if (!checkInputFormat(new String[]{service_name})){
+        if (!checkInput(new String[]{service_name})){
             return Response.WRONG_INPT;
+        }
+        if (this.checkDataFormat(new String[] {service_name})){
+            return Response.BAD_FORMAT;
         }
         if (!user_table.containsKey(service_name))
             return Response.NO_SVC;
         user_table.remove(service_name);
-        try {
+        return Response.SUCCESS;
+    }
+
+    protected Response logout() {
+        try{
             BufferedWriter writer = new BufferedWriter(
                     new FileWriter(curr_dir.concat("/stored_credentials.txt")));
             for (String k : user_table.keySet()){
@@ -634,25 +646,7 @@ public class ServerConnection implements Runnable {
             }
             writer.flush();
             writer.close();
-            
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return Response.SUCCESS;
-    }
-
-    protected Response logout() {
-        try
-            (PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter
-                                                                  (curr_dir +
-                                                                   "/stored_credentials.txt"
-                                                                   , false))))
-            {
-                for (String s : user_table.keySet()) {
-                    Pair<String, String> creds = user_table.get(s);
-                    out.println(s + "," + creds.first() + "," + creds.second());
-                }
-            } catch (IOException e) {
+        } catch (IOException e) {
             // TODO: Need something to log here...
             return Response.FAIL;
         }
