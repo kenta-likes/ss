@@ -342,7 +342,7 @@ public class ServerConnection implements Runnable {
         // Note: Not thread-safe 
         if (new File("users/" + new_usr).isDirectory()){
         	//logCenter(username ,"Create Account", Response.FAIL);
-            return Response.FAIL;
+            return Response.USER_EXISTS;
         }
         // Create a new directory
         curr_dir = "users/" + new_usr;

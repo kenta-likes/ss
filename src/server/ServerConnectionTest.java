@@ -1,10 +1,10 @@
 package server;
 
 import util.*;
-
 import static org.junit.Assert.*;
 
 import java.io.File;
+import java.util.ArrayList;
 
 import org.junit.Test;
 
@@ -109,7 +109,37 @@ public class ServerConnectionTest {
 
 	@Test
 	public void testRetrieveCredentials() {
-		fail("Not yet implemented");
+		ServerConnection sc = new ServerConnection(null);
+		try {
+		    //create account
+            assertEquals(Response.SUCCESS, sc.createAccount("foo", "test"));
+            
+            //retrieve 0
+            ArrayList<String> cred_list = new ArrayList<String>();
+            Pair<Response, ArrayList<String>> expected = new Pair<Response,ArrayList<String>>(Response.SUCCESS, cred_list);
+    		assertEquals(expected, sc.retrieveCredentials());
+            
+            
+            //add another credential
+    		assertEquals(Response.SUCCESS, sc.addCredential("Amazon", "cs794@cornell.edu", "helloworld"));
+    		cred_list.add("Amazon");
+    		
+    		//retrieve 1
+    		expected = new Pair<Response,ArrayList<String>>(Response.SUCCESS, cred_list);
+    		assertEquals(expected, sc.retrieveCredentials());
+    		
+    		//add another credential
+    		assertEquals(Response.SUCCESS, sc.addCredential("Facebook", "cs794@cornell.edu", "imhungry"));
+    		cred_list.add("Facebook");
+    		
+            //retrieve 2
+    		expected = new Pair<Response,ArrayList<String>>(Response.SUCCESS, cred_list);
+    		assertEquals(expected, sc.retrieveCredentials());
+    		
+    		
+		} finally {
+		    sc.deleteAccount("helloworld");
+		}
 	}
 
 	@Test
