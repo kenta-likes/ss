@@ -34,8 +34,8 @@ public class ServerConnection implements Runnable {
     protected String username; //user associated with this account
     protected boolean timed_out = false; //TODO think about this later...
     protected Hashtable<String, Pair<String, String>> user_table;
-    MessageDigest messageDigest;
-    String curr_dir;
+    protected MessageDigest messageDigest;
+    protected String curr_dir;
          
     public ServerConnection(SSLSocket s) {
     	this.socket = s;
@@ -227,7 +227,7 @@ public class ServerConnection implements Runnable {
             }
     }
     
-    public String responseGetString(Response r){
+    protected String responseGetString(Response r){
     	switch (r){
 	    	case SUCCESS: return "SUCCESS";
 	    	case FAIL: return "INTERNAL ERROR";
@@ -245,7 +245,7 @@ public class ServerConnection implements Runnable {
     /*
      * Helper function for salting and hashing master passwords
      * */
-    public byte[] saltAndHash(String password, byte salt[]) throws NoSuchAlgorithmException {
+    protected byte[] saltAndHash(String password, byte salt[]) throws NoSuchAlgorithmException {
     	byte[] toHash = new byte[SALT_LEN + password.length()];
         
         System.arraycopy(password.getBytes(), 0, toHash, 0, password.length());
@@ -265,7 +265,7 @@ public class ServerConnection implements Runnable {
      * Helper function for logging for a specific user
      * Should be used for everything associated with the user
      * */
-    public void logUserResult(String method_name, Response res){
+    protected void logUserResult(String method_name, Response res){
         try {
             Date date = new Date();
             //PrintWriter logger = new PrintWriter(curr_dir.concat("/log.txt"), "UTF-8");
@@ -282,7 +282,7 @@ public class ServerConnection implements Runnable {
      * Helper function for logging for the server
      * */
 
-    public void logCenter(String user, String method_name, Response res){
+    protected void logCenter(String user, String method_name, Response res){
         try(PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter("centerlog.txt", true)))) {
         	Date date = new Date();
         	if (user==null){user = "N/A";}
@@ -302,7 +302,7 @@ public class ServerConnection implements Runnable {
      * Assumes: username and password are not null
      * Assumes: username and password are valid (we haven't defined valid yet)
      * */
-    public Response createAccount(String username, String password) {
+    protected Response createAccount(String username, String password) {
         // Directory already exists
         // Note: Not thread-safe 
         if (new File("users/" + username).isDirectory()){
@@ -353,7 +353,7 @@ public class ServerConnection implements Runnable {
     /*
      * Change password for this user
      * */
-    public Response changeAccountPassword(String old_password, String new_password){
+    protected Response changeAccountPassword(String old_password, String new_password){
     	if (this.authAccount(this.username, old_password) != Response.SUCCESS){
     		// Logging
     		logCenter(this.username, "Change Account Password", Response.FAIL);
@@ -394,7 +394,7 @@ public class ServerConnection implements Runnable {
     /*
      * Delete this account and log out the user.
      * */
-    public Response deleteAccount(String password){
+    protected Response deleteAccount(String password){
     	Response r = this.authAccount(this.username, password);
     	if (r != Response.SUCCESS){
     		// Logging
@@ -427,7 +427,7 @@ public class ServerConnection implements Runnable {
     /*
      * Authenticate user to system
      * */
-    public Response authAccount(String username, String password){
+    protected Response authAccount(String username, String password){
     	// Directory DNE TODO: check with other fxns
         // Note: Not thread-safe 
         if ( !(new File("users/" + username).isDirectory())){
@@ -499,7 +499,7 @@ public class ServerConnection implements Runnable {
      * Returns a list of services for which credentials stored on server.
      * Delimited by commas
      * */
-    public Pair<Response,ArrayList<String>> retrieveCredentials(){
+    protected Pair<Response,ArrayList<String>> retrieveCredentials(){
         ArrayList<String> cred_list = new ArrayList<String>();
         for (String k : user_table.keySet()){
                 cred_list.add(k);
@@ -511,7 +511,7 @@ public class ServerConnection implements Runnable {
     /*
      * Get password for specific service
      * */
-    public Pair<Response, Pair<String, String>> getPassword(String service_name){
+    protected Pair<Response, Pair<String, String>> getPassword(String service_name){
     	if (!user_table.containsKey(service_name)){ //credentials not listed in server
             logUserResult("Get Credential", Response.NO_SVC);
             return new Pair<Response,Pair<String, String>>(Response.NO_SVC,
@@ -525,7 +525,7 @@ public class ServerConnection implements Runnable {
     /*
      * Adds new credentials
      * */
-    public Response addCredential(String service_name, String stored_username, String stored_password){
+    protected Response addCredential(String service_name, String stored_username, String stored_password){
     	if (user_table.containsKey(service_name))
             return Response.CRED_EXISTS;
     	user_table.put(service_name, new Pair<String,String>(stored_username, stored_password));
@@ -535,7 +535,7 @@ public class ServerConnection implements Runnable {
     /*
      * Updates credentials with new password
      * */
-    public Response updateCredential(String service_name, String new_username, String new_stored_pass){
+    protected Response updateCredential(String service_name, String new_username, String new_stored_pass){
         if (!user_table.containsKey(service_name)) {
             System.out.println("Service " + service_name + " not in table.");
             return Response.NO_SVC;
@@ -547,14 +547,14 @@ public class ServerConnection implements Runnable {
     /*
      * Deletes specific credential for specified service
      * */
-    public Response deleteCredential(String service_name){
+    protected Response deleteCredential(String service_name){
         if (!user_table.containsKey(service_name))
             return Response.NO_SVC;
         user_table.remove(service_name);
         return Response.SUCCESS;
     }
 
-    public Response logout() {
+    protected Response logout() {
         try
             (PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter
                                                                   (curr_dir +
