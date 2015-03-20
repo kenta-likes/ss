@@ -10,6 +10,10 @@ import org.junit.Test;
 
 
 public class ServerConnectionTest {
+    /*
+     * All of these functions are protected and only called by the server loop. They work with
+     * assumptions on input/state that are written under each of the specs.
+     * */
 
 	@Test
 	public void testLog_Center() {
@@ -115,10 +119,27 @@ public class ServerConnectionTest {
 
 	@Test
 	public void testAddCredential() {
-		fail("Not yet implemented");
-//	    ServerConnection sc = new ServerConnection(null);
-//	    sc.createAccount("kl459", "test");
-//	    System.out.println(sc.responseGetString(sc.authAccount("kl459", "test")));
+        ServerConnection sc = new ServerConnection(null);
+        try {
+            //create account Note: this logins the user
+            assertEquals(Response.SUCCESS, sc.createAccount("foobar", "baz"));
+
+            //Add credentials
+            assertEquals(Response.SUCCESS, sc.addCredential("facebook", "foobar", "baz"));
+            //Add another credential
+            assertEquals(Response.SUCCESS, sc.addCredential("gmail", "foobar2", "baz2"));
+            //Add credential with same name
+            assertEquals(Response.CRED_EXISTS, sc.addCredential("facebook", "barfoo", "bazfoo"));
+            //check stored fb username
+            assertEquals("foobar", sc.getPassword("facebook").second().first());
+            //check stored gmail username
+            assertEquals("foobar2", sc.getPassword("gmail").second().first());
+            assertEquals("baz", sc.getPassword("facebook").second().second());
+            assertEquals("baz2", sc.getPassword("gmail").second().second());
+            
+        } finally {
+            sc.deleteAccount("baz");
+        }
 	}
 
 	@Test

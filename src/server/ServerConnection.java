@@ -216,7 +216,15 @@ public class ServerConnection implements Runnable {
                     break;
             }
             
-            //remove reference to the hash table etc.
+            //write back to file, then remove reference to the hash table etc.
+            BufferedWriter writer = new BufferedWriter(
+                    new FileWriter(curr_dir.concat("/stored_credentials.txt")));
+            for (String k : user_table.keySet()){
+               writer.write(k + "," +  user_table.get(k).first() + "," + user_table.get(k).second() + "\n");
+            }
+            writer.flush();
+            writer.close();
+            System.out.println("ended in socket end");
             user_table = null;
             username = null;
             logCenter(username ,"Logout", Response.SUCCESS);
@@ -496,9 +504,6 @@ public class ServerConnection implements Runnable {
             while ( (line=cred_reader.readLine()) != null ){
                 String[] curr_cred = line.split(",");
 
-                if (curr_cred[2].charAt(curr_cred[2].length() - 1) == '\n')
-                    System.out.println("Found a newline!!");
-
                 if (curr_cred.length != 3){
                     cred_reader.close();
                     logUserResult("Authenticate Account", Response.FAIL);
@@ -567,6 +572,20 @@ public class ServerConnection implements Runnable {
     	if (user_table.containsKey(service_name))
             return Response.CRED_EXISTS;
     	user_table.put(service_name, new Pair<String,String>(stored_username, stored_password));
+    	
+    	try {
+
+            BufferedWriter writer = new BufferedWriter(
+                    new FileWriter(curr_dir.concat("/stored_credentials.txt")));
+            for (String k : user_table.keySet()){
+               writer.write(k + "," +  user_table.get(k).first() + "," + user_table.get(k).second() + "\n");
+            }
+            writer.flush();
+            writer.close();
+    	} catch (Exception e) {
+    	    e.printStackTrace();
+    	}
+    	
     	return Response.SUCCESS;
     }
     
@@ -581,7 +600,19 @@ public class ServerConnection implements Runnable {
             System.out.println("Service " + service_name + " not in table.");
             return Response.NO_SVC;
         }
-        user_table.put(service_name, new Pair<String,String>(new_username, new_stored_pass)); //TODO FIX username!!
+        user_table.put(service_name, new Pair<String,String>(new_username, new_stored_pass));
+        try {
+
+            BufferedWriter writer = new BufferedWriter(
+                    new FileWriter(curr_dir.concat("/stored_credentials.txt")));
+            for (String k : user_table.keySet()){
+               writer.write(k + "," +  user_table.get(k).first() + "," + user_table.get(k).second() + "\n");
+            }
+            writer.flush();
+            writer.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         return Response.SUCCESS;
     }
     
@@ -595,6 +626,18 @@ public class ServerConnection implements Runnable {
         if (!user_table.containsKey(service_name))
             return Response.NO_SVC;
         user_table.remove(service_name);
+        try {
+            BufferedWriter writer = new BufferedWriter(
+                    new FileWriter(curr_dir.concat("/stored_credentials.txt")));
+            for (String k : user_table.keySet()){
+               writer.write(k + "," +  user_table.get(k).first() + "," + user_table.get(k).second() + "\n");
+            }
+            writer.flush();
+            writer.close();
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         return Response.SUCCESS;
     }
 
