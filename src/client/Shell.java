@@ -44,7 +44,7 @@ public class Shell {
         Response err;
         char[] password;
 
-        conf = con.readLine("Delete account. Are you sure?[y/n]: ");
+        conf = con.readLine("Delete account. Are you sure? [y/n]: ");
 
         password = con.readPassword("Password: ");
 
