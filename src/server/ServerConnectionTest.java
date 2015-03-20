@@ -26,15 +26,19 @@ public class ServerConnectionTest {
 
 	@Test
 	public void testCreateAccount() throws Exception{
-    		// 1. Create an account
+    		// Create an account
     	ServerConnection sc = new ServerConnection(null);
     	try{
-    		assertEquals(Response.SUCCESS, sc.createAccount("cs794", "helloworld"));
+    		// case0. invalid inputs
+    		assertEquals(Response.BAD_FORMAT, sc.createAccount("fo/ o", "helloworld"));
     		
-    		// 2. Try to create a duplicate account
-    		assertEquals(Response.FAIL, sc.createAccount("cs794", "helloworld"));
-    				
-    		sc.deleteAccount("helloworld");
+    		// case1. success
+    		assertEquals(Response.SUCCESS, sc.createAccount("foo", "helloworld"));
+    		
+    		// case2. try to create a duplicate account
+    		assertEquals(Response.USER_EXISTS, sc.createAccount("foo", "helloworld"));
+
+    		
 	    } finally {
 	        sc.deleteAccount("helloworld");
 	    }
@@ -157,13 +161,19 @@ public class ServerConnectionTest {
             //case1. retrieve a credential that does not exist
             Pair<String, String> cred = null;
             Pair<Response, Pair<String, String>> expected = new Pair<Response,Pair<String, String>>(Response.NO_SVC, cred);	
-            assertEquals(expected, sc.getPassword("Amazon"));
+            Pair<Response, Pair<String, String>> result = sc.getPassword("Amazon");
+            assertEquals(expected.first(), result.first());
+            assertEquals(expected.second(), result.second());
+            
             
             //case2. retrieve a credential that exists
             assertEquals(Response.SUCCESS, sc.addCredential("Facebook", "cs794@cornell.edu", "imhungry"));
             cred = new Pair<String, String>("cs794@cornell.edu", "imhungry");
             expected = new Pair<Response, Pair<String, String>>(Response.SUCCESS, cred);
-            assertEquals(expected, sc.getPassword("Facebook"));
+            result = sc.getPassword("Facebook");
+            assertEquals(expected.first(), result.first());
+            assertEquals(expected.second().first(), result.second().first());
+            assertEquals(expected.second().second(), result.second().second());
 
 		}finally {
 		    sc.deleteAccount("test");
