@@ -32,7 +32,7 @@ public class ServerConnectionTest {
     		assertEquals(Response.SUCCESS, sc.createAccount("cs794", "helloworld"));
     		
     		// 2. Try to create a duplicate account
-    		assertEquals(Response.FAIL, sc.createAccount("cs794", "helloworld"));
+    		assertEquals(Response.USER_EXISTS, sc.createAccount("cs794", "helloworld"));
     				
     		sc.deleteAccount("helloworld");
 	    } finally {
