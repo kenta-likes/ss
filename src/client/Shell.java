@@ -312,6 +312,9 @@ public class Shell {
         case NAUTH:
             System.out.println("Error: you are not logged in!");
             return;
+
+        case BAD_FORMAT:
+            System.out.println("Error: the / and \\ characters are not allowed."
             
         case WRONG_INPT: /* fall through.  Generic error message in this case. */
             System.out.println("Error: incorrect username or password.");
