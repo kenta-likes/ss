@@ -117,16 +117,20 @@ public class ServerConnectionTest {
             //retrieve 0
             ArrayList<String> cred_list = new ArrayList<String>();
             Pair<Response, ArrayList<String>> expected = new Pair<Response,ArrayList<String>>(Response.SUCCESS, cred_list);
-    		assertEquals(expected, sc.retrieveCredentials());
+    		assertEquals(expected.second(), sc.retrieveCredentials().second());
+    		assertEquals(expected.first(), sc.retrieveCredentials().first());
+    		
             
             
             //add another credential
     		assertEquals(Response.SUCCESS, sc.addCredential("Amazon", "cs794@cornell.edu", "helloworld"));
+    		cred_list = new ArrayList<String>();
     		cred_list.add("Amazon");
     		
     		//retrieve 1
     		expected = new Pair<Response,ArrayList<String>>(Response.SUCCESS, cred_list);
-    		assertEquals(expected, sc.retrieveCredentials());
+    		assertEquals(expected.second(), sc.retrieveCredentials().second());
+    		assertEquals(expected.first(), sc.retrieveCredentials().first());
     		
     		//add another credential
     		assertEquals(Response.SUCCESS, sc.addCredential("Facebook", "cs794@cornell.edu", "imhungry"));
@@ -134,7 +138,8 @@ public class ServerConnectionTest {
     		
             //retrieve 2
     		expected = new Pair<Response,ArrayList<String>>(Response.SUCCESS, cred_list);
-    		assertEquals(expected, sc.retrieveCredentials());
+    		assert(expected.second().contains(sc.retrieveCredentials().second()));
+    		assertEquals(expected.first(), sc.retrieveCredentials().first());
     		
     		
 		} finally {
@@ -192,8 +197,27 @@ public class ServerConnectionTest {
 
 	@Test
 	public void testUpdateCredential() {
-		fail("Not yet implemented");
-	}
+		ServerConnection sc = new ServerConnection(null);
+        try {
+        	//create account and add a credential Note: this logins the user
+            assertEquals(Response.SUCCESS, sc.createAccount("foo", "test"));
+            assertEquals(Response.SUCCESS, sc.addCredential("Cornell", "kenta", "iamkent"));
+            
+            // case1. Update attempt on a credential that does not exist
+            assertEquals(Response.NO_SVC, sc.updateCredential("Harvard", "kenta", "iamkenta"));
+            
+            // case2. Successfully updates a credential
+            assertEquals(Response.SUCCESS, sc.updateCredential("Cornell", "kenta", "iamkenta"));
+            
+            // case3. Invalid password
+            assertEquals(Response.BAD_FORMAT, sc.updateCredential("Cornell", "../chie", "iam 	kenta"));
+            
+        	
+        } finally {
+            sc.deleteAccount("test");
+        }
+    
+}
 
 	@Test
 	public void testDeleteCredential() {
