@@ -64,6 +64,7 @@ public class ServerConnection implements Runnable {
                         switch (command) {
                         
                         case "ATHN":
+                        case "RGST":
                             js.object()
                                 .key("response").value(Response.DUP_LOGIN)
                                 .endObject();
