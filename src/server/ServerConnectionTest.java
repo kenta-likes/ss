@@ -177,6 +177,21 @@ public class ServerConnectionTest {
             //create account Note: this logins the user
             assertEquals(Response.SUCCESS, sc.createAccount("foobar", "baz"));
 
+            //try to add credentials with empty inputs
+            assertEquals(Response.WRONG_INPT, sc.addCredential("", "", ""));
+            //try to add credentials with null inputs
+            assertEquals(Response.WRONG_INPT, sc.addCredential(null, null, null));
+
+
+            //try to add credentials with tabspaces in service name
+            assertEquals(Response.BAD_FORMAT, sc.addCredential("face\tbook", "username", "pass\tword"));
+            //try to add credentials with tabspaces in password
+            assertEquals(Response.BAD_FORMAT, sc.addCredential("facebook", "username", "pass\tword"));
+            //try to add credentials with tabspaces in username
+            assertEquals(Response.BAD_FORMAT, sc.addCredential("facebook", "user\tname", "password"));
+            //add cred with only tabspace in service name
+            assertEquals(Response.BAD_FORMAT, sc.addCredential("\t", "\t", "\t"));
+
             //Add credentials
             assertEquals(Response.SUCCESS, sc.addCredential("facebook", "foobar", "baz"));
             //Add another credential
@@ -187,8 +202,12 @@ public class ServerConnectionTest {
             assertEquals("foobar", sc.getPassword("facebook").second().first());
             //check stored gmail username
             assertEquals("foobar2", sc.getPassword("gmail").second().first());
+            //check stored facebook pass
             assertEquals("baz", sc.getPassword("facebook").second().second());
+            //check stored gmail pass
             assertEquals("baz2", sc.getPassword("gmail").second().second());
+            
+            
             
         } finally {
             sc.deleteAccount("baz");
@@ -221,7 +240,37 @@ public class ServerConnectionTest {
 
 	@Test
 	public void testDeleteCredential() {
-		fail("Not yet implemented");
+        ServerConnection sc = new ServerConnection(null);
+        try {
+            //create account Note: this logins the user
+            assertEquals(Response.SUCCESS, sc.createAccount("foobar", "baz"));
+            
+            
+            //try to delete credentials with empty inputs
+            assertEquals(Response.WRONG_INPT, sc.deleteCredential(""));
+            //try to delete credentials with null inputs
+            assertEquals(Response.WRONG_INPT, sc.deleteCredential(null));
+            //try to delete credentials with tabspaces in service name
+            assertEquals(Response.BAD_FORMAT, sc.deleteCredential("face\tbook"));
+            //delete cred with only tabspace in service name
+            assertEquals(Response.BAD_FORMAT, sc.deleteCredential("\t"));
+            //delete nonexistent credential
+            assertEquals(Response.NO_SVC, sc.deleteCredential("facebook"));
+
+            //Add credentials
+            assertEquals(Response.SUCCESS, sc.addCredential("facebook", "foobar", "baz"));
+            //Add another credential
+            assertEquals(Response.SUCCESS, sc.addCredential("gmail", "foobar2", "baz2"));
+
+            //delete existing credential
+            assertEquals(Response.SUCCESS, sc.deleteCredential("facebook"));
+            //delete already deleted credential
+            assertEquals(Response.NO_SVC, sc.deleteCredential("facebook"));
+            
+            
+        } finally {
+            sc.deleteAccount("baz");
+        }
 	}
 
 }
