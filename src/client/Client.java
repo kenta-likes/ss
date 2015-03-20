@@ -497,6 +497,7 @@ public class Client {
             respPacket = new JSONObject(sockReader.readLine());
         } catch (IOException e) {
             e.printStackTrace();
+            return responseFromString("IO Error getting response from server");
         }
 
         err = responseFromString(respPacket.getString("response"));
@@ -522,6 +523,7 @@ public class Client {
             respPacket = new JSONObject(sockReader.readLine());
         } catch (IOException e) {
             e.printStackTrace();
+            return responseFromString("IO Error getting response from server");
         }
 
         err = responseFromString(respPacket.getString("response"));
