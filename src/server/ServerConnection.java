@@ -219,6 +219,7 @@ public class ServerConnection implements Runnable {
             //remove reference to the hash table etc.
             user_table = null;
             username = null;
+            logCenter(username ,"Logout", Response.SUCCESS);
             r.close();
             socket.close();
     	} catch (Exception e)
@@ -269,8 +270,12 @@ public class ServerConnection implements Runnable {
         try {
             Date date = new Date();
             //PrintWriter logger = new PrintWriter(curr_dir.concat("/log.txt"), "UTF-8");
-            PrintWriter logger = new PrintWriter(new BufferedWriter(new FileWriter(curr_dir.concat("user_log.txt"), true)));
-            logger.println(date.toString() + ": " + responseGetString(res) + " on " + method_name);
+            PrintWriter logger = new PrintWriter(new BufferedWriter
+                    (new FileWriter(curr_dir.concat("user_log.txt"), true)));
+            logger.println(date.toString()
+                    + "\t" + socket.getRemoteSocketAddress()
+                    + "\t" + method_name
+                    + "\t" + responseGetString(res) );
             logger.flush();
             logger.close();
         } catch (IOException e){
@@ -286,7 +291,11 @@ public class ServerConnection implements Runnable {
         try(PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter("centerlog.txt", true)))) {
         	Date date = new Date();
         	if (user==null){user = "N/A";}
-        	out.println(user +"\t"+date.toString()+"\t"+method_name+"\t"+ responseGetString(res));
+        	out.println(user
+        	        + "\t"+date.toString()
+        	        + "\t" + socket.getRemoteSocketAddress()
+        	        + "\t" + method_name
+        	        + "\t" + responseGetString(res));
         	out.flush();
         	out.close();
         }catch (IOException e) {
@@ -345,7 +354,7 @@ public class ServerConnection implements Runnable {
         
         //Logging
 		logCenter(this.username, "Create Account", Response.SUCCESS);
-        logUserResult("Create Account", Response.SUCCESS);
+        logUserResult("Create Account", Response.SUCCESS); // ?
 
         return Response.SUCCESS;
     }
@@ -356,8 +365,7 @@ public class ServerConnection implements Runnable {
     protected Response changeAccountPassword(String old_password, String new_password){
     	if (this.authAccount(this.username, old_password) != Response.SUCCESS){
     		// Logging
-    		logCenter(this.username, "Change Account Password", Response.FAIL);
-    		//logUserResult("Change Account Password", Response.FAIL);
+    		logUserResult("Change Account Password", Response.FAIL);
     		return Response.FAIL;
     	}
     	
@@ -368,7 +376,6 @@ public class ServerConnection implements Runnable {
         try{
             hashedpassword = saltAndHash(new_password, salt);
         } catch (NoSuchAlgorithmException e){
-        	logCenter(this.username, "Change Account Password", Response.FAIL);
             return Response.FAIL; //should never happen
         }
 		
@@ -383,8 +390,7 @@ public class ServerConnection implements Runnable {
             writer.close();
         } catch (IOException e1) {
             e1.printStackTrace();
-            logCenter(this.username, "Change Account Password", Response.FAIL);
-            //logUserResult("Change Account Password", Response.FAIL);
+            logUserResult("Change Account Password", Response.FAIL);
             return Response.FAIL; //should never happen
         }
         logUserResult("Change Account Password", Response.SUCCESS);
