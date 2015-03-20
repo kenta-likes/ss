@@ -54,7 +54,6 @@ public class Client {
             SSLSocketFactory sf = context.getSocketFactory();
             SSLSocket c = (SSLSocket)sf.createSocket("localhost", 8888);
             c.startHandshake();
-            printSocketInfo(c);
 
             sockReader = new BufferedReader(new InputStreamReader(c.getInputStream()));
             sockWriter = new PrintWriter(c.getOutputStream(), true);
@@ -134,6 +133,7 @@ public class Client {
         case "CRED_EXISTS": return Response.CRED_EXISTS;
         case "USER_EXISTS": return Response.USER_EXISTS;
         case "DUP_LOGIN": return Response.DUP_LOGIN;
+        case "BAD_FORMAT": return Response.BAD_FORMAT;
         case "FAIL":
         default: return Response.FAIL;
         }
@@ -316,8 +316,9 @@ public class Client {
             e.printStackTrace();
         }
 
-        if (respPacket == null)
+        if (respPacket == null) {
             return Response.FAIL;
+        }
 
         err = responseFromString(respPacket.getString("response"));
 
