@@ -25,7 +25,7 @@ public class Server {
          SSLServerSocket s 
             = (SSLServerSocket) ssf.createServerSocket(8888);
 
-         printServerSocketInfo(s);
+         //printServerSocketInfo(s);
          
          ExecutorService executor = Executors.newFixedThreadPool(8);
          while (true) {

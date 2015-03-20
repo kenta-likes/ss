@@ -58,7 +58,7 @@ public class ServerConnection implements Runnable {
                     command = req.getString("command");
                     
                     //check for authenticated user
-                    System.out.println("ServerConnection: command=" +command);
+                    //System.out.println("ServerConnection: command=" +command);
                     if (username != null){
                         
                         switch (command) {
@@ -74,9 +74,8 @@ public class ServerConnection implements Runnable {
                             String service = req.getString("service");
                             String sName = req.getString("username");
                             String sPass = req.getString("password");
-                            String resp1 = responseGetString(addCredential(service, sName, sPass));
                             js.object()
-                                .key("response").value(resp1)
+                                .key("response").value(addCredential(service,sName,sPass).name())
                                 .endObject();
                             break;
                         case "GET1":
@@ -171,7 +170,7 @@ public class ServerConnection implements Runnable {
                             }
                             
                         default:
-                        	System.out.println("username is not null: command is "+command);
+                        	//System.out.println("username is not null: command is "+command);
                         	// TODO: this is a stub to prevent json from breaking
                         	js.object()
                             .key("response").value("NAUTH")
@@ -234,21 +233,6 @@ public class ServerConnection implements Runnable {
             }
     }
     
-    protected String responseGetString(Response r){
-    	switch (r){
-	    	case SUCCESS: return "SUCCESS";
-	    	case FAIL: return "INTERNAL ERROR";
-	    	case WRONG_INPT: return "WRONG USERNAME OR PASSWORD";
-	    	case NO_SVC: return "CREDENTIAL DOES NOT EXIST";
-	    	case NAUTH: return "USER NOT LOGGED IN";
-	    	case USER_EXISTS: return "USERNAME IS TAKEN";
-	    	case CRED_EXISTS: return "CREDENTIAL ALREADY TAKEN";
-	    	case DUP_LOGIN: return "ALREADY LOGGED IN";
-	    	case BAD_FORMAT: return "BAD_FORMAT";
-	    	default: break;
-    	}
-    	return "";
-    }
     
     /*
      * Helper fxn for simple string input checking
@@ -313,7 +297,7 @@ public class ServerConnection implements Runnable {
             logger.println(date.toString()
                     + "\t" + ip_addr
                     + "\t" + method_name
-                    + "\t" + responseGetString(res) );
+                    + "\t" + res.name() );
             logger.flush();
             logger.close();
         } catch (IOException e){
@@ -335,7 +319,7 @@ public class ServerConnection implements Runnable {
         	        + "\t" + date.toString()
         	        + "\t" + ip_addr
         	        + "\t" + method_name
-        	        + "\t" + responseGetString(res));
+        	        + "\t" + res.name());
         	out.flush();
         	out.close();
         }catch (IOException e) {
@@ -532,7 +516,7 @@ public class ServerConnection implements Runnable {
                     logUserResult("Authenticate Account", Response.FAIL);
                     return Response.FAIL;
                 }
-                System.out.println("Loaded creds for " + curr_cred[0]);
+                //System.out.println("Loaded creds for " + curr_cred[0]);
                 user_table.put(curr_cred[0], new Pair<String,String>(curr_cred[1], curr_cred[2]));
             }
             cred_reader.close();
@@ -616,7 +600,7 @@ public class ServerConnection implements Runnable {
             return Response.BAD_FORMAT;
         }
         if (!user_table.containsKey(service_name)) {
-            System.out.println("Service " + service_name + " not in table.");
+            //System.out.println("Service " + service_name + " not in table.");
             return Response.NO_SVC;
         }
         user_table.put(service_name, new Pair<String,String>(new_username, new_stored_pass));
