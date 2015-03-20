@@ -406,11 +406,12 @@ public class ServerConnection implements Runnable {
     	// Delete the account
     	File directory = new File(curr_dir);
     	String[] entries = directory.list();
-    	
-    	// Delete all the files in this directory
-    	for (String s: entries){
-            File currentFile = new File(directory.getPath(), s);
-            currentFile.delete();
+    	if (entries != null) {
+    		// Delete all the files in this directory
+    		for (String s: entries){
+    			File currentFile = new File(directory.getPath(), s);
+    			currentFile.delete();
+    		}
     	}
     	
     	// delete the directory 

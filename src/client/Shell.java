@@ -30,7 +30,7 @@ public class Shell {
             case "change": handleChange(splitCommand); break;
             case "exit":
             case "logout": handleLogout(); return;
-            case "unregister": handleUnregister(); break;
+            case "unregister": handleUnregister(); return;
             case "chpass": handleMasterChange(); break;
             case "help": if (splitCommand.length == 1) help(); else help(splitCommand[1]);
                 break;
@@ -112,7 +112,7 @@ public class Shell {
         String username, email;
         char[] password0, password1;
         Response err;
-        boolean samePassword = true;
+        boolean samePassword = true, containsComma = false;
 
         username = con.readLine("Username: ");
         password0 = con.readPassword("Password: ");
@@ -124,10 +124,22 @@ public class Shell {
             for (int i = 0; i < password0.length; i++) {
                 /* Make sure the user entered the password they intended - twice. */
                 samePassword &= (password0[i] == password1[i]);
+
+                if (password0[i] == ',')
+                    containsComma = true;
             }
         }
 
         if (samePassword) {
+            if (containsComma) {
+                System.out.println("Please do not enter commas in passwords.");
+
+                /* Clear the password from memory. */
+                java.util.Arrays.fill(password0, ' ');
+                java.util.Arrays.fill(password1, ' ');
+                return;
+            }
+
             email = con.readLine("Email address: ");
             
             err = Client.register(username, password0, email);
@@ -285,7 +297,7 @@ public class Shell {
         case "chpass": helpMsg = "chpass: initiates a change to your account master password.";
             break;
         case "help": helpMsg = "help <command>: display help about a certain command."; break;
-        default: helpMsg = "Failure: command not recognized.";
+        default: helpMsg = "Error: command not recognized.";
         }
 
         System.out.println(helpMsg);
@@ -297,37 +309,37 @@ public class Shell {
         case SUCCESS: return;
 
         case NAUTH:
-            System.out.println("Failure: you are not logged in!");
+            System.out.println("Error: you are not logged in!");
             return;
             
         case WRONG_INPT: /* fall through.  Generic error message in this case. */
-            System.out.println("Failure: incorrect username or password.");
+            System.out.println("Error: incorrect username or password.");
             return;
             
         case NO_SVC: /* We could not find the requested service stored in the user's account
                       * e.g. Netfilx
                       */
-            System.out.println("Failure: the requested service was not found.");
+            System.out.println("Error: the requested service was not found.");
             return;
 
         case CRED_EXISTS: /* the credential that you tried to add is already in the server */
-            System.out.println("Failure: a set of credentials with that name already exists.");
+            System.out.println("Error: a set of credentials with that name already exists.");
             return;
 
         case USER_EXISTS: /* could not register an account with that username as one exists */
-            System.out.println("Failure: an account with that username already exists.");
+            System.out.println("Error: an account with that username already exists.");
             return;
             
         case DUP_LOGIN: /* duplicated login attempts */   
-        	System.out.println("Failure: you are already logged in.");
+        	System.out.println("Error: you are already logged in.");
         	return;
         
         case FAIL: /* Generic error */
-            System.out.println("Failure: the system encountered an unknown error.");
+            System.out.println("Error: the system encountered an unknown error.");
             return;
         
         default: /* For recompilation purposes */
-            System.out.println("Failure: unrecognized error code.  Please recompile.");
+            System.out.println("Error: unrecognized error code.  Please recompile.");
         }
     }
 }
