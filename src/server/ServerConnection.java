@@ -270,10 +270,12 @@ public class ServerConnection implements Runnable {
         try {
             Date date = new Date();
             //PrintWriter logger = new PrintWriter(curr_dir.concat("/log.txt"), "UTF-8");
+            String ip_addr = socket == null || socket.getRemoteSocketAddress() == null ? "N/A" :
+                socket.getRemoteSocketAddress().toString();
             PrintWriter logger = new PrintWriter(new BufferedWriter
                     (new FileWriter(curr_dir.concat("user_log.txt"), true)));
             logger.println(date.toString()
-                    + "\t" + socket.getRemoteSocketAddress()
+                    + "\t" + ip_addr
                     + "\t" + method_name
                     + "\t" + responseGetString(res) );
             logger.flush();
@@ -291,9 +293,11 @@ public class ServerConnection implements Runnable {
         try(PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter("centerlog.txt", true)))) {
         	Date date = new Date();
         	if (user==null){user = "N/A";}
+        	String ip_addr = socket == null || socket.getRemoteSocketAddress() == null ? "N/A" :
+        	                socket.getRemoteSocketAddress().toString();
         	out.println(user
-        	        + "\t"+date.toString()
-        	        + "\t" + socket.getRemoteSocketAddress()
+        	        + "\t" + date.toString()
+        	        + "\t" + ip_addr
         	        + "\t" + method_name
         	        + "\t" + responseGetString(res));
         	out.flush();
@@ -315,7 +319,7 @@ public class ServerConnection implements Runnable {
         // Directory already exists
         // Note: Not thread-safe 
         if (new File("users/" + username).isDirectory()){
-        	logCenter(username ,"Create Account", Response.FAIL);
+        	//logCenter(username ,"Create Account", Response.FAIL);
             return Response.FAIL;
         }
         // Create a new directory
