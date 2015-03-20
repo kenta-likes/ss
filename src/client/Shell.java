@@ -205,7 +205,7 @@ public class Shell {
                     /* Print and zero out array. */
                     for (int i = 0; i < pass.length; i++) {
                         System.out.print(pass[i]);
-                        pass[i] = (char) 0;
+                        pass[i] = ' ';
                     }
                         
                     System.out.println();
