@@ -1,0 +1,1269 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<BugCollection version="3.0.1-rc1" sequence="0" timestamp="1426883808000" analysisTimestamp="1426883819128" release="">
+  <Project projectName="5430">
+    <Jar>/home/mitchvogel/Documents/class/crypto/passman/cs5430/alpha.jar</Jar>
+  </Project>
+  <BugInstance type="BC_UNCONFIRMED_CAST_OF_RETURN_VALUE" priority="3" rank="20" abbrev="BC" category="STYLE">
+    <Class classname="client.Client">
+      <SourceLine classname="client.Client" sourcefile="Client.java" sourcepath="client/Client.java"/>
+    </Class>
+    <Method classname="client.Client" name="main" signature="([Ljava/lang/String;)V" isStatic="true">
+      <SourceLine classname="client.Client" start="38" end="70" startBytecode="0" endBytecode="90" sourcefile="Client.java" sourcepath="client/Client.java"/>
+    </Method>
+    <Type descriptor="Ljava/net/Socket;" role="TYPE_FOUND">
+      <SourceLine classname="java.net.Socket" start="59" end="1674" sourcefile="Socket.java" sourcepath="java/net/Socket.java"/>
+    </Type>
+    <Type descriptor="Ljavax/net/ssl/SSLSocket;" role="TYPE_EXPECTED">
+      <SourceLine classname="javax.net.ssl.SSLSocket" start="148" end="662" sourcefile="SSLSocket.java" sourcepath="javax/net/ssl/SSLSocket.java"/>
+    </Type>
+    <SourceLine classname="client.Client" start="57" end="57" startBytecode="127" endBytecode="127" sourcefile="Client.java" sourcepath="client/Client.java"/>
+  </BugInstance>
+  <BugInstance type="DLS_DEAD_LOCAL_STORE" priority="2" rank="17" abbrev="DLS" category="STYLE">
+    <Class classname="client.Client">
+      <SourceLine classname="client.Client" sourcefile="Client.java" sourcepath="client/Client.java"/>
+    </Class>
+    <Method classname="client.Client" name="login" signature="(Ljava/lang/String;[C)Lutil/Response;" isStatic="true">
+      <SourceLine classname="client.Client" start="146" end="219" startBytecode="0" endBytecode="129" sourcefile="Client.java" sourcepath="client/Client.java"/>
+    </Method>
+    <LocalVariable name="srand" register="7" pc="138" role="LOCAL_VARIABLE_NAMED"/>
+    <SourceLine classname="client.Client" start="178" end="178" startBytecode="136" endBytecode="136" sourcefile="Client.java" sourcepath="client/Client.java"/>
+    <Property name="edu.umd.cs.findbugs.detect.DeadLocalStoreProperty.LOCAL_NAME" value="srand"/>
+    <Property name="edu.umd.cs.findbugs.detect.DeadLocalStoreProperty.METHOD_RESULT" value="true"/>
+    <Property name="edu.umd.cs.findbugs.detect.DeadLocalStoreProperty.NO_LOADS" value="true"/>
+  </BugInstance>
+  <BugInstance type="DLS_DEAD_LOCAL_STORE" priority="2" rank="17" abbrev="DLS" category="STYLE">
+    <Class classname="client.Client">
+      <SourceLine classname="client.Client" sourcefile="Client.java" sourcepath="client/Client.java"/>
+    </Class>
+    <Method classname="client.Client" name="main" signature="([Ljava/lang/String;)V" isStatic="true">
+      <SourceLine classname="client.Client" start="38" end="70" startBytecode="0" endBytecode="90" sourcefile="Client.java" sourcepath="client/Client.java"/>
+    </Method>
+    <LocalVariable name="out" register="1" pc="4" role="LOCAL_VARIABLE_NAMED"/>
+    <SourceLine classname="client.Client" start="38" end="38" startBytecode="3" endBytecode="3" sourcefile="Client.java" sourcepath="client/Client.java"/>
+    <Property name="edu.umd.cs.findbugs.detect.DeadLocalStoreProperty.LOCAL_NAME" value="out"/>
+    <Property name="edu.umd.cs.findbugs.detect.DeadLocalStoreProperty.NO_LOADS" value="true"/>
+  </BugInstance>
+  <BugInstance type="DM_DEFAULT_ENCODING" priority="1" rank="19" abbrev="Dm" category="I18N">
+    <Class classname="client.Client">
+      <SourceLine classname="client.Client" sourcefile="Client.java" sourcepath="client/Client.java"/>
+    </Class>
+    <Method classname="client.Client" name="main" signature="([Ljava/lang/String;)V" isStatic="true">
+      <SourceLine classname="client.Client" start="38" end="70" startBytecode="0" endBytecode="508" sourcefile="Client.java" sourcepath="client/Client.java"/>
+    </Method>
+    <Method classname="java.io.InputStreamReader" name="&lt;init&gt;" signature="(Ljava/io/InputStream;)V" isStatic="false" role="METHOD_CALLED">
+      <SourceLine classname="java.io.InputStreamReader" start="72" end="79" startBytecode="0" endBytecode="146" sourcefile="InputStreamReader.java" sourcepath="java/io/InputStreamReader.java"/>
+    </Method>
+    <SourceLine classname="client.Client" start="60" end="60" startBytecode="150" endBytecode="150" sourcefile="Client.java" sourcepath="client/Client.java"/>
+  </BugInstance>
+  <BugInstance type="DM_DEFAULT_ENCODING" priority="1" rank="19" abbrev="Dm" category="I18N">
+    <Class classname="client.Client">
+      <SourceLine classname="client.Client" sourcefile="Client.java" sourcepath="client/Client.java"/>
+    </Class>
+    <Method classname="client.Client" name="main" signature="([Ljava/lang/String;)V" isStatic="true">
+      <SourceLine classname="client.Client" start="38" end="70" startBytecode="0" endBytecode="508" sourcefile="Client.java" sourcepath="client/Client.java"/>
+    </Method>
+    <Method classname="java.io.PrintWriter" name="&lt;init&gt;" signature="(Ljava/io/OutputStream;Z)V" isStatic="false" role="METHOD_CALLED">
+      <SourceLine classname="java.io.PrintWriter" start="148" end="154" startBytecode="0" endBytecode="131" sourcefile="PrintWriter.java" sourcepath="java/io/PrintWriter.java"/>
+    </Method>
+    <SourceLine classname="client.Client" start="61" end="61" startBytecode="169" endBytecode="169" sourcefile="Client.java" sourcepath="client/Client.java"/>
+  </BugInstance>
+  <BugInstance type="OBL_UNSATISFIED_OBLIGATION" priority="2" rank="20" abbrev="OBL" category="EXPERIMENTAL">
+    <Class classname="client.Client">
+      <SourceLine classname="client.Client" sourcefile="Client.java" sourcepath="client/Client.java"/>
+    </Class>
+    <Method classname="client.Client" name="login" signature="(Ljava/lang/String;[C)Lutil/Response;" isStatic="true">
+      <SourceLine classname="client.Client" start="146" end="219" startBytecode="0" endBytecode="658" sourcefile="Client.java" sourcepath="client/Client.java"/>
+    </Method>
+    <Class classname="java.io.InputStream" role="CLASS_REFTYPE">
+      <SourceLine classname="java.io.InputStream" sourcefile="InputStream.java" sourcepath="java/io/InputStream.java"/>
+    </Class>
+    <Int value="1" role="INT_OBLIGATIONS_REMAINING"/>
+    <SourceLine classname="client.Client" start="180" end="180" startBytecode="177" endBytecode="177" sourcefile="Client.java" sourcepath="client/Client.java" role="SOURCE_LINE_OBLIGATION_CREATED"/>
+    <SourceLine classname="client.Client" start="194" end="194" startBytecode="182" endBytecode="182" sourcefile="Client.java" sourcepath="client/Client.java" role="SOURCE_LINE_PATH_CONTINUES"/>
+    <SourceLine classname="client.Client" start="195" end="195" startBytecode="188" endBytecode="188" sourcefile="Client.java" sourcepath="client/Client.java" role="SOURCE_LINE_PATH_CONTINUES"/>
+    <SourceLine classname="client.Client" start="198" end="198" startBytecode="196" endBytecode="196" sourcefile="Client.java" sourcepath="client/Client.java" role="SOURCE_LINE_PATH_CONTINUES"/>
+    <SourceLine classname="client.Client" start="200" end="200" startBytecode="203" endBytecode="203" sourcefile="Client.java" sourcepath="client/Client.java" role="SOURCE_LINE_PATH_CONTINUES"/>
+    <SourceLine classname="client.Client" start="201" end="201" startBytecode="209" endBytecode="209" sourcefile="Client.java" sourcepath="client/Client.java" role="SOURCE_LINE_PATH_CONTINUES"/>
+    <SourceLine classname="client.Client" start="203" end="203" startBytecode="217" endBytecode="217" sourcefile="Client.java" sourcepath="client/Client.java" role="SOURCE_LINE_PATH_CONTINUES"/>
+    <SourceLine classname="client.Client" start="205" end="205" startBytecode="228" endBytecode="228" sourcefile="Client.java" sourcepath="client/Client.java" role="SOURCE_LINE_PATH_CONTINUES"/>
+    <SourceLine classname="client.Client" start="207" end="207" startBytecode="246" endBytecode="246" sourcefile="Client.java" sourcepath="client/Client.java" role="SOURCE_LINE_PATH_CONTINUES"/>
+    <SourceLine classname="client.Client" start="208" end="208" startBytecode="255" endBytecode="255" sourcefile="Client.java" sourcepath="client/Client.java" role="SOURCE_LINE_PATH_CONTINUES"/>
+    <SourceLine classname="client.Client" start="210" end="210" startBytecode="267" endBytecode="267" sourcefile="Client.java" sourcepath="client/Client.java" role="SOURCE_LINE_PATH_CONTINUES"/>
+    <SourceLine classname="client.Client" start="211" end="211" startBytecode="276" endBytecode="276" sourcefile="Client.java" sourcepath="client/Client.java" role="SOURCE_LINE_PATH_CONTINUES"/>
+    <SourceLine classname="client.Client" start="213" end="213" startBytecode="288" endBytecode="288" sourcefile="Client.java" sourcepath="client/Client.java" role="SOURCE_LINE_PATH_CONTINUES"/>
+    <SourceLine classname="client.Client" start="219" end="219" startBytecode="307" endBytecode="307" sourcefile="Client.java" sourcepath="client/Client.java" role="SOURCE_LINE_PATH_CONTINUES"/>
+    <String value="{InputStream x 1}" role="STRING_REMAINING_OBLIGATIONS"/>
+  </BugInstance>
+  <BugInstance type="OBL_UNSATISFIED_OBLIGATION_EXCEPTION_EDGE" priority="2" rank="20" abbrev="OBL" category="EXPERIMENTAL">
+    <Class classname="client.Client">
+      <SourceLine classname="client.Client" sourcefile="Client.java" sourcepath="client/Client.java"/>
+    </Class>
+    <Method classname="client.Client" name="register" signature="(Ljava/lang/String;[CLjava/lang/String;)Lutil/Response;" isStatic="true">
+      <SourceLine classname="client.Client" start="228" end="289" startBytecode="0" endBytecode="727" sourcefile="Client.java" sourcepath="client/Client.java"/>
+    </Method>
+    <Class classname="java.io.OutputStream" role="CLASS_REFTYPE">
+      <SourceLine classname="java.io.OutputStream" sourcefile="OutputStream.java" sourcepath="java/io/OutputStream.java"/>
+    </Class>
+    <Int value="1" role="INT_OBLIGATIONS_REMAINING"/>
+    <SourceLine classname="client.Client" start="268" end="268" startBytecode="237" endBytecode="237" sourcefile="Client.java" sourcepath="client/Client.java" role="SOURCE_LINE_OBLIGATION_CREATED"/>
+    <SourceLine classname="client.Client" start="272" end="272" startBytecode="242" endBytecode="242" sourcefile="Client.java" sourcepath="client/Client.java" role="SOURCE_LINE_PATH_CONTINUES"/>
+    <SourceLine classname="client.Client" start="283" end="283" startBytecode="319" endBytecode="319" sourcefile="Client.java" sourcepath="client/Client.java" role="SOURCE_LINE_PATH_CONTINUES"/>
+    <SourceLine classname="client.Client" start="284" end="284" startBytecode="321" endBytecode="321" sourcefile="Client.java" sourcepath="client/Client.java" role="SOURCE_LINE_PATH_CONTINUES"/>
+    <SourceLine classname="client.Client" start="285" end="285" startBytecode="330" endBytecode="330" sourcefile="Client.java" sourcepath="client/Client.java" role="SOURCE_LINE_PATH_CONTINUES"/>
+    <SourceLine classname="client.Client" start="289" end="289" startBytecode="335" endBytecode="335" sourcefile="Client.java" sourcepath="client/Client.java" role="SOURCE_LINE_PATH_CONTINUES"/>
+    <String value="{OutputStream x 1}" role="STRING_REMAINING_OBLIGATIONS"/>
+  </BugInstance>
+  <BugInstance type="OS_OPEN_STREAM" priority="2" rank="16" abbrev="OS" category="BAD_PRACTICE">
+    <Class classname="client.Client">
+      <SourceLine classname="client.Client" sourcefile="Client.java" sourcepath="client/Client.java"/>
+    </Class>
+    <Method classname="client.Client" name="login" signature="(Ljava/lang/String;[C)Lutil/Response;" isStatic="true">
+      <SourceLine classname="client.Client" start="146" end="219" startBytecode="0" endBytecode="129" sourcefile="Client.java" sourcepath="client/Client.java"/>
+    </Method>
+    <Type descriptor="Ljava/io/InputStream;" role="TYPE_CLOSEIT">
+      <SourceLine classname="java.io.InputStream" start="45" end="363" sourcefile="InputStream.java" sourcepath="java/io/InputStream.java"/>
+    </Type>
+    <SourceLine classname="client.Client" start="180" end="180" startBytecode="138" endBytecode="138" sourcefile="Client.java" sourcepath="client/Client.java"/>
+  </BugInstance>
+  <BugInstance type="OS_OPEN_STREAM_EXCEPTION_PATH" priority="3" rank="19" abbrev="OS" category="BAD_PRACTICE">
+    <Class classname="client.Client">
+      <SourceLine classname="client.Client" sourcefile="Client.java" sourcepath="client/Client.java"/>
+    </Class>
+    <Method classname="client.Client" name="register" signature="(Ljava/lang/String;[CLjava/lang/String;)Lutil/Response;" isStatic="true">
+      <SourceLine classname="client.Client" start="228" end="289" startBytecode="0" endBytecode="134" sourcefile="Client.java" sourcepath="client/Client.java"/>
+    </Method>
+    <Type descriptor="Ljava/io/OutputStream;" role="TYPE_CLOSEIT">
+      <SourceLine classname="java.io.OutputStream" start="46" end="152" sourcefile="OutputStream.java" sourcepath="java/io/OutputStream.java"/>
+    </Type>
+    <SourceLine classname="client.Client" start="268" end="268" startBytecode="198" endBytecode="198" sourcefile="Client.java" sourcepath="client/Client.java"/>
+  </BugInstance>
+  <BugInstance type="REC_CATCH_EXCEPTION" priority="3" rank="20" abbrev="REC" category="STYLE">
+    <Class classname="client.Client">
+      <SourceLine classname="client.Client" sourcefile="Client.java" sourcepath="client/Client.java"/>
+    </Class>
+    <Method classname="client.Client" name="decryptPassword" signature="(Ljava/lang/String;)[C" isStatic="true">
+      <SourceLine classname="client.Client" start="110" end="126" startBytecode="0" endBytecode="202" sourcefile="Client.java" sourcepath="client/Client.java"/>
+    </Method>
+    <SourceLine classname="client.Client" start="122" end="122" startBytecode="39" endBytecode="39" sourcefile="Client.java" sourcepath="client/Client.java"/>
+  </BugInstance>
+  <BugInstance type="REC_CATCH_EXCEPTION" priority="3" rank="20" abbrev="REC" category="STYLE">
+    <Class classname="client.Client">
+      <SourceLine classname="client.Client" sourcefile="Client.java" sourcepath="client/Client.java"/>
+    </Class>
+    <Method classname="client.Client" name="encryptPassword" signature="(Ljava/lang/String;)Ljava/lang/String;" isStatic="true">
+      <SourceLine classname="client.Client" start="90" end="105" startBytecode="0" endBytecode="199" sourcefile="Client.java" sourcepath="client/Client.java"/>
+    </Method>
+    <SourceLine classname="client.Client" start="101" end="101" startBytecode="36" endBytecode="36" sourcefile="Client.java" sourcepath="client/Client.java"/>
+  </BugInstance>
+  <BugInstance type="REC_CATCH_EXCEPTION" priority="3" rank="20" abbrev="REC" category="STYLE">
+    <Class classname="client.Client">
+      <SourceLine classname="client.Client" sourcefile="Client.java" sourcepath="client/Client.java"/>
+    </Class>
+    <Method classname="client.Client" name="login" signature="(Ljava/lang/String;[C)Lutil/Response;" isStatic="true">
+      <SourceLine classname="client.Client" start="146" end="219" startBytecode="0" endBytecode="658" sourcefile="Client.java" sourcepath="client/Client.java"/>
+    </Method>
+    <SourceLine classname="client.Client" start="213" end="213" startBytecode="291" endBytecode="291" sourcefile="Client.java" sourcepath="client/Client.java"/>
+  </BugInstance>
+  <BugInstance type="REC_CATCH_EXCEPTION" priority="3" rank="20" abbrev="REC" category="STYLE">
+    <Class classname="client.Client">
+      <SourceLine classname="client.Client" sourcefile="Client.java" sourcepath="client/Client.java"/>
+    </Class>
+    <Method classname="client.Client" name="register" signature="(Ljava/lang/String;[CLjava/lang/String;)Lutil/Response;" isStatic="true">
+      <SourceLine classname="client.Client" start="228" end="289" startBytecode="0" endBytecode="727" sourcefile="Client.java" sourcepath="client/Client.java"/>
+    </Method>
+    <SourceLine classname="client.Client" start="283" end="283" startBytecode="319" endBytecode="319" sourcefile="Client.java" sourcepath="client/Client.java"/>
+  </BugInstance>
+  <BugInstance type="RR_NOT_CHECKED" priority="2" rank="16" abbrev="RR" category="BAD_PRACTICE">
+    <Class classname="client.Client">
+      <SourceLine classname="client.Client" sourcefile="Client.java" sourcepath="client/Client.java"/>
+    </Class>
+    <Method classname="client.Client" name="login" signature="(Ljava/lang/String;[C)Lutil/Response;" isStatic="true">
+      <SourceLine classname="client.Client" start="146" end="219" startBytecode="0" endBytecode="658" sourcefile="Client.java" sourcepath="client/Client.java"/>
+    </Method>
+    <Method classname="java.io.FileInputStream" name="read" signature="([B)I" isStatic="false" role="METHOD_CALLED">
+      <SourceLine classname="java.io.FileInputStream" start="240" end="247" startBytecode="0" endBytecode="273" sourcefile="FileInputStream.java" sourcepath="java/io/FileInputStream.java"/>
+    </Method>
+    <SourceLine classname="client.Client" start="195" end="195" startBytecode="192" endBytecode="192" sourcefile="Client.java" sourcepath="client/Client.java"/>
+    <SourceLine classname="client.Client" start="201" end="201" startBytecode="213" endBytecode="213" sourcefile="Client.java" sourcepath="client/Client.java" role="SOURCE_LINE_ANOTHER_INSTANCE"/>
+  </BugInstance>
+  <BugInstance type="RV_RETURN_VALUE_IGNORED_BAD_PRACTICE" priority="2" rank="16" abbrev="RV" category="BAD_PRACTICE">
+    <Class classname="client.Client">
+      <SourceLine classname="client.Client" sourcefile="Client.java" sourcepath="client/Client.java"/>
+    </Class>
+    <Method classname="client.Client" name="unregister" signature="([C)Lutil/Response;" isStatic="true">
+      <SourceLine classname="client.Client" start="564" end="592" startBytecode="0" endBytecode="370" sourcefile="Client.java" sourcepath="client/Client.java"/>
+    </Method>
+    <Method classname="java.io.File" name="delete" signature="()Z" isStatic="false" role="METHOD_CALLED">
+      <SourceLine classname="java.io.File" start="1028" end="1035" startBytecode="0" endBytecode="119" sourcefile="File.java" sourcepath="java/io/File.java"/>
+    </Method>
+    <SourceLine classname="client.Client" start="587" end="587" startBytecode="153" endBytecode="153" sourcefile="Client.java" sourcepath="client/Client.java"/>
+  </BugInstance>
+  <BugInstance type="SR_NOT_CHECKED" priority="2" rank="16" abbrev="RR" category="BAD_PRACTICE">
+    <Class classname="client.Client">
+      <SourceLine classname="client.Client" sourcefile="Client.java" sourcepath="client/Client.java"/>
+    </Class>
+    <Method classname="client.Client" name="login" signature="(Ljava/lang/String;[C)Lutil/Response;" isStatic="true">
+      <SourceLine classname="client.Client" start="146" end="219" startBytecode="0" endBytecode="658" sourcefile="Client.java" sourcepath="client/Client.java"/>
+    </Method>
+    <Method classname="java.io.FileInputStream" name="skip" signature="(J)J" isStatic="false" role="METHOD_CALLED">
+      <SourceLine classname="java.io.FileInputStream" sourcefile="FileInputStream.java" sourcepath="java/io/FileInputStream.java"/>
+    </Method>
+    <SourceLine classname="client.Client" start="198" end="198" startBytecode="199" endBytecode="199" sourcefile="Client.java" sourcepath="client/Client.java"/>
+  </BugInstance>
+  <BugInstance type="UPM_UNCALLED_PRIVATE_METHOD" priority="3" rank="20" abbrev="UPM" category="PERFORMANCE">
+    <Class classname="client.Client">
+      <SourceLine classname="client.Client" sourcefile="Client.java" sourcepath="client/Client.java"/>
+    </Class>
+    <Method classname="client.Client" name="printSocketInfo" signature="(Ljavax/net/ssl/SSLSocket;)V" isStatic="true">
+      <SourceLine classname="client.Client" start="72" end="86" startBytecode="0" endBytecode="369" sourcefile="Client.java" sourcepath="client/Client.java"/>
+    </Method>
+  </BugInstance>
+  <BugInstance type="UUF_UNUSED_FIELD" priority="2" rank="18" abbrev="UuF" category="PERFORMANCE">
+    <Class classname="client.Client">
+      <SourceLine classname="client.Client" sourcefile="Client.java" sourcepath="client/Client.java"/>
+    </Class>
+    <Field classname="client.Client" name="c" signature="Ljavax/net/ssl/SSLSocket;" isStatic="true">
+      <SourceLine classname="client.Client" sourcefile="Client.java" sourcepath="client/Client.java"/>
+    </Field>
+  </BugInstance>
+  <BugInstance type="REC_CATCH_EXCEPTION" priority="3" rank="20" abbrev="REC" category="STYLE">
+    <Class classname="client.ClientKeyGen">
+      <SourceLine classname="client.ClientKeyGen" sourcefile="ClientKeyGen.java" sourcepath="client/ClientKeyGen.java"/>
+    </Class>
+    <Method classname="client.ClientKeyGen" name="main" signature="([Ljava/lang/String;)V" isStatic="true">
+      <SourceLine classname="client.ClientKeyGen" start="6" end="23" startBytecode="0" endBytecode="189" sourcefile="ClientKeyGen.java" sourcepath="client/ClientKeyGen.java"/>
+    </Method>
+    <SourceLine classname="client.ClientKeyGen" start="19" end="19" startBytecode="43" endBytecode="43" sourcefile="ClientKeyGen.java" sourcepath="client/ClientKeyGen.java"/>
+  </BugInstance>
+  <BugInstance type="DLS_DEAD_LOCAL_STORE" priority="2" rank="17" abbrev="DLS" category="STYLE">
+    <Class classname="client.Shell">
+      <SourceLine classname="client.Shell" sourcefile="Shell.java" sourcepath="client/Shell.java"/>
+    </Class>
+    <Method classname="client.Shell" name="handleMasterChange" signature="()V" isStatic="true">
+      <SourceLine classname="client.Shell" start="67" end="90" startBytecode="0" endBytecode="60" sourcefile="Shell.java" sourcepath="client/Shell.java"/>
+    </Method>
+    <LocalVariable name="err" register="4" pc="96" role="LOCAL_VARIABLE_NAMED"/>
+    <SourceLine classname="client.Shell" start="84" end="84" startBytecode="94" endBytecode="94" sourcefile="Shell.java" sourcepath="client/Shell.java"/>
+    <Property name="edu.umd.cs.findbugs.detect.DeadLocalStoreProperty.LOCAL_NAME" value="err"/>
+    <Property name="edu.umd.cs.findbugs.detect.DeadLocalStoreProperty.METHOD_RESULT" value="true"/>
+    <Property name="edu.umd.cs.findbugs.detect.DeadLocalStoreProperty.NO_LOADS" value="true"/>
+  </BugInstance>
+  <BugInstance type="DM_CONVERT_CASE" priority="3" rank="20" abbrev="Dm" category="I18N">
+    <Class classname="org.json.HTTP">
+      <SourceLine classname="org.json.HTTP" sourcefile="HTTP.java" sourcepath="org/json/HTTP.java"/>
+    </Class>
+    <Method classname="org.json.HTTP" name="toJSONObject" signature="(Ljava/lang/String;)Lorg/json/JSONObject;" isStatic="true">
+      <SourceLine classname="org.json.HTTP" start="72" end="103" startBytecode="0" endBytecode="322" sourcefile="HTTP.java" sourcepath="org/json/HTTP.java"/>
+    </Method>
+    <SourceLine classname="org.json.HTTP" start="77" end="77" startBytecode="23" endBytecode="23" sourcefile="HTTP.java" sourcepath="org/json/HTTP.java"/>
+  </BugInstance>
+  <BugInstance type="DM_FP_NUMBER_CTOR" priority="3" rank="20" abbrev="Bx" category="PERFORMANCE">
+    <Class classname="org.json.JSONArray">
+      <SourceLine classname="org.json.JSONArray" sourcefile="JSONArray.java" sourcepath="org/json/JSONArray.java"/>
+    </Class>
+    <Method classname="org.json.JSONArray" name="put" signature="(D)Lorg/json/JSONArray;" isStatic="false">
+      <SourceLine classname="org.json.JSONArray" start="611" end="614" startBytecode="0" endBytecode="94" sourcefile="JSONArray.java" sourcepath="org/json/JSONArray.java"/>
+    </Method>
+    <Method classname="java.lang.Double" name="&lt;init&gt;" signature="(D)V" isStatic="false" role="METHOD_CALLED">
+      <SourceLine classname="java.lang.Double" start="580" end="582" startBytecode="0" endBytecode="69" sourcefile="Double.java" sourcepath="java/lang/Double.java"/>
+    </Method>
+    <Method classname="java.lang.Double" name="valueOf" signature="(D)Ljava/lang/Double;" isStatic="true" role="SHOULD_CALL">
+      <SourceLine classname="java.lang.Double" start="521" end="521" startBytecode="0" endBytecode="50" sourcefile="Double.java" sourcepath="java/lang/Double.java"/>
+    </Method>
+    <SourceLine classname="org.json.JSONArray" start="611" end="611" startBytecode="5" endBytecode="5" sourcefile="JSONArray.java" sourcepath="org/json/JSONArray.java"/>
+  </BugInstance>
+  <BugInstance type="DM_FP_NUMBER_CTOR" priority="3" rank="20" abbrev="Bx" category="PERFORMANCE">
+    <Class classname="org.json.JSONArray">
+      <SourceLine classname="org.json.JSONArray" sourcefile="JSONArray.java" sourcepath="org/json/JSONArray.java"/>
+    </Class>
+    <Method classname="org.json.JSONArray" name="put" signature="(ID)Lorg/json/JSONArray;" isStatic="false">
+      <SourceLine classname="org.json.JSONArray" start="717" end="718" startBytecode="0" endBytecode="81" sourcefile="JSONArray.java" sourcepath="org/json/JSONArray.java"/>
+    </Method>
+    <Method classname="java.lang.Double" name="&lt;init&gt;" signature="(D)V" isStatic="false" role="METHOD_CALLED">
+      <SourceLine classname="java.lang.Double" start="580" end="582" startBytecode="0" endBytecode="69" sourcefile="Double.java" sourcepath="java/lang/Double.java"/>
+    </Method>
+    <Method classname="java.lang.Double" name="valueOf" signature="(D)Ljava/lang/Double;" isStatic="true" role="SHOULD_CALL">
+      <SourceLine classname="java.lang.Double" start="521" end="521" startBytecode="0" endBytecode="50" sourcefile="Double.java" sourcepath="java/lang/Double.java"/>
+    </Method>
+    <SourceLine classname="org.json.JSONArray" start="717" end="717" startBytecode="7" endBytecode="7" sourcefile="JSONArray.java" sourcepath="org/json/JSONArray.java"/>
+  </BugInstance>
+  <BugInstance type="DM_NUMBER_CTOR" priority="2" rank="18" abbrev="Bx" category="PERFORMANCE">
+    <Class classname="org.json.JSONArray">
+      <SourceLine classname="org.json.JSONArray" sourcefile="JSONArray.java" sourcepath="org/json/JSONArray.java"/>
+    </Class>
+    <Method classname="org.json.JSONArray" name="put" signature="(I)Lorg/json/JSONArray;" isStatic="false">
+      <SourceLine classname="org.json.JSONArray" start="625" end="626" startBytecode="0" endBytecode="70" sourcefile="JSONArray.java" sourcepath="org/json/JSONArray.java"/>
+    </Method>
+    <Method classname="java.lang.Integer" name="&lt;init&gt;" signature="(I)V" isStatic="false" role="METHOD_CALLED">
+      <SourceLine classname="java.lang.Integer" start="659" end="661" startBytecode="0" endBytecode="69" sourcefile="Integer.java" sourcepath="java/lang/Integer.java"/>
+    </Method>
+    <Method classname="java.lang.Integer" name="valueOf" signature="(I)Ljava/lang/Integer;" isStatic="true" role="SHOULD_CALL">
+      <SourceLine classname="java.lang.Integer" start="639" end="642" startBytecode="0" endBytecode="117" sourcefile="Integer.java" sourcepath="java/lang/Integer.java"/>
+    </Method>
+    <SourceLine classname="org.json.JSONArray" start="625" end="625" startBytecode="6" endBytecode="6" sourcefile="JSONArray.java" sourcepath="org/json/JSONArray.java"/>
+  </BugInstance>
+  <BugInstance type="DM_NUMBER_CTOR" priority="2" rank="18" abbrev="Bx" category="PERFORMANCE">
+    <Class classname="org.json.JSONArray">
+      <SourceLine classname="org.json.JSONArray" sourcefile="JSONArray.java" sourcepath="org/json/JSONArray.java"/>
+    </Class>
+    <Method classname="org.json.JSONArray" name="put" signature="(II)Lorg/json/JSONArray;" isStatic="false">
+      <SourceLine classname="org.json.JSONArray" start="735" end="736" startBytecode="0" endBytecode="81" sourcefile="JSONArray.java" sourcepath="org/json/JSONArray.java"/>
+    </Method>
+    <Method classname="java.lang.Integer" name="&lt;init&gt;" signature="(I)V" isStatic="false" role="METHOD_CALLED">
+      <SourceLine classname="java.lang.Integer" start="659" end="661" startBytecode="0" endBytecode="69" sourcefile="Integer.java" sourcepath="java/lang/Integer.java"/>
+    </Method>
+    <Method classname="java.lang.Integer" name="valueOf" signature="(I)Ljava/lang/Integer;" isStatic="true" role="SHOULD_CALL">
+      <SourceLine classname="java.lang.Integer" start="639" end="642" startBytecode="0" endBytecode="117" sourcefile="Integer.java" sourcepath="java/lang/Integer.java"/>
+    </Method>
+    <SourceLine classname="org.json.JSONArray" start="735" end="735" startBytecode="7" endBytecode="7" sourcefile="JSONArray.java" sourcepath="org/json/JSONArray.java"/>
+  </BugInstance>
+  <BugInstance type="DM_NUMBER_CTOR" priority="2" rank="18" abbrev="Bx" category="PERFORMANCE">
+    <Class classname="org.json.JSONArray">
+      <SourceLine classname="org.json.JSONArray" sourcefile="JSONArray.java" sourcepath="org/json/JSONArray.java"/>
+    </Class>
+    <Method classname="org.json.JSONArray" name="put" signature="(IJ)Lorg/json/JSONArray;" isStatic="false">
+      <SourceLine classname="org.json.JSONArray" start="753" end="754" startBytecode="0" endBytecode="81" sourcefile="JSONArray.java" sourcepath="org/json/JSONArray.java"/>
+    </Method>
+    <Method classname="java.lang.Long" name="&lt;init&gt;" signature="(J)V" isStatic="false" role="METHOD_CALLED">
+      <SourceLine classname="java.lang.Long" start="684" end="686" startBytecode="0" endBytecode="69" sourcefile="Long.java" sourcepath="java/lang/Long.java"/>
+    </Method>
+    <Method classname="java.lang.Long" name="valueOf" signature="(J)Ljava/lang/Long;" isStatic="true" role="SHOULD_CALL">
+      <SourceLine classname="java.lang.Long" start="573" end="577" startBytecode="0" endBytecode="115" sourcefile="Long.java" sourcepath="java/lang/Long.java"/>
+    </Method>
+    <SourceLine classname="org.json.JSONArray" start="753" end="753" startBytecode="7" endBytecode="7" sourcefile="JSONArray.java" sourcepath="org/json/JSONArray.java"/>
+  </BugInstance>
+  <BugInstance type="DM_NUMBER_CTOR" priority="2" rank="18" abbrev="Bx" category="PERFORMANCE">
+    <Class classname="org.json.JSONArray">
+      <SourceLine classname="org.json.JSONArray" sourcefile="JSONArray.java" sourcepath="org/json/JSONArray.java"/>
+    </Class>
+    <Method classname="org.json.JSONArray" name="put" signature="(J)Lorg/json/JSONArray;" isStatic="false">
+      <SourceLine classname="org.json.JSONArray" start="637" end="638" startBytecode="0" endBytecode="70" sourcefile="JSONArray.java" sourcepath="org/json/JSONArray.java"/>
+    </Method>
+    <Method classname="java.lang.Long" name="&lt;init&gt;" signature="(J)V" isStatic="false" role="METHOD_CALLED">
+      <SourceLine classname="java.lang.Long" start="684" end="686" startBytecode="0" endBytecode="69" sourcefile="Long.java" sourcepath="java/lang/Long.java"/>
+    </Method>
+    <Method classname="java.lang.Long" name="valueOf" signature="(J)Ljava/lang/Long;" isStatic="true" role="SHOULD_CALL">
+      <SourceLine classname="java.lang.Long" start="573" end="577" startBytecode="0" endBytecode="115" sourcefile="Long.java" sourcepath="java/lang/Long.java"/>
+    </Method>
+    <SourceLine classname="org.json.JSONArray" start="637" end="637" startBytecode="6" endBytecode="6" sourcefile="JSONArray.java" sourcepath="org/json/JSONArray.java"/>
+  </BugInstance>
+  <BugInstance type="NP_TOSTRING_COULD_RETURN_NULL" priority="2" rank="14" abbrev="NP" category="BAD_PRACTICE">
+    <Class classname="org.json.JSONArray">
+      <SourceLine classname="org.json.JSONArray" sourcefile="JSONArray.java" sourcepath="org/json/JSONArray.java"/>
+    </Class>
+    <Method classname="org.json.JSONArray" name="toString" signature="()Ljava/lang/String;" isStatic="false">
+      <SourceLine classname="org.json.JSONArray" start="890" end="892" startBytecode="0" endBytecode="88" sourcefile="JSONArray.java" sourcepath="org/json/JSONArray.java"/>
+    </Method>
+    <SourceLine classname="org.json.JSONArray" start="892" end="892" startBytecode="8" endBytecode="8" sourcefile="JSONArray.java" sourcepath="org/json/JSONArray.java"/>
+  </BugInstance>
+  <BugInstance type="RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE" priority="3" rank="20" abbrev="RCN" category="STYLE">
+    <Class classname="org.json.JSONML">
+      <SourceLine classname="org.json.JSONML" sourcefile="JSONML.java" sourcepath="org/json/JSONML.java"/>
+    </Class>
+    <Method classname="org.json.JSONML" name="toString" signature="(Lorg/json/JSONArray;)Ljava/lang/String;" isStatic="true">
+      <SourceLine classname="org.json.JSONML" start="321" end="384" startBytecode="0" endBytecode="800" sourcefile="JSONML.java" sourcepath="org/json/JSONML.java"/>
+    </Method>
+    <LocalVariable name="object" register="6" pc="220" role="LOCAL_VARIABLE_VALUE_OF"/>
+    <Method classname="org.json.JSONArray" name="get" signature="(I)Ljava/lang/Object;" isStatic="false" role="METHOD_RETURN_VALUE_OF">
+      <SourceLine classname="org.json.JSONArray" start="192" end="196" startBytecode="0" endBytecode="128" sourcefile="JSONArray.java" sourcepath="org/json/JSONArray.java"/>
+    </Method>
+    <SourceLine classname="org.json.JSONML" start="369" end="369" startBytecode="222" endBytecode="222" sourcefile="JSONML.java" sourcepath="org/json/JSONML.java" role="SOURCE_REDUNDANT_NULL_CHECK"/>
+  </BugInstance>
+  <BugInstance type="RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE" priority="3" rank="20" abbrev="RCN" category="STYLE">
+    <Class classname="org.json.JSONML">
+      <SourceLine classname="org.json.JSONML" sourcefile="JSONML.java" sourcepath="org/json/JSONML.java"/>
+    </Class>
+    <Method classname="org.json.JSONML" name="toString" signature="(Lorg/json/JSONObject;)Ljava/lang/String;" isStatic="true">
+      <SourceLine classname="org.json.JSONML" start="397" end="465" startBytecode="0" endBytecode="875" sourcefile="JSONML.java" sourcepath="org/json/JSONML.java"/>
+    </Method>
+    <LocalVariable name="object" register="7" pc="225" role="LOCAL_VARIABLE_VALUE_OF"/>
+    <Method classname="org.json.JSONArray" name="get" signature="(I)Ljava/lang/Object;" isStatic="false" role="METHOD_RETURN_VALUE_OF">
+      <SourceLine classname="org.json.JSONArray" start="192" end="196" startBytecode="0" endBytecode="128" sourcefile="JSONArray.java" sourcepath="org/json/JSONArray.java"/>
+    </Method>
+    <SourceLine classname="org.json.JSONML" start="448" end="448" startBytecode="227" endBytecode="227" sourcefile="JSONML.java" sourcepath="org/json/JSONML.java" role="SOURCE_REDUNDANT_NULL_CHECK"/>
+  </BugInstance>
+  <BugInstance type="RC_REF_COMPARISON_BAD_PRACTICE" priority="2" rank="16" abbrev="RC" category="BAD_PRACTICE">
+    <Class classname="org.json.JSONML">
+      <SourceLine classname="org.json.JSONML" sourcefile="JSONML.java" sourcepath="org/json/JSONML.java"/>
+    </Class>
+    <Method classname="org.json.JSONML" name="parse" signature="(Lorg/json/XMLTokener;ZLorg/json/JSONArray;)Ljava/lang/Object;" isStatic="true">
+      <SourceLine classname="org.json.JSONML" start="56" end="69" startBytecode="0" endBytecode="353" sourcefile="JSONML.java" sourcepath="org/json/JSONML.java"/>
+    </Method>
+    <Type descriptor="Ljava/lang/Character;" role="TYPE_FOUND">
+      <SourceLine classname="java.lang.Character" start="122" end="7030" sourcefile="Character.java" sourcepath="java/lang/Character.java"/>
+    </Type>
+    <Field classname="org.json.XML" name="BANG" signature="Ljava/lang/Character;" isStatic="true" role="FIELD_VALUE_OF">
+      <SourceLine classname="org.json.XML" sourcefile="XML.java" sourcepath="org/json/XML.java"/>
+    </Field>
+    <SourceLine classname="org.json.JSONML" start="91" end="91" startBytecode="131" endBytecode="131" sourcefile="JSONML.java" sourcepath="org/json/JSONML.java"/>
+  </BugInstance>
+  <BugInstance type="RC_REF_COMPARISON_BAD_PRACTICE" priority="2" rank="16" abbrev="RC" category="BAD_PRACTICE">
+    <Class classname="org.json.JSONML">
+      <SourceLine classname="org.json.JSONML" sourcefile="JSONML.java" sourcepath="org/json/JSONML.java"/>
+    </Class>
+    <Method classname="org.json.JSONML" name="parse" signature="(Lorg/json/XMLTokener;ZLorg/json/JSONArray;)Ljava/lang/Object;" isStatic="true">
+      <SourceLine classname="org.json.JSONML" start="56" end="69" startBytecode="0" endBytecode="353" sourcefile="JSONML.java" sourcepath="org/json/JSONML.java"/>
+    </Method>
+    <Type descriptor="Ljava/lang/Character;" role="TYPE_FOUND">
+      <SourceLine classname="java.lang.Character" start="122" end="7030" sourcefile="Character.java" sourcepath="java/lang/Character.java"/>
+    </Type>
+    <Field classname="org.json.XML" name="EQ" signature="Ljava/lang/Character;" isStatic="true" role="FIELD_VALUE_OF">
+      <SourceLine classname="org.json.XML" sourcefile="XML.java" sourcepath="org/json/XML.java"/>
+    </Field>
+    <SourceLine classname="org.json.JSONML" start="172" end="172" startBytecode="497" endBytecode="497" sourcefile="JSONML.java" sourcepath="org/json/JSONML.java"/>
+  </BugInstance>
+  <BugInstance type="RC_REF_COMPARISON_BAD_PRACTICE" priority="2" rank="16" abbrev="RC" category="BAD_PRACTICE">
+    <Class classname="org.json.JSONML">
+      <SourceLine classname="org.json.JSONML" sourcefile="JSONML.java" sourcepath="org/json/JSONML.java"/>
+    </Class>
+    <Method classname="org.json.JSONML" name="parse" signature="(Lorg/json/XMLTokener;ZLorg/json/JSONArray;)Ljava/lang/Object;" isStatic="true">
+      <SourceLine classname="org.json.JSONML" start="56" end="69" startBytecode="0" endBytecode="353" sourcefile="JSONML.java" sourcepath="org/json/JSONML.java"/>
+    </Method>
+    <Type descriptor="Ljava/lang/Character;" role="TYPE_FOUND">
+      <SourceLine classname="java.lang.Character" start="122" end="7030" sourcefile="Character.java" sourcepath="java/lang/Character.java"/>
+    </Type>
+    <Field classname="org.json.XML" name="GT" signature="Ljava/lang/Character;" isStatic="true" role="FIELD_VALUE_OF">
+      <SourceLine classname="org.json.XML" sourcefile="XML.java" sourcepath="org/json/XML.java"/>
+    </Field>
+    <SourceLine classname="org.json.JSONML" start="87" end="87" startBytecode="113" endBytecode="113" sourcefile="JSONML.java" sourcepath="org/json/JSONML.java"/>
+    <SourceLine classname="org.json.JSONML" start="119" end="119" startBytecode="268" endBytecode="268" sourcefile="JSONML.java" sourcepath="org/json/JSONML.java" role="SOURCE_LINE_ANOTHER_INSTANCE"/>
+    <SourceLine classname="org.json.JSONML" start="204" end="204" startBytecode="618" endBytecode="618" sourcefile="JSONML.java" sourcepath="org/json/JSONML.java" role="SOURCE_LINE_ANOTHER_INSTANCE"/>
+    <SourceLine classname="org.json.JSONML" start="190" end="190" startBytecode="589" endBytecode="589" sourcefile="JSONML.java" sourcepath="org/json/JSONML.java" role="SOURCE_LINE_ANOTHER_INSTANCE"/>
+  </BugInstance>
+  <BugInstance type="RC_REF_COMPARISON_BAD_PRACTICE" priority="2" rank="16" abbrev="RC" category="BAD_PRACTICE">
+    <Class classname="org.json.JSONML">
+      <SourceLine classname="org.json.JSONML" sourcefile="JSONML.java" sourcepath="org/json/JSONML.java"/>
+    </Class>
+    <Method classname="org.json.JSONML" name="parse" signature="(Lorg/json/XMLTokener;ZLorg/json/JSONArray;)Ljava/lang/Object;" isStatic="true">
+      <SourceLine classname="org.json.JSONML" start="56" end="69" startBytecode="0" endBytecode="353" sourcefile="JSONML.java" sourcepath="org/json/JSONML.java"/>
+    </Method>
+    <Type descriptor="Ljava/lang/Character;" role="TYPE_FOUND">
+      <SourceLine classname="java.lang.Character" start="122" end="7030" sourcefile="Character.java" sourcepath="java/lang/Character.java"/>
+    </Type>
+    <Field classname="org.json.XML" name="LT" signature="Ljava/lang/Character;" isStatic="true" role="FIELD_VALUE_OF">
+      <SourceLine classname="org.json.XML" sourcefile="XML.java" sourcepath="org/json/XML.java"/>
+    </Field>
+    <SourceLine classname="org.json.JSONML" start="74" end="74" startBytecode="37" endBytecode="37" sourcefile="JSONML.java" sourcepath="org/json/JSONML.java"/>
+    <SourceLine classname="org.json.JSONML" start="117" end="117" startBytecode="254" endBytecode="254" sourcefile="JSONML.java" sourcepath="org/json/JSONML.java" role="SOURCE_LINE_ANOTHER_INSTANCE"/>
+  </BugInstance>
+  <BugInstance type="RC_REF_COMPARISON_BAD_PRACTICE" priority="2" rank="16" abbrev="RC" category="BAD_PRACTICE">
+    <Class classname="org.json.JSONML">
+      <SourceLine classname="org.json.JSONML" sourcefile="JSONML.java" sourcepath="org/json/JSONML.java"/>
+    </Class>
+    <Method classname="org.json.JSONML" name="parse" signature="(Lorg/json/XMLTokener;ZLorg/json/JSONArray;)Ljava/lang/Object;" isStatic="true">
+      <SourceLine classname="org.json.JSONML" start="56" end="69" startBytecode="0" endBytecode="353" sourcefile="JSONML.java" sourcepath="org/json/JSONML.java"/>
+    </Method>
+    <Type descriptor="Ljava/lang/Character;" role="TYPE_FOUND">
+      <SourceLine classname="java.lang.Character" start="122" end="7030" sourcefile="Character.java" sourcepath="java/lang/Character.java"/>
+    </Type>
+    <Field classname="org.json.XML" name="QUEST" signature="Ljava/lang/Character;" isStatic="true" role="FIELD_VALUE_OF">
+      <SourceLine classname="org.json.XML" sourcefile="XML.java" sourcepath="org/json/XML.java"/>
+    </Field>
+    <SourceLine classname="org.json.JSONML" start="124" end="124" startBytecode="287" endBytecode="287" sourcefile="JSONML.java" sourcepath="org/json/JSONML.java"/>
+  </BugInstance>
+  <BugInstance type="RC_REF_COMPARISON_BAD_PRACTICE" priority="2" rank="16" abbrev="RC" category="BAD_PRACTICE">
+    <Class classname="org.json.JSONML">
+      <SourceLine classname="org.json.JSONML" sourcefile="JSONML.java" sourcepath="org/json/JSONML.java"/>
+    </Class>
+    <Method classname="org.json.JSONML" name="parse" signature="(Lorg/json/XMLTokener;ZLorg/json/JSONArray;)Ljava/lang/Object;" isStatic="true">
+      <SourceLine classname="org.json.JSONML" start="56" end="69" startBytecode="0" endBytecode="353" sourcefile="JSONML.java" sourcepath="org/json/JSONML.java"/>
+    </Method>
+    <Type descriptor="Ljava/lang/Character;" role="TYPE_FOUND">
+      <SourceLine classname="java.lang.Character" start="122" end="7030" sourcefile="Character.java" sourcepath="java/lang/Character.java"/>
+    </Type>
+    <Field classname="org.json.XML" name="SLASH" signature="Ljava/lang/Character;" isStatic="true" role="FIELD_VALUE_OF">
+      <SourceLine classname="org.json.XML" sourcefile="XML.java" sourcepath="org/json/XML.java"/>
+    </Field>
+    <SourceLine classname="org.json.JSONML" start="77" end="77" startBytecode="59" endBytecode="59" sourcefile="JSONML.java" sourcepath="org/json/JSONML.java"/>
+    <SourceLine classname="org.json.JSONML" start="189" end="189" startBytecode="579" endBytecode="579" sourcefile="JSONML.java" sourcepath="org/json/JSONML.java" role="SOURCE_LINE_ANOTHER_INSTANCE"/>
+  </BugInstance>
+  <BugInstance type="BC_VACUOUS_INSTANCEOF" priority="2" rank="17" abbrev="BC" category="STYLE">
+    <Class classname="org.json.JSONObject">
+      <SourceLine classname="org.json.JSONObject" sourcefile="JSONObject.java" sourcepath="org/json/JSONObject.java"/>
+    </Class>
+    <Method classname="org.json.JSONObject" name="valueToString" signature="(Ljava/lang/Object;)Ljava/lang/String;" isStatic="true">
+      <SourceLine classname="org.json.JSONObject" start="1492" end="1523" startBytecode="0" endBytecode="87" sourcefile="JSONObject.java" sourcepath="org/json/JSONObject.java"/>
+    </Method>
+    <Type descriptor="Ljava/lang/String;" role="TYPE_FOUND">
+      <SourceLine classname="java.lang.String" start="108" end="3093" sourcefile="String.java" sourcepath="java/lang/String.java"/>
+    </Type>
+    <Type descriptor="Ljava/lang/String;" role="TYPE_EXPECTED">
+      <SourceLine classname="java.lang.String" start="108" end="3093" sourcefile="String.java" sourcepath="java/lang/String.java"/>
+    </Type>
+    <SourceLine classname="org.json.JSONObject" start="1502" end="1502" startBytecode="39" endBytecode="39" sourcefile="JSONObject.java" sourcepath="org/json/JSONObject.java"/>
+  </BugInstance>
+  <BugInstance type="DE_MIGHT_IGNORE" priority="3" rank="19" abbrev="DE" category="BAD_PRACTICE">
+    <Class classname="org.json.JSONObject">
+      <SourceLine classname="org.json.JSONObject" sourcefile="JSONObject.java" sourcepath="org/json/JSONObject.java"/>
+    </Class>
+    <Method classname="org.json.JSONObject" name="&lt;init&gt;" signature="(Ljava/lang/Object;[Ljava/lang/String;)V" isStatic="false">
+      <SourceLine classname="org.json.JSONObject" start="300" end="309" startBytecode="0" endBytecode="239" sourcefile="JSONObject.java" sourcepath="org/json/JSONObject.java"/>
+    </Method>
+    <Class classname="java.lang.Exception" role="CLASS_EXCEPTION">
+      <SourceLine classname="java.lang.Exception" sourcefile="Exception.java" sourcepath="java/lang/Exception.java"/>
+    </Class>
+    <SourceLine classname="org.json.JSONObject" start="306" end="306" startBytecode="41" endBytecode="41" sourcefile="JSONObject.java" sourcepath="org/json/JSONObject.java"/>
+    <SourceLine classname="org.json.JSONObject" start="306" end="306" startBytecode="41" endBytecode="41" sourcefile="JSONObject.java" sourcepath="org/json/JSONObject.java"/>
+  </BugInstance>
+  <BugInstance type="DE_MIGHT_IGNORE" priority="3" rank="19" abbrev="DE" category="BAD_PRACTICE">
+    <Class classname="org.json.JSONObject">
+      <SourceLine classname="org.json.JSONObject" sourcefile="JSONObject.java" sourcepath="org/json/JSONObject.java"/>
+    </Class>
+    <Method classname="org.json.JSONObject" name="&lt;init&gt;" signature="(Lorg/json/JSONObject;[Ljava/lang/String;)V" isStatic="false">
+      <SourceLine classname="org.json.JSONObject" start="173" end="180" startBytecode="0" endBytecode="169" sourcefile="JSONObject.java" sourcepath="org/json/JSONObject.java"/>
+    </Method>
+    <Class classname="java.lang.Exception" role="CLASS_EXCEPTION">
+      <SourceLine classname="java.lang.Exception" sourcefile="Exception.java" sourcepath="java/lang/Exception.java"/>
+    </Class>
+    <SourceLine classname="org.json.JSONObject" start="177" end="177" startBytecode="27" endBytecode="27" sourcefile="JSONObject.java" sourcepath="org/json/JSONObject.java"/>
+    <SourceLine classname="org.json.JSONObject" start="177" end="177" startBytecode="27" endBytecode="27" sourcefile="JSONObject.java" sourcepath="org/json/JSONObject.java"/>
+  </BugInstance>
+  <BugInstance type="DM_CONVERT_CASE" priority="3" rank="20" abbrev="Dm" category="I18N">
+    <Class classname="org.json.JSONObject">
+      <SourceLine classname="org.json.JSONObject" sourcefile="JSONObject.java" sourcepath="org/json/JSONObject.java"/>
+    </Class>
+    <Method classname="org.json.JSONObject" name="populateMap" signature="(Ljava/lang/Object;)V" isStatic="false">
+      <SourceLine classname="org.json.JSONObject" start="984" end="1027" startBytecode="0" endBytecode="625" sourcefile="JSONObject.java" sourcepath="org/json/JSONObject.java"/>
+    </Method>
+    <SourceLine classname="org.json.JSONObject" start="1012" end="1012" startBytecode="182" endBytecode="182" sourcefile="JSONObject.java" sourcepath="org/json/JSONObject.java"/>
+    <SourceLine classname="org.json.JSONObject" start="1014" end="1014" startBytecode="213" endBytecode="213" sourcefile="JSONObject.java" sourcepath="org/json/JSONObject.java" role="SOURCE_LINE_ANOTHER_INSTANCE"/>
+  </BugInstance>
+  <BugInstance type="DM_FP_NUMBER_CTOR" priority="3" rank="20" abbrev="Bx" category="PERFORMANCE">
+    <Class classname="org.json.JSONObject">
+      <SourceLine classname="org.json.JSONObject" sourcefile="JSONObject.java" sourcepath="org/json/JSONObject.java"/>
+    </Class>
+    <Method classname="org.json.JSONObject" name="put" signature="(Ljava/lang/String;D)Lorg/json/JSONObject;" isStatic="false">
+      <SourceLine classname="org.json.JSONObject" start="1073" end="1074" startBytecode="0" endBytecode="81" sourcefile="JSONObject.java" sourcepath="org/json/JSONObject.java"/>
+    </Method>
+    <Method classname="java.lang.Double" name="&lt;init&gt;" signature="(D)V" isStatic="false" role="METHOD_CALLED">
+      <SourceLine classname="java.lang.Double" start="580" end="582" startBytecode="0" endBytecode="69" sourcefile="Double.java" sourcepath="java/lang/Double.java"/>
+    </Method>
+    <Method classname="java.lang.Double" name="valueOf" signature="(D)Ljava/lang/Double;" isStatic="true" role="SHOULD_CALL">
+      <SourceLine classname="java.lang.Double" start="521" end="521" startBytecode="0" endBytecode="50" sourcefile="Double.java" sourcepath="java/lang/Double.java"/>
+    </Method>
+    <SourceLine classname="org.json.JSONObject" start="1073" end="1073" startBytecode="7" endBytecode="7" sourcefile="JSONObject.java" sourcepath="org/json/JSONObject.java"/>
+  </BugInstance>
+  <BugInstance type="DM_NUMBER_CTOR" priority="2" rank="18" abbrev="Bx" category="PERFORMANCE">
+    <Class classname="org.json.JSONObject">
+      <SourceLine classname="org.json.JSONObject" sourcefile="JSONObject.java" sourcepath="org/json/JSONObject.java"/>
+    </Class>
+    <Method classname="org.json.JSONObject" name="put" signature="(Ljava/lang/String;I)Lorg/json/JSONObject;" isStatic="false">
+      <SourceLine classname="org.json.JSONObject" start="1089" end="1090" startBytecode="0" endBytecode="81" sourcefile="JSONObject.java" sourcepath="org/json/JSONObject.java"/>
+    </Method>
+    <Method classname="java.lang.Integer" name="&lt;init&gt;" signature="(I)V" isStatic="false" role="METHOD_CALLED">
+      <SourceLine classname="java.lang.Integer" start="659" end="661" startBytecode="0" endBytecode="69" sourcefile="Integer.java" sourcepath="java/lang/Integer.java"/>
+    </Method>
+    <Method classname="java.lang.Integer" name="valueOf" signature="(I)Ljava/lang/Integer;" isStatic="true" role="SHOULD_CALL">
+      <SourceLine classname="java.lang.Integer" start="639" end="642" startBytecode="0" endBytecode="117" sourcefile="Integer.java" sourcepath="java/lang/Integer.java"/>
+    </Method>
+    <SourceLine classname="org.json.JSONObject" start="1089" end="1089" startBytecode="7" endBytecode="7" sourcefile="JSONObject.java" sourcepath="org/json/JSONObject.java"/>
+  </BugInstance>
+  <BugInstance type="DM_NUMBER_CTOR" priority="2" rank="18" abbrev="Bx" category="PERFORMANCE">
+    <Class classname="org.json.JSONObject">
+      <SourceLine classname="org.json.JSONObject" sourcefile="JSONObject.java" sourcepath="org/json/JSONObject.java"/>
+    </Class>
+    <Method classname="org.json.JSONObject" name="put" signature="(Ljava/lang/String;J)Lorg/json/JSONObject;" isStatic="false">
+      <SourceLine classname="org.json.JSONObject" start="1105" end="1106" startBytecode="0" endBytecode="81" sourcefile="JSONObject.java" sourcepath="org/json/JSONObject.java"/>
+    </Method>
+    <Method classname="java.lang.Long" name="&lt;init&gt;" signature="(J)V" isStatic="false" role="METHOD_CALLED">
+      <SourceLine classname="java.lang.Long" start="684" end="686" startBytecode="0" endBytecode="69" sourcefile="Long.java" sourcepath="java/lang/Long.java"/>
+    </Method>
+    <Method classname="java.lang.Long" name="valueOf" signature="(J)Ljava/lang/Long;" isStatic="true" role="SHOULD_CALL">
+      <SourceLine classname="java.lang.Long" start="573" end="577" startBytecode="0" endBytecode="115" sourcefile="Long.java" sourcepath="java/lang/Long.java"/>
+    </Method>
+    <SourceLine classname="org.json.JSONObject" start="1105" end="1105" startBytecode="7" endBytecode="7" sourcefile="JSONObject.java" sourcepath="org/json/JSONObject.java"/>
+  </BugInstance>
+  <BugInstance type="DM_NUMBER_CTOR" priority="2" rank="18" abbrev="Bx" category="PERFORMANCE">
+    <Class classname="org.json.JSONObject">
+      <SourceLine classname="org.json.JSONObject" sourcefile="JSONObject.java" sourcepath="org/json/JSONObject.java"/>
+    </Class>
+    <Method classname="org.json.JSONObject" name="stringToValue" signature="(Ljava/lang/String;)Ljava/lang/Object;" isStatic="true">
+      <SourceLine classname="org.json.JSONObject" start="1337" end="1377" startBytecode="0" endBytecode="403" sourcefile="JSONObject.java" sourcepath="org/json/JSONObject.java"/>
+    </Method>
+    <Method classname="java.lang.Long" name="&lt;init&gt;" signature="(Ljava/lang/String;)V" isStatic="false" role="METHOD_CALLED">
+      <SourceLine classname="java.lang.Long" start="701" end="703" startBytecode="0" endBytecode="74" sourcefile="Long.java" sourcepath="java/lang/Long.java"/>
+    </Method>
+    <Method classname="java.lang.Long" name="valueOf" signature="(Ljava/lang/String;)Ljava/lang/Long;" isStatic="true" role="SHOULD_CALL">
+      <SourceLine classname="java.lang.Long" start="540" end="540" startBytecode="0" endBytecode="51" sourcefile="Long.java" sourcepath="java/lang/Long.java"/>
+    </Method>
+    <SourceLine classname="org.json.JSONObject" start="1365" end="1365" startBytecode="134" endBytecode="134" sourcefile="JSONObject.java" sourcepath="org/json/JSONObject.java"/>
+  </BugInstance>
+  <BugInstance type="NP_TOSTRING_COULD_RETURN_NULL" priority="2" rank="14" abbrev="NP" category="BAD_PRACTICE">
+    <Class classname="org.json.JSONObject">
+      <SourceLine classname="org.json.JSONObject" sourcefile="JSONObject.java" sourcepath="org/json/JSONObject.java"/>
+    </Class>
+    <Method classname="org.json.JSONObject" name="toString" signature="()Ljava/lang/String;" isStatic="false">
+      <SourceLine classname="org.json.JSONObject" start="1440" end="1442" startBytecode="0" endBytecode="88" sourcefile="JSONObject.java" sourcepath="org/json/JSONObject.java"/>
+    </Method>
+    <SourceLine classname="org.json.JSONObject" start="1442" end="1442" startBytecode="8" endBytecode="8" sourcefile="JSONObject.java" sourcepath="org/json/JSONObject.java"/>
+  </BugInstance>
+  <BugInstance type="PZLA_PREFER_ZERO_LENGTH_ARRAYS" priority="3" rank="20" abbrev="PZLA" category="STYLE">
+    <Class classname="org.json.JSONObject">
+      <SourceLine classname="org.json.JSONObject" sourcefile="JSONObject.java" sourcepath="org/json/JSONObject.java"/>
+    </Class>
+    <Method classname="org.json.JSONObject" name="getNames" signature="(Ljava/lang/Object;)[Ljava/lang/String;" isStatic="true">
+      <SourceLine classname="org.json.JSONObject" start="631" end="644" startBytecode="0" endBytecode="223" sourcefile="JSONObject.java" sourcepath="org/json/JSONObject.java"/>
+    </Method>
+    <SourceLine classname="org.json.JSONObject" start="632" end="632" startBytecode="5" endBytecode="5" sourcefile="JSONObject.java" sourcepath="org/json/JSONObject.java"/>
+    <SourceLine classname="org.json.JSONObject" start="638" end="638" startBytecode="24" endBytecode="24" sourcefile="JSONObject.java" sourcepath="org/json/JSONObject.java"/>
+  </BugInstance>
+  <BugInstance type="PZLA_PREFER_ZERO_LENGTH_ARRAYS" priority="3" rank="20" abbrev="PZLA" category="STYLE">
+    <Class classname="org.json.JSONObject">
+      <SourceLine classname="org.json.JSONObject" sourcefile="JSONObject.java" sourcepath="org/json/JSONObject.java"/>
+    </Class>
+    <Method classname="org.json.JSONObject" name="getNames" signature="(Lorg/json/JSONObject;)[Ljava/lang/String;" isStatic="true">
+      <SourceLine classname="org.json.JSONObject" start="611" end="622" startBytecode="0" endBytecode="216" sourcefile="JSONObject.java" sourcepath="org/json/JSONObject.java"/>
+    </Method>
+    <SourceLine classname="org.json.JSONObject" start="613" end="613" startBytecode="10" endBytecode="10" sourcefile="JSONObject.java" sourcepath="org/json/JSONObject.java"/>
+  </BugInstance>
+  <BugInstance type="REC_CATCH_EXCEPTION" priority="2" rank="17" abbrev="REC" category="STYLE">
+    <Class classname="org.json.JSONObject">
+      <SourceLine classname="org.json.JSONObject" sourcefile="JSONObject.java" sourcepath="org/json/JSONObject.java"/>
+    </Class>
+    <Method classname="org.json.JSONObject" name="populateMap" signature="(Ljava/lang/Object;)V" isStatic="false">
+      <SourceLine classname="org.json.JSONObject" start="984" end="1027" startBytecode="0" endBytecode="625" sourcefile="JSONObject.java" sourcepath="org/json/JSONObject.java"/>
+    </Method>
+    <SourceLine classname="org.json.JSONObject" start="1024" end="1024" startBytecode="270" endBytecode="270" sourcefile="JSONObject.java" sourcepath="org/json/JSONObject.java"/>
+  </BugInstance>
+  <BugInstance type="REC_CATCH_EXCEPTION" priority="3" rank="20" abbrev="REC" category="STYLE">
+    <Class classname="org.json.JSONObject">
+      <SourceLine classname="org.json.JSONObject" sourcefile="JSONObject.java" sourcepath="org/json/JSONObject.java"/>
+    </Class>
+    <Method classname="org.json.JSONObject" name="&lt;init&gt;" signature="(Ljava/lang/Object;[Ljava/lang/String;)V" isStatic="false">
+      <SourceLine classname="org.json.JSONObject" start="300" end="309" startBytecode="0" endBytecode="239" sourcefile="JSONObject.java" sourcepath="org/json/JSONObject.java"/>
+    </Method>
+    <SourceLine classname="org.json.JSONObject" start="306" end="306" startBytecode="41" endBytecode="41" sourcefile="JSONObject.java" sourcepath="org/json/JSONObject.java"/>
+  </BugInstance>
+  <BugInstance type="REC_CATCH_EXCEPTION" priority="3" rank="20" abbrev="REC" category="STYLE">
+    <Class classname="org.json.JSONObject">
+      <SourceLine classname="org.json.JSONObject" sourcefile="JSONObject.java" sourcepath="org/json/JSONObject.java"/>
+    </Class>
+    <Method classname="org.json.JSONObject" name="stringToValue" signature="(Ljava/lang/String;)Ljava/lang/Object;" isStatic="true">
+      <SourceLine classname="org.json.JSONObject" start="1337" end="1377" startBytecode="0" endBytecode="403" sourcefile="JSONObject.java" sourcepath="org/json/JSONObject.java"/>
+    </Method>
+    <SourceLine classname="org.json.JSONObject" start="1374" end="1374" startBytecode="172" endBytecode="172" sourcefile="JSONObject.java" sourcepath="org/json/JSONObject.java"/>
+  </BugInstance>
+  <BugInstance type="REC_CATCH_EXCEPTION" priority="3" rank="20" abbrev="REC" category="STYLE">
+    <Class classname="org.json.JSONObject">
+      <SourceLine classname="org.json.JSONObject" sourcefile="JSONObject.java" sourcepath="org/json/JSONObject.java"/>
+    </Class>
+    <Method classname="org.json.JSONObject" name="wrap" signature="(Ljava/lang/Object;)Ljava/lang/Object;" isStatic="true">
+      <SourceLine classname="org.json.JSONObject" start="1540" end="1572" startBytecode="0" endBytecode="508" sourcefile="JSONObject.java" sourcepath="org/json/JSONObject.java"/>
+    </Method>
+    <SourceLine classname="org.json.JSONObject" start="1571" end="1571" startBytecode="228" endBytecode="228" sourcefile="JSONObject.java" sourcepath="org/json/JSONObject.java"/>
+  </BugInstance>
+  <BugInstance type="EQ_UNUSUAL" priority="2" rank="17" abbrev="Eq" category="STYLE">
+    <Class classname="org.json.JSONObject$Null">
+      <SourceLine classname="org.json.JSONObject$Null" sourcefile="JSONObject.java" sourcepath="org/json/JSONObject.java"/>
+    </Class>
+    <Method classname="org.json.JSONObject$Null" name="equals" signature="(Ljava/lang/Object;)Z" isStatic="false">
+      <SourceLine classname="org.json.JSONObject$Null" start="125" end="125" startBytecode="0" endBytecode="73" sourcefile="JSONObject.java" sourcepath="org/json/JSONObject.java"/>
+    </Method>
+  </BugInstance>
+  <BugInstance type="HE_EQUALS_USE_HASHCODE" priority="2" rank="16" abbrev="HE" category="BAD_PRACTICE">
+    <Class classname="org.json.JSONObject$Null">
+      <SourceLine classname="org.json.JSONObject$Null" sourcefile="JSONObject.java" sourcepath="org/json/JSONObject.java"/>
+    </Class>
+    <Method classname="org.json.JSONObject$Null" name="equals" signature="(Ljava/lang/Object;)Z" isStatic="false">
+      <SourceLine classname="org.json.JSONObject$Null" start="125" end="125" startBytecode="0" endBytecode="73" sourcefile="JSONObject.java" sourcepath="org/json/JSONObject.java"/>
+    </Method>
+  </BugInstance>
+  <BugInstance type="NP_TOSTRING_COULD_RETURN_NULL" priority="2" rank="14" abbrev="NP" category="BAD_PRACTICE">
+    <Class classname="org.json.JSONStringer">
+      <SourceLine classname="org.json.JSONStringer" sourcefile="JSONStringer.java" sourcepath="org/json/JSONStringer.java"/>
+    </Class>
+    <Method classname="org.json.JSONStringer" name="toString" signature="()Ljava/lang/String;" isStatic="false">
+      <SourceLine classname="org.json.JSONStringer" start="76" end="76" startBytecode="0" endBytecode="75" sourcefile="JSONStringer.java" sourcepath="org/json/JSONStringer.java"/>
+    </Method>
+    <String value="null" role="STRING_NONSTRING_CONSTANT"/>
+    <SourceLine classname="org.json.JSONStringer" start="76" end="76" startBytecode="20" endBytecode="20" sourcefile="JSONStringer.java" sourcepath="org/json/JSONStringer.java" role="SOURCE_LINE_RETURNED"/>
+    <SourceLine classname="org.json.JSONStringer" start="76" end="76" startBytecode="19" endBytecode="19" sourcefile="JSONStringer.java" sourcepath="org/json/JSONStringer.java" role="SOURCE_LINE_KNOWN_NULL"/>
+  </BugInstance>
+  <BugInstance type="DM_DEFAULT_ENCODING" priority="1" rank="19" abbrev="Dm" category="I18N">
+    <Class classname="org.json.JSONTokener">
+      <SourceLine classname="org.json.JSONTokener" sourcefile="JSONTokener.java" sourcepath="org/json/JSONTokener.java"/>
+    </Class>
+    <Method classname="org.json.JSONTokener" name="&lt;init&gt;" signature="(Ljava/io/InputStream;)V" isStatic="false">
+      <SourceLine classname="org.json.JSONTokener" start="75" end="76" startBytecode="0" endBytecode="68" sourcefile="JSONTokener.java" sourcepath="org/json/JSONTokener.java"/>
+    </Method>
+    <Method classname="java.io.InputStreamReader" name="&lt;init&gt;" signature="(Ljava/io/InputStream;)V" isStatic="false" role="METHOD_CALLED">
+      <SourceLine classname="java.io.InputStreamReader" start="72" end="79" startBytecode="0" endBytecode="146" sourcefile="InputStreamReader.java" sourcepath="java/io/InputStreamReader.java"/>
+    </Method>
+    <SourceLine classname="org.json.JSONTokener" start="75" end="75" startBytecode="6" endBytecode="6" sourcefile="JSONTokener.java" sourcepath="org/json/JSONTokener.java"/>
+  </BugInstance>
+  <BugInstance type="DM_FP_NUMBER_CTOR" priority="3" rank="20" abbrev="Bx" category="PERFORMANCE">
+    <Class classname="org.json.JSONWriter">
+      <SourceLine classname="org.json.JSONWriter" sourcefile="JSONWriter.java" sourcepath="org/json/JSONWriter.java"/>
+    </Class>
+    <Method classname="org.json.JSONWriter" name="value" signature="(D)Lorg/json/JSONWriter;" isStatic="false">
+      <SourceLine classname="org.json.JSONWriter" start="303" end="303" startBytecode="0" endBytecode="64" sourcefile="JSONWriter.java" sourcepath="org/json/JSONWriter.java"/>
+    </Method>
+    <Method classname="java.lang.Double" name="&lt;init&gt;" signature="(D)V" isStatic="false" role="METHOD_CALLED">
+      <SourceLine classname="java.lang.Double" start="580" end="582" startBytecode="0" endBytecode="69" sourcefile="Double.java" sourcepath="java/lang/Double.java"/>
+    </Method>
+    <Method classname="java.lang.Double" name="valueOf" signature="(D)Ljava/lang/Double;" isStatic="true" role="SHOULD_CALL">
+      <SourceLine classname="java.lang.Double" start="521" end="521" startBytecode="0" endBytecode="50" sourcefile="Double.java" sourcepath="java/lang/Double.java"/>
+    </Method>
+    <SourceLine classname="org.json.JSONWriter" start="303" end="303" startBytecode="6" endBytecode="6" sourcefile="JSONWriter.java" sourcepath="org/json/JSONWriter.java"/>
+  </BugInstance>
+  <BugInstance type="DM_FP_NUMBER_CTOR" priority="3" rank="20" abbrev="Bx" category="PERFORMANCE">
+    <Class classname="org.json.XML">
+      <SourceLine classname="org.json.XML" sourcefile="XML.java" sourcepath="org/json/XML.java"/>
+    </Class>
+    <Method classname="org.json.XML" name="stringToValue" signature="(Ljava/lang/String;)Ljava/lang/Object;" isStatic="true">
+      <SourceLine classname="org.json.XML" start="303" end="333" startBytecode="0" endBytecode="319" sourcefile="XML.java" sourcepath="org/json/XML.java"/>
+    </Method>
+    <Method classname="java.lang.Double" name="&lt;init&gt;" signature="(Ljava/lang/String;)V" isStatic="false" role="METHOD_CALLED">
+      <SourceLine classname="java.lang.Double" start="597" end="598" startBytecode="0" endBytecode="67" sourcefile="Double.java" sourcepath="java/lang/Double.java"/>
+    </Method>
+    <Method classname="java.lang.Double" name="valueOf" signature="(Ljava/lang/String;)Ljava/lang/Double;" isStatic="true" role="SHOULD_CALL">
+      <SourceLine classname="java.lang.Double" start="504" end="504" startBytecode="0" endBytecode="56" sourcefile="Double.java" sourcepath="java/lang/Double.java"/>
+    </Method>
+    <SourceLine classname="org.json.XML" start="326" end="326" startBytecode="91" endBytecode="91" sourcefile="XML.java" sourcepath="org/json/XML.java"/>
+  </BugInstance>
+  <BugInstance type="DM_NUMBER_CTOR" priority="2" rank="18" abbrev="Bx" category="PERFORMANCE">
+    <Class classname="org.json.XML">
+      <SourceLine classname="org.json.XML" sourcefile="XML.java" sourcepath="org/json/XML.java"/>
+    </Class>
+    <Method classname="org.json.XML" name="stringToValue" signature="(Ljava/lang/String;)Ljava/lang/Object;" isStatic="true">
+      <SourceLine classname="org.json.XML" start="303" end="333" startBytecode="0" endBytecode="319" sourcefile="XML.java" sourcepath="org/json/XML.java"/>
+    </Method>
+    <Method classname="java.lang.Long" name="&lt;init&gt;" signature="(Ljava/lang/String;)V" isStatic="false" role="METHOD_CALLED">
+      <SourceLine classname="java.lang.Long" start="701" end="703" startBytecode="0" endBytecode="74" sourcefile="Long.java" sourcepath="java/lang/Long.java"/>
+    </Method>
+    <Method classname="java.lang.Long" name="valueOf" signature="(Ljava/lang/String;)Ljava/lang/Long;" isStatic="true" role="SHOULD_CALL">
+      <SourceLine classname="java.lang.Long" start="540" end="540" startBytecode="0" endBytecode="51" sourcefile="Long.java" sourcepath="java/lang/Long.java"/>
+    </Method>
+    <SourceLine classname="org.json.XML" start="319" end="319" startBytecode="68" endBytecode="68" sourcefile="XML.java" sourcepath="org/json/XML.java"/>
+  </BugInstance>
+  <BugInstance type="RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE" priority="2" rank="18" abbrev="RCN" category="STYLE">
+    <Class classname="org.json.XML">
+      <SourceLine classname="org.json.XML" sourcefile="XML.java" sourcepath="org/json/XML.java"/>
+    </Class>
+    <Method classname="org.json.XML" name="toString" signature="(Ljava/lang/Object;Ljava/lang/String;)Ljava/lang/String;" isStatic="true">
+      <SourceLine classname="org.json.XML" start="381" end="484" startBytecode="0" endBytecode="1516" sourcefile="XML.java" sourcepath="org/json/XML.java"/>
+    </Method>
+    <LocalVariable name="object" register="0" pc="490" role="LOCAL_VARIABLE_VALUE_OF"/>
+    <SourceLine classname="org.json.XML" start="483" end="483" startBytecode="491" endBytecode="491" sourcefile="XML.java" sourcepath="org/json/XML.java" role="SOURCE_REDUNDANT_NULL_CHECK"/>
+  </BugInstance>
+  <BugInstance type="RC_REF_COMPARISON_BAD_PRACTICE" priority="2" rank="16" abbrev="RC" category="BAD_PRACTICE">
+    <Class classname="org.json.XML">
+      <SourceLine classname="org.json.XML" sourcefile="XML.java" sourcepath="org/json/XML.java"/>
+    </Class>
+    <Method classname="org.json.XML" name="parse" signature="(Lorg/json/XMLTokener;Lorg/json/JSONObject;Ljava/lang/String;)Z" isStatic="true">
+      <SourceLine classname="org.json.XML" start="133" end="286" startBytecode="0" endBytecode="304" sourcefile="XML.java" sourcepath="org/json/XML.java"/>
+    </Method>
+    <Type descriptor="Ljava/lang/Character;" role="TYPE_FOUND">
+      <SourceLine classname="java.lang.Character" start="122" end="7030" sourcefile="Character.java" sourcepath="java/lang/Character.java"/>
+    </Type>
+    <Field classname="org.json.XML" name="BANG" signature="Ljava/lang/Character;" isStatic="true" role="FIELD_VALUE_OF">
+      <SourceLine classname="org.json.XML" sourcefile="XML.java" sourcepath="org/json/XML.java"/>
+    </Field>
+    <SourceLine classname="org.json.XML" start="152" end="152" startBytecode="14" endBytecode="14" sourcefile="XML.java" sourcepath="org/json/XML.java"/>
+  </BugInstance>
+  <BugInstance type="RC_REF_COMPARISON_BAD_PRACTICE" priority="2" rank="16" abbrev="RC" category="BAD_PRACTICE">
+    <Class classname="org.json.XML">
+      <SourceLine classname="org.json.XML" sourcefile="XML.java" sourcepath="org/json/XML.java"/>
+    </Class>
+    <Method classname="org.json.XML" name="parse" signature="(Lorg/json/XMLTokener;Lorg/json/JSONObject;Ljava/lang/String;)Z" isStatic="true">
+      <SourceLine classname="org.json.XML" start="133" end="286" startBytecode="0" endBytecode="304" sourcefile="XML.java" sourcepath="org/json/XML.java"/>
+    </Method>
+    <Type descriptor="Ljava/lang/Character;" role="TYPE_FOUND">
+      <SourceLine classname="java.lang.Character" start="122" end="7030" sourcefile="Character.java" sourcepath="java/lang/Character.java"/>
+    </Type>
+    <Field classname="org.json.XML" name="EQ" signature="Ljava/lang/Character;" isStatic="true" role="FIELD_VALUE_OF">
+      <SourceLine classname="org.json.XML" sourcefile="XML.java" sourcepath="org/json/XML.java"/>
+    </Field>
+    <SourceLine classname="org.json.XML" start="226" end="226" startBytecode="356" endBytecode="356" sourcefile="XML.java" sourcepath="org/json/XML.java"/>
+  </BugInstance>
+  <BugInstance type="RC_REF_COMPARISON_BAD_PRACTICE" priority="2" rank="16" abbrev="RC" category="BAD_PRACTICE">
+    <Class classname="org.json.XML">
+      <SourceLine classname="org.json.XML" sourcefile="XML.java" sourcepath="org/json/XML.java"/>
+    </Class>
+    <Method classname="org.json.XML" name="parse" signature="(Lorg/json/XMLTokener;Lorg/json/JSONObject;Ljava/lang/String;)Z" isStatic="true">
+      <SourceLine classname="org.json.XML" start="133" end="286" startBytecode="0" endBytecode="304" sourcefile="XML.java" sourcepath="org/json/XML.java"/>
+    </Method>
+    <Type descriptor="Ljava/lang/Character;" role="TYPE_FOUND">
+      <SourceLine classname="java.lang.Character" start="122" end="7030" sourcefile="Character.java" sourcepath="java/lang/Character.java"/>
+    </Type>
+    <Field classname="org.json.XML" name="GT" signature="Ljava/lang/Character;" isStatic="true" role="FIELD_VALUE_OF">
+      <SourceLine classname="org.json.XML" sourcefile="XML.java" sourcepath="org/json/XML.java"/>
+    </Field>
+    <SourceLine classname="org.json.XML" start="180" end="180" startBytecode="156" endBytecode="156" sourcefile="XML.java" sourcepath="org/json/XML.java"/>
+    <SourceLine classname="org.json.XML" start="202" end="202" startBytecode="273" endBytecode="273" sourcefile="XML.java" sourcepath="org/json/XML.java" role="SOURCE_LINE_ANOTHER_INSTANCE"/>
+    <SourceLine classname="org.json.XML" start="253" end="253" startBytecode="476" endBytecode="476" sourcefile="XML.java" sourcepath="org/json/XML.java" role="SOURCE_LINE_ANOTHER_INSTANCE"/>
+    <SourceLine classname="org.json.XML" start="241" end="241" startBytecode="430" endBytecode="430" sourcefile="XML.java" sourcepath="org/json/XML.java" role="SOURCE_LINE_ANOTHER_INSTANCE"/>
+  </BugInstance>
+  <BugInstance type="RC_REF_COMPARISON_BAD_PRACTICE" priority="2" rank="16" abbrev="RC" category="BAD_PRACTICE">
+    <Class classname="org.json.XML">
+      <SourceLine classname="org.json.XML" sourcefile="XML.java" sourcepath="org/json/XML.java"/>
+    </Class>
+    <Method classname="org.json.XML" name="parse" signature="(Lorg/json/XMLTokener;Lorg/json/JSONObject;Ljava/lang/String;)Z" isStatic="true">
+      <SourceLine classname="org.json.XML" start="133" end="286" startBytecode="0" endBytecode="304" sourcefile="XML.java" sourcepath="org/json/XML.java"/>
+    </Method>
+    <Type descriptor="Ljava/lang/Character;" role="TYPE_FOUND">
+      <SourceLine classname="java.lang.Character" start="122" end="7030" sourcefile="Character.java" sourcepath="java/lang/Character.java"/>
+    </Type>
+    <Field classname="org.json.XML" name="LT" signature="Ljava/lang/Character;" isStatic="true" role="FIELD_VALUE_OF">
+      <SourceLine classname="org.json.XML" sourcefile="XML.java" sourcepath="org/json/XML.java"/>
+    </Field>
+    <SourceLine classname="org.json.XML" start="178" end="178" startBytecode="142" endBytecode="142" sourcefile="XML.java" sourcepath="org/json/XML.java"/>
+    <SourceLine classname="org.json.XML" start="270" end="270" startBytecode="563" endBytecode="563" sourcefile="XML.java" sourcepath="org/json/XML.java" role="SOURCE_LINE_ANOTHER_INSTANCE"/>
+  </BugInstance>
+  <BugInstance type="RC_REF_COMPARISON_BAD_PRACTICE" priority="2" rank="16" abbrev="RC" category="BAD_PRACTICE">
+    <Class classname="org.json.XML">
+      <SourceLine classname="org.json.XML" sourcefile="XML.java" sourcepath="org/json/XML.java"/>
+    </Class>
+    <Method classname="org.json.XML" name="parse" signature="(Lorg/json/XMLTokener;Lorg/json/JSONObject;Ljava/lang/String;)Z" isStatic="true">
+      <SourceLine classname="org.json.XML" start="133" end="286" startBytecode="0" endBytecode="304" sourcefile="XML.java" sourcepath="org/json/XML.java"/>
+    </Method>
+    <Type descriptor="Ljava/lang/Character;" role="TYPE_FOUND">
+      <SourceLine classname="java.lang.Character" start="122" end="7030" sourcefile="Character.java" sourcepath="java/lang/Character.java"/>
+    </Type>
+    <Field classname="org.json.XML" name="QUEST" signature="Ljava/lang/Character;" isStatic="true" role="FIELD_VALUE_OF">
+      <SourceLine classname="org.json.XML" sourcefile="XML.java" sourcepath="org/json/XML.java"/>
+    </Field>
+    <SourceLine classname="org.json.XML" start="185" end="185" startBytecode="174" endBytecode="174" sourcefile="XML.java" sourcepath="org/json/XML.java"/>
+  </BugInstance>
+  <BugInstance type="RC_REF_COMPARISON_BAD_PRACTICE" priority="2" rank="16" abbrev="RC" category="BAD_PRACTICE">
+    <Class classname="org.json.XML">
+      <SourceLine classname="org.json.XML" sourcefile="XML.java" sourcepath="org/json/XML.java"/>
+    </Class>
+    <Method classname="org.json.XML" name="parse" signature="(Lorg/json/XMLTokener;Lorg/json/JSONObject;Ljava/lang/String;)Z" isStatic="true">
+      <SourceLine classname="org.json.XML" start="133" end="286" startBytecode="0" endBytecode="304" sourcefile="XML.java" sourcepath="org/json/XML.java"/>
+    </Method>
+    <Type descriptor="Ljava/lang/Character;" role="TYPE_FOUND">
+      <SourceLine classname="java.lang.Character" start="122" end="7030" sourcefile="Character.java" sourcepath="java/lang/Character.java"/>
+    </Type>
+    <Field classname="org.json.XML" name="SLASH" signature="Ljava/lang/Character;" isStatic="true" role="FIELD_VALUE_OF">
+      <SourceLine classname="org.json.XML" sourcefile="XML.java" sourcepath="org/json/XML.java"/>
+    </Field>
+    <SourceLine classname="org.json.XML" start="191" end="191" startBytecode="191" endBytecode="191" sourcefile="XML.java" sourcepath="org/json/XML.java"/>
+    <SourceLine classname="org.json.XML" start="240" end="240" startBytecode="420" endBytecode="420" sourcefile="XML.java" sourcepath="org/json/XML.java" role="SOURCE_LINE_ANOTHER_INSTANCE"/>
+  </BugInstance>
+  <BugInstance type="REC_CATCH_EXCEPTION" priority="3" rank="20" abbrev="REC" category="STYLE">
+    <Class classname="org.json.XML">
+      <SourceLine classname="org.json.XML" sourcefile="XML.java" sourcepath="org/json/XML.java"/>
+    </Class>
+    <Method classname="org.json.XML" name="stringToValue" signature="(Ljava/lang/String;)Ljava/lang/Object;" isStatic="true">
+      <SourceLine classname="org.json.XML" start="303" end="333" startBytecode="0" endBytecode="319" sourcefile="XML.java" sourcepath="org/json/XML.java"/>
+    </Method>
+    <SourceLine classname="org.json.XML" start="324" end="324" startBytecode="85" endBytecode="85" sourcefile="XML.java" sourcepath="org/json/XML.java"/>
+  </BugInstance>
+  <BugInstance type="MS_MUTABLE_COLLECTION_PKGPROTECT" priority="2" rank="18" abbrev="MS" category="MALICIOUS_CODE">
+    <Class classname="org.json.XMLTokener">
+      <SourceLine classname="org.json.XMLTokener" sourcefile="XMLTokener.java" sourcepath="org/json/XMLTokener.java"/>
+    </Class>
+    <Field classname="org.json.XMLTokener" name="entity" signature="Ljava/util/HashMap;" isStatic="true">
+      <SourceLine classname="org.json.XMLTokener" sourcefile="XMLTokener.java" sourcepath="org/json/XMLTokener.java"/>
+    </Field>
+    <SourceLine classname="org.json.XMLTokener" start="42" end="42" startBytecode="9" endBytecode="9" sourcefile="XMLTokener.java" sourcepath="org/json/XMLTokener.java"/>
+  </BugInstance>
+  <BugInstance type="BC_UNCONFIRMED_CAST_OF_RETURN_VALUE" priority="3" rank="20" abbrev="BC" category="STYLE">
+    <Class classname="server.Server">
+      <SourceLine classname="server.Server" sourcefile="Server.java" sourcepath="server/Server.java"/>
+    </Class>
+    <Method classname="server.Server" name="main" signature="([Ljava/lang/String;)V" isStatic="true">
+      <SourceLine classname="server.Server" start="13" end="41" startBytecode="0" endBytecode="63" sourcefile="Server.java" sourcepath="server/Server.java"/>
+    </Method>
+    <Type descriptor="Ljava/net/ServerSocket;" role="TYPE_FOUND">
+      <SourceLine classname="java.net.ServerSocket" start="52" end="899" sourcefile="ServerSocket.java" sourcepath="java/net/ServerSocket.java"/>
+    </Type>
+    <Type descriptor="Ljavax/net/ssl/SSLServerSocket;" role="TYPE_EXPECTED">
+      <SourceLine classname="javax.net.ssl.SSLServerSocket" start="71" end="525" sourcefile="SSLServerSocket.java" sourcepath="javax/net/ssl/SSLServerSocket.java"/>
+    </Type>
+    <SourceLine classname="server.Server" start="26" end="26" startBytecode="91" endBytecode="91" sourcefile="Server.java" sourcepath="server/Server.java"/>
+  </BugInstance>
+  <BugInstance type="BC_UNCONFIRMED_CAST_OF_RETURN_VALUE" priority="3" rank="20" abbrev="BC" category="STYLE">
+    <Class classname="server.Server">
+      <SourceLine classname="server.Server" sourcefile="Server.java" sourcepath="server/Server.java"/>
+    </Class>
+    <Method classname="server.Server" name="main" signature="([Ljava/lang/String;)V" isStatic="true">
+      <SourceLine classname="server.Server" start="13" end="41" startBytecode="0" endBytecode="63" sourcefile="Server.java" sourcepath="server/Server.java"/>
+    </Method>
+    <Type descriptor="Ljava/net/Socket;" role="TYPE_FOUND">
+      <SourceLine classname="java.net.Socket" start="59" end="1674" sourcefile="Socket.java" sourcepath="java/net/Socket.java"/>
+    </Type>
+    <Type descriptor="Ljavax/net/ssl/SSLSocket;" role="TYPE_EXPECTED">
+      <SourceLine classname="javax.net.ssl.SSLSocket" start="148" end="662" sourcefile="SSLSocket.java" sourcepath="javax/net/ssl/SSLSocket.java"/>
+    </Type>
+    <SourceLine classname="server.Server" start="32" end="32" startBytecode="108" endBytecode="108" sourcefile="Server.java" sourcepath="server/Server.java"/>
+  </BugInstance>
+  <BugInstance type="REC_CATCH_EXCEPTION" priority="3" rank="20" abbrev="REC" category="STYLE">
+    <Class classname="server.Server">
+      <SourceLine classname="server.Server" sourcefile="Server.java" sourcepath="server/Server.java"/>
+    </Class>
+    <Method classname="server.Server" name="main" signature="([Ljava/lang/String;)V" isStatic="true">
+      <SourceLine classname="server.Server" start="13" end="41" startBytecode="0" endBytecode="460" sourcefile="Server.java" sourcepath="server/Server.java"/>
+    </Method>
+    <SourceLine classname="server.Server" start="37" end="37" startBytecode="136" endBytecode="136" sourcefile="Server.java" sourcepath="server/Server.java"/>
+  </BugInstance>
+  <BugInstance type="UPM_UNCALLED_PRIVATE_METHOD" priority="3" rank="20" abbrev="UPM" category="PERFORMANCE">
+    <Class classname="server.Server">
+      <SourceLine classname="server.Server" sourcefile="Server.java" sourcepath="server/Server.java"/>
+    </Class>
+    <Method classname="server.Server" name="printServerSocketInfo" signature="(Ljavax/net/ssl/SSLServerSocket;)V" isStatic="true">
+      <SourceLine classname="server.Server" start="45" end="56" startBytecode="0" endBytecode="259" sourcefile="Server.java" sourcepath="server/Server.java"/>
+    </Method>
+  </BugInstance>
+  <BugInstance type="DLS_DEAD_LOCAL_STORE" priority="3" rank="20" abbrev="DLS" category="STYLE">
+    <Class classname="server.ServerConnection">
+      <SourceLine classname="server.ServerConnection" sourcefile="ServerConnection.java" sourcepath="server/ServerConnection.java"/>
+    </Class>
+    <Method classname="server.ServerConnection" name="run" signature="()V" isStatic="false">
+      <SourceLine classname="server.ServerConnection" start="48" end="234" startBytecode="0" endBytecode="467" sourcefile="ServerConnection.java" sourcepath="server/ServerConnection.java"/>
+    </Method>
+    <LocalVariable name="email" register="14" pc="1046" role="LOCAL_VARIABLE_NAMED"/>
+    <SourceLine classname="server.ServerConnection" start="198" end="198" startBytecode="1044" endBytecode="1044" sourcefile="ServerConnection.java" sourcepath="server/ServerConnection.java"/>
+    <Property name="edu.umd.cs.findbugs.detect.DeadLocalStoreProperty.BASE_VALUE" value="true"/>
+    <Property name="edu.umd.cs.findbugs.detect.DeadLocalStoreProperty.KILLED_BY_SUBSEQUENT_STORE" value="true"/>
+    <Property name="edu.umd.cs.findbugs.detect.DeadLocalStoreProperty.LOCAL_NAME" value="email"/>
+    <Property name="edu.umd.cs.findbugs.detect.DeadLocalStoreProperty.METHOD_RESULT" value="true"/>
+  </BugInstance>
+  <BugInstance type="DM_DEFAULT_ENCODING" priority="1" rank="19" abbrev="Dm" category="I18N">
+    <Class classname="server.ServerConnection">
+      <SourceLine classname="server.ServerConnection" sourcefile="ServerConnection.java" sourcepath="server/ServerConnection.java"/>
+    </Class>
+    <Method classname="server.ServerConnection" name="authAccount" signature="(Ljava/lang/String;Ljava/lang/String;)Lutil/Response;" isStatic="false">
+      <SourceLine classname="server.ServerConnection" start="473" end="538" startBytecode="0" endBytecode="901" sourcefile="ServerConnection.java" sourcepath="server/ServerConnection.java"/>
+    </Method>
+    <Method classname="java.io.FileReader" name="&lt;init&gt;" signature="(Ljava/lang/String;)V" isStatic="false" role="METHOD_CALLED">
+      <SourceLine classname="java.io.FileReader" start="58" end="59" startBytecode="0" endBytecode="68" sourcefile="FileReader.java" sourcepath="java/io/FileReader.java"/>
+    </Method>
+    <SourceLine classname="server.ServerConnection" start="509" end="509" startBytecode="247" endBytecode="247" sourcefile="ServerConnection.java" sourcepath="server/ServerConnection.java"/>
+  </BugInstance>
+  <BugInstance type="DM_DEFAULT_ENCODING" priority="1" rank="19" abbrev="Dm" category="I18N">
+    <Class classname="server.ServerConnection">
+      <SourceLine classname="server.ServerConnection" sourcefile="ServerConnection.java" sourcepath="server/ServerConnection.java"/>
+    </Class>
+    <Method classname="server.ServerConnection" name="logCenter" signature="(Ljava/lang/String;Ljava/lang/String;Lutil/Response;)V" isStatic="false">
+      <SourceLine classname="server.ServerConnection" start="313" end="328" startBytecode="0" endBytecode="536" sourcefile="ServerConnection.java" sourcepath="server/ServerConnection.java"/>
+    </Method>
+    <Method classname="java.io.FileWriter" name="&lt;init&gt;" signature="(Ljava/lang/String;Z)V" isStatic="false" role="METHOD_CALLED">
+      <SourceLine classname="java.io.FileWriter" start="78" end="79" startBytecode="0" endBytecode="79" sourcefile="FileWriter.java" sourcepath="java/io/FileWriter.java"/>
+    </Method>
+    <SourceLine classname="server.ServerConnection" start="313" end="313" startBytecode="22" endBytecode="22" sourcefile="ServerConnection.java" sourcepath="server/ServerConnection.java"/>
+  </BugInstance>
+  <BugInstance type="DM_DEFAULT_ENCODING" priority="1" rank="19" abbrev="Dm" category="I18N">
+    <Class classname="server.ServerConnection">
+      <SourceLine classname="server.ServerConnection" sourcefile="ServerConnection.java" sourcepath="server/ServerConnection.java"/>
+    </Class>
+    <Method classname="server.ServerConnection" name="logUserResult" signature="(Ljava/lang/String;Lutil/Response;)V" isStatic="false">
+      <SourceLine classname="server.ServerConnection" start="291" end="306" startBytecode="0" endBytecode="364" sourcefile="ServerConnection.java" sourcepath="server/ServerConnection.java"/>
+    </Method>
+    <Method classname="java.io.FileWriter" name="&lt;init&gt;" signature="(Ljava/lang/String;Z)V" isStatic="false" role="METHOD_CALLED">
+      <SourceLine classname="java.io.FileWriter" start="78" end="79" startBytecode="0" endBytecode="79" sourcefile="FileWriter.java" sourcepath="java/io/FileWriter.java"/>
+    </Method>
+    <SourceLine classname="server.ServerConnection" start="296" end="296" startBytecode="66" endBytecode="66" sourcefile="ServerConnection.java" sourcepath="server/ServerConnection.java"/>
+  </BugInstance>
+  <BugInstance type="DM_DEFAULT_ENCODING" priority="1" rank="19" abbrev="Dm" category="I18N">
+    <Class classname="server.ServerConnection">
+      <SourceLine classname="server.ServerConnection" sourcefile="ServerConnection.java" sourcepath="server/ServerConnection.java"/>
+    </Class>
+    <Method classname="server.ServerConnection" name="logout" signature="()Lutil/Response;" isStatic="false">
+      <SourceLine classname="server.ServerConnection" start="629" end="641" startBytecode="0" endBytecode="325" sourcefile="ServerConnection.java" sourcepath="server/ServerConnection.java"/>
+    </Method>
+    <Method classname="java.io.FileWriter" name="&lt;init&gt;" signature="(Ljava/lang/String;)V" isStatic="false" role="METHOD_CALLED">
+      <SourceLine classname="java.io.FileWriter" start="63" end="64" startBytecode="0" endBytecode="68" sourcefile="FileWriter.java" sourcepath="java/io/FileWriter.java"/>
+    </Method>
+    <SourceLine classname="server.ServerConnection" start="630" end="630" startBytecode="18" endBytecode="18" sourcefile="ServerConnection.java" sourcepath="server/ServerConnection.java"/>
+  </BugInstance>
+  <BugInstance type="DM_DEFAULT_ENCODING" priority="1" rank="19" abbrev="Dm" category="I18N">
+    <Class classname="server.ServerConnection">
+      <SourceLine classname="server.ServerConnection" sourcefile="ServerConnection.java" sourcepath="server/ServerConnection.java"/>
+    </Class>
+    <Method classname="server.ServerConnection" name="run" signature="()V" isStatic="false">
+      <SourceLine classname="server.ServerConnection" start="48" end="234" startBytecode="0" endBytecode="2470" sourcefile="ServerConnection.java" sourcepath="server/ServerConnection.java"/>
+    </Method>
+    <Method classname="java.io.InputStreamReader" name="&lt;init&gt;" signature="(Ljava/io/InputStream;)V" isStatic="false" role="METHOD_CALLED">
+      <SourceLine classname="java.io.InputStreamReader" start="72" end="79" startBytecode="0" endBytecode="146" sourcefile="InputStreamReader.java" sourcepath="java/io/InputStreamReader.java"/>
+    </Method>
+    <SourceLine classname="server.ServerConnection" start="50" end="50" startBytecode="37" endBytecode="37" sourcefile="ServerConnection.java" sourcepath="server/ServerConnection.java"/>
+  </BugInstance>
+  <BugInstance type="DM_DEFAULT_ENCODING" priority="1" rank="19" abbrev="Dm" category="I18N">
+    <Class classname="server.ServerConnection">
+      <SourceLine classname="server.ServerConnection" sourcefile="ServerConnection.java" sourcepath="server/ServerConnection.java"/>
+    </Class>
+    <Method classname="server.ServerConnection" name="run" signature="()V" isStatic="false">
+      <SourceLine classname="server.ServerConnection" start="48" end="234" startBytecode="0" endBytecode="2470" sourcefile="ServerConnection.java" sourcepath="server/ServerConnection.java"/>
+    </Method>
+    <Method classname="java.io.OutputStreamWriter" name="&lt;init&gt;" signature="(Ljava/io/OutputStream;)V" isStatic="false" role="METHOD_CALLED">
+      <SourceLine classname="java.io.OutputStreamWriter" start="109" end="115" startBytecode="0" endBytecode="146" sourcefile="OutputStreamWriter.java" sourcepath="java/io/OutputStreamWriter.java"/>
+    </Method>
+    <SourceLine classname="server.ServerConnection" start="48" end="48" startBytecode="15" endBytecode="15" sourcefile="ServerConnection.java" sourcepath="server/ServerConnection.java"/>
+  </BugInstance>
+  <BugInstance type="DM_DEFAULT_ENCODING" priority="1" rank="19" abbrev="Dm" category="I18N">
+    <Class classname="server.ServerConnection">
+      <SourceLine classname="server.ServerConnection" sourcefile="ServerConnection.java" sourcepath="server/ServerConnection.java"/>
+    </Class>
+    <Method classname="server.ServerConnection" name="saltAndHash" signature="(Ljava/lang/String;[B)[B" isStatic="false">
+      <SourceLine classname="server.ServerConnection" start="270" end="282" startBytecode="0" endBytecode="178" sourcefile="ServerConnection.java" sourcepath="server/ServerConnection.java"/>
+    </Method>
+    <Method classname="java.lang.String" name="getBytes" signature="()[B" isStatic="false" role="METHOD_CALLED">
+      <SourceLine classname="java.lang.String" start="956" end="956" startBytecode="0" endBytecode="55" sourcefile="String.java" sourcepath="java/lang/String.java"/>
+    </Method>
+    <SourceLine classname="server.ServerConnection" start="272" end="272" startBytecode="11" endBytecode="11" sourcefile="ServerConnection.java" sourcepath="server/ServerConnection.java"/>
+  </BugInstance>
+  <BugInstance type="OBL_UNSATISFIED_OBLIGATION_EXCEPTION_EDGE" priority="2" rank="20" abbrev="OBL" category="EXPERIMENTAL">
+    <Class classname="server.ServerConnection">
+      <SourceLine classname="server.ServerConnection" sourcefile="ServerConnection.java" sourcepath="server/ServerConnection.java"/>
+    </Class>
+    <Method classname="server.ServerConnection" name="authAccount" signature="(Ljava/lang/String;Ljava/lang/String;)Lutil/Response;" isStatic="false">
+      <SourceLine classname="server.ServerConnection" start="473" end="538" startBytecode="0" endBytecode="901" sourcefile="ServerConnection.java" sourcepath="server/ServerConnection.java"/>
+    </Method>
+    <Class classname="java.io.InputStream" role="CLASS_REFTYPE">
+      <SourceLine classname="java.io.InputStream" sourcefile="InputStream.java" sourcepath="java/io/InputStream.java"/>
+    </Class>
+    <Int value="1" role="INT_OBLIGATIONS_REMAINING"/>
+    <SourceLine classname="server.ServerConnection" start="490" end="490" startBytecode="118" endBytecode="118" sourcefile="ServerConnection.java" sourcepath="server/ServerConnection.java" role="SOURCE_LINE_OBLIGATION_CREATED"/>
+    <SourceLine classname="server.ServerConnection" start="491" end="491" startBytecode="123" endBytecode="123" sourcefile="ServerConnection.java" sourcepath="server/ServerConnection.java" role="SOURCE_LINE_PATH_CONTINUES"/>
+    <SourceLine classname="server.ServerConnection" start="534" end="534" startBytecode="394" endBytecode="394" sourcefile="ServerConnection.java" sourcepath="server/ServerConnection.java" role="SOURCE_LINE_PATH_CONTINUES"/>
+    <SourceLine classname="server.ServerConnection" start="535" end="535" startBytecode="396" endBytecode="396" sourcefile="ServerConnection.java" sourcepath="server/ServerConnection.java" role="SOURCE_LINE_PATH_CONTINUES"/>
+    <SourceLine classname="server.ServerConnection" start="536" end="536" startBytecode="401" endBytecode="401" sourcefile="ServerConnection.java" sourcepath="server/ServerConnection.java" role="SOURCE_LINE_PATH_CONTINUES"/>
+    <SourceLine classname="server.ServerConnection" start="537" end="537" startBytecode="412" endBytecode="412" sourcefile="ServerConnection.java" sourcepath="server/ServerConnection.java" role="SOURCE_LINE_PATH_CONTINUES"/>
+    <SourceLine classname="server.ServerConnection" start="538" end="538" startBytecode="422" endBytecode="422" sourcefile="ServerConnection.java" sourcepath="server/ServerConnection.java" role="SOURCE_LINE_PATH_CONTINUES"/>
+    <String value="{InputStream x 1}" role="STRING_REMAINING_OBLIGATIONS"/>
+  </BugInstance>
+  <BugInstance type="OBL_UNSATISFIED_OBLIGATION_EXCEPTION_EDGE" priority="2" rank="20" abbrev="OBL" category="EXPERIMENTAL">
+    <Class classname="server.ServerConnection">
+      <SourceLine classname="server.ServerConnection" sourcefile="ServerConnection.java" sourcepath="server/ServerConnection.java"/>
+    </Class>
+    <Method classname="server.ServerConnection" name="changeAccountPassword" signature="(Ljava/lang/String;Ljava/lang/String;)Lutil/Response;" isStatic="false">
+      <SourceLine classname="server.ServerConnection" start="396" end="430" startBytecode="0" endBytecode="433" sourcefile="ServerConnection.java" sourcepath="server/ServerConnection.java"/>
+    </Method>
+    <Class classname="java.io.OutputStream" role="CLASS_REFTYPE">
+      <SourceLine classname="java.io.OutputStream" sourcefile="OutputStream.java" sourcepath="java/io/OutputStream.java"/>
+    </Class>
+    <Int value="1" role="INT_OBLIGATIONS_REMAINING"/>
+    <SourceLine classname="server.ServerConnection" start="419" end="419" startBytecode="96" endBytecode="96" sourcefile="ServerConnection.java" sourcepath="server/ServerConnection.java" role="SOURCE_LINE_OBLIGATION_CREATED"/>
+    <SourceLine classname="server.ServerConnection" start="420" end="420" startBytecode="101" endBytecode="101" sourcefile="ServerConnection.java" sourcepath="server/ServerConnection.java" role="SOURCE_LINE_PATH_CONTINUES"/>
+    <SourceLine classname="server.ServerConnection" start="424" end="424" startBytecode="127" endBytecode="127" sourcefile="ServerConnection.java" sourcepath="server/ServerConnection.java" role="SOURCE_LINE_PATH_CONTINUES"/>
+    <SourceLine classname="server.ServerConnection" start="425" end="425" startBytecode="129" endBytecode="129" sourcefile="ServerConnection.java" sourcepath="server/ServerConnection.java" role="SOURCE_LINE_PATH_CONTINUES"/>
+    <SourceLine classname="server.ServerConnection" start="426" end="426" startBytecode="134" endBytecode="134" sourcefile="ServerConnection.java" sourcepath="server/ServerConnection.java" role="SOURCE_LINE_PATH_CONTINUES"/>
+    <SourceLine classname="server.ServerConnection" start="427" end="427" startBytecode="144" endBytecode="144" sourcefile="ServerConnection.java" sourcepath="server/ServerConnection.java" role="SOURCE_LINE_PATH_CONTINUES"/>
+    <String value="{OutputStream x 1}" role="STRING_REMAINING_OBLIGATIONS"/>
+  </BugInstance>
+  <BugInstance type="OBL_UNSATISFIED_OBLIGATION_EXCEPTION_EDGE" priority="2" rank="20" abbrev="OBL" category="EXPERIMENTAL">
+    <Class classname="server.ServerConnection">
+      <SourceLine classname="server.ServerConnection" sourcefile="ServerConnection.java" sourcepath="server/ServerConnection.java"/>
+    </Class>
+    <Method classname="server.ServerConnection" name="createAccount" signature="(Ljava/lang/String;Ljava/lang/String;)Lutil/Response;" isStatic="false">
+      <SourceLine classname="server.ServerConnection" start="339" end="389" startBytecode="0" endBytecode="569" sourcefile="ServerConnection.java" sourcepath="server/ServerConnection.java"/>
+    </Method>
+    <Class classname="java.io.OutputStream" role="CLASS_REFTYPE">
+      <SourceLine classname="java.io.OutputStream" sourcefile="OutputStream.java" sourcepath="java/io/OutputStream.java"/>
+    </Class>
+    <Int value="1" role="INT_OBLIGATIONS_REMAINING"/>
+    <SourceLine classname="server.ServerConnection" start="363" end="363" startBytecode="143" endBytecode="143" sourcefile="ServerConnection.java" sourcepath="server/ServerConnection.java" role="SOURCE_LINE_OBLIGATION_CREATED"/>
+    <SourceLine classname="server.ServerConnection" start="364" end="364" startBytecode="148" endBytecode="148" sourcefile="ServerConnection.java" sourcepath="server/ServerConnection.java" role="SOURCE_LINE_PATH_CONTINUES"/>
+    <SourceLine classname="server.ServerConnection" start="376" end="376" startBytecode="228" endBytecode="228" sourcefile="ServerConnection.java" sourcepath="server/ServerConnection.java" role="SOURCE_LINE_PATH_CONTINUES"/>
+    <SourceLine classname="server.ServerConnection" start="377" end="377" startBytecode="230" endBytecode="230" sourcefile="ServerConnection.java" sourcepath="server/ServerConnection.java" role="SOURCE_LINE_PATH_CONTINUES"/>
+    <SourceLine classname="server.ServerConnection" start="378" end="378" startBytecode="235" endBytecode="235" sourcefile="ServerConnection.java" sourcepath="server/ServerConnection.java" role="SOURCE_LINE_PATH_CONTINUES"/>
+    <String value="{OutputStream x 1}" role="STRING_REMAINING_OBLIGATIONS"/>
+  </BugInstance>
+  <BugInstance type="OS_OPEN_STREAM_EXCEPTION_PATH" priority="3" rank="19" abbrev="OS" category="BAD_PRACTICE">
+    <Class classname="server.ServerConnection">
+      <SourceLine classname="server.ServerConnection" sourcefile="ServerConnection.java" sourcepath="server/ServerConnection.java"/>
+    </Class>
+    <Method classname="server.ServerConnection" name="authAccount" signature="(Ljava/lang/String;Ljava/lang/String;)Lutil/Response;" isStatic="false">
+      <SourceLine classname="server.ServerConnection" start="473" end="538" startBytecode="0" endBytecode="199" sourcefile="ServerConnection.java" sourcepath="server/ServerConnection.java"/>
+    </Method>
+    <Type descriptor="Ljava/io/InputStream;" role="TYPE_CLOSEIT">
+      <SourceLine classname="java.io.InputStream" start="45" end="363" sourcefile="InputStream.java" sourcepath="java/io/InputStream.java"/>
+    </Type>
+    <SourceLine classname="server.ServerConnection" start="490" end="490" startBytecode="91" endBytecode="91" sourcefile="ServerConnection.java" sourcepath="server/ServerConnection.java"/>
+  </BugInstance>
+  <BugInstance type="OS_OPEN_STREAM_EXCEPTION_PATH" priority="3" rank="19" abbrev="OS" category="BAD_PRACTICE">
+    <Class classname="server.ServerConnection">
+      <SourceLine classname="server.ServerConnection" sourcefile="ServerConnection.java" sourcepath="server/ServerConnection.java"/>
+    </Class>
+    <Method classname="server.ServerConnection" name="authAccount" signature="(Ljava/lang/String;Ljava/lang/String;)Lutil/Response;" isStatic="false">
+      <SourceLine classname="server.ServerConnection" start="473" end="538" startBytecode="0" endBytecode="199" sourcefile="ServerConnection.java" sourcepath="server/ServerConnection.java"/>
+    </Method>
+    <Type descriptor="Ljava/io/Reader;" role="TYPE_CLOSEIT">
+      <SourceLine classname="java.io.Reader" start="66" end="249" sourcefile="Reader.java" sourcepath="java/io/Reader.java"/>
+    </Type>
+    <SourceLine classname="server.ServerConnection" start="508" end="508" startBytecode="229" endBytecode="229" sourcefile="ServerConnection.java" sourcepath="server/ServerConnection.java"/>
+  </BugInstance>
+  <BugInstance type="OS_OPEN_STREAM_EXCEPTION_PATH" priority="3" rank="19" abbrev="OS" category="BAD_PRACTICE">
+    <Class classname="server.ServerConnection">
+      <SourceLine classname="server.ServerConnection" sourcefile="ServerConnection.java" sourcepath="server/ServerConnection.java"/>
+    </Class>
+    <Method classname="server.ServerConnection" name="changeAccountPassword" signature="(Ljava/lang/String;Ljava/lang/String;)Lutil/Response;" isStatic="false">
+      <SourceLine classname="server.ServerConnection" start="396" end="430" startBytecode="0" endBytecode="76" sourcefile="ServerConnection.java" sourcepath="server/ServerConnection.java"/>
+    </Method>
+    <Type descriptor="Ljava/io/OutputStream;" role="TYPE_CLOSEIT">
+      <SourceLine classname="java.io.OutputStream" start="46" end="152" sourcefile="OutputStream.java" sourcepath="java/io/OutputStream.java"/>
+    </Type>
+    <SourceLine classname="server.ServerConnection" start="419" end="419" startBytecode="82" endBytecode="82" sourcefile="ServerConnection.java" sourcepath="server/ServerConnection.java"/>
+  </BugInstance>
+  <BugInstance type="OS_OPEN_STREAM_EXCEPTION_PATH" priority="3" rank="19" abbrev="OS" category="BAD_PRACTICE">
+    <Class classname="server.ServerConnection">
+      <SourceLine classname="server.ServerConnection" sourcefile="ServerConnection.java" sourcepath="server/ServerConnection.java"/>
+    </Class>
+    <Method classname="server.ServerConnection" name="createAccount" signature="(Ljava/lang/String;Ljava/lang/String;)Lutil/Response;" isStatic="false">
+      <SourceLine classname="server.ServerConnection" start="339" end="389" startBytecode="0" endBytecode="129" sourcefile="ServerConnection.java" sourcepath="server/ServerConnection.java"/>
+    </Method>
+    <Type descriptor="Ljava/io/OutputStream;" role="TYPE_CLOSEIT">
+      <SourceLine classname="java.io.OutputStream" start="46" end="152" sourcefile="OutputStream.java" sourcepath="java/io/OutputStream.java"/>
+    </Type>
+    <SourceLine classname="server.ServerConnection" start="363" end="363" startBytecode="129" endBytecode="129" sourcefile="ServerConnection.java" sourcepath="server/ServerConnection.java"/>
+  </BugInstance>
+  <BugInstance type="OS_OPEN_STREAM_EXCEPTION_PATH" priority="3" rank="19" abbrev="OS" category="BAD_PRACTICE">
+    <Class classname="server.ServerConnection">
+      <SourceLine classname="server.ServerConnection" sourcefile="ServerConnection.java" sourcepath="server/ServerConnection.java"/>
+    </Class>
+    <Method classname="server.ServerConnection" name="logout" signature="()Lutil/Response;" isStatic="false">
+      <SourceLine classname="server.ServerConnection" start="629" end="641" startBytecode="0" endBytecode="65" sourcefile="ServerConnection.java" sourcepath="server/ServerConnection.java"/>
+    </Method>
+    <Type descriptor="Ljava/io/Writer;" role="TYPE_CLOSEIT">
+      <SourceLine classname="java.io.Writer" start="50" end="294" sourcefile="Writer.java" sourcepath="java/io/Writer.java"/>
+    </Type>
+    <SourceLine classname="server.ServerConnection" start="629" end="629" startBytecode="0" endBytecode="0" sourcefile="ServerConnection.java" sourcepath="server/ServerConnection.java"/>
+  </BugInstance>
+  <BugInstance type="REC_CATCH_EXCEPTION" priority="2" rank="17" abbrev="REC" category="STYLE">
+    <Class classname="server.ServerConnection">
+      <SourceLine classname="server.ServerConnection" sourcefile="ServerConnection.java" sourcepath="server/ServerConnection.java"/>
+    </Class>
+    <Method classname="server.ServerConnection" name="run" signature="()V" isStatic="false">
+      <SourceLine classname="server.ServerConnection" start="48" end="234" startBytecode="0" endBytecode="2470" sourcefile="ServerConnection.java" sourcepath="server/ServerConnection.java"/>
+    </Method>
+    <SourceLine classname="server.ServerConnection" start="230" end="230" startBytecode="1192" endBytecode="1192" sourcefile="ServerConnection.java" sourcepath="server/ServerConnection.java"/>
+  </BugInstance>
+  <BugInstance type="REC_CATCH_EXCEPTION" priority="3" rank="20" abbrev="REC" category="STYLE">
+    <Class classname="server.ServerConnection">
+      <SourceLine classname="server.ServerConnection" sourcefile="ServerConnection.java" sourcepath="server/ServerConnection.java"/>
+    </Class>
+    <Method classname="server.ServerConnection" name="createAccount" signature="(Ljava/lang/String;Ljava/lang/String;)Lutil/Response;" isStatic="false">
+      <SourceLine classname="server.ServerConnection" start="339" end="389" startBytecode="0" endBytecode="569" sourcefile="ServerConnection.java" sourcepath="server/ServerConnection.java"/>
+    </Method>
+    <SourceLine classname="server.ServerConnection" start="376" end="376" startBytecode="228" endBytecode="228" sourcefile="ServerConnection.java" sourcepath="server/ServerConnection.java"/>
+  </BugInstance>
+  <BugInstance type="RR_NOT_CHECKED" priority="2" rank="16" abbrev="RR" category="BAD_PRACTICE">
+    <Class classname="server.ServerConnection">
+      <SourceLine classname="server.ServerConnection" sourcefile="ServerConnection.java" sourcepath="server/ServerConnection.java"/>
+    </Class>
+    <Method classname="server.ServerConnection" name="authAccount" signature="(Ljava/lang/String;Ljava/lang/String;)Lutil/Response;" isStatic="false">
+      <SourceLine classname="server.ServerConnection" start="473" end="538" startBytecode="0" endBytecode="901" sourcefile="ServerConnection.java" sourcepath="server/ServerConnection.java"/>
+    </Method>
+    <Method classname="java.io.FileInputStream" name="read" signature="([BII)I" isStatic="false" role="METHOD_CALLED">
+      <SourceLine classname="java.io.FileInputStream" start="269" end="276" startBytecode="0" endBytecode="310" sourcefile="FileInputStream.java" sourcepath="java/io/FileInputStream.java"/>
+    </Method>
+    <SourceLine classname="server.ServerConnection" start="491" end="491" startBytecode="130" endBytecode="130" sourcefile="ServerConnection.java" sourcepath="server/ServerConnection.java"/>
+    <SourceLine classname="server.ServerConnection" start="492" end="492" startBytecode="140" endBytecode="140" sourcefile="ServerConnection.java" sourcepath="server/ServerConnection.java" role="SOURCE_LINE_ANOTHER_INSTANCE"/>
+  </BugInstance>
+  <BugInstance type="RV_RETURN_VALUE_IGNORED_BAD_PRACTICE" priority="2" rank="16" abbrev="RV" category="BAD_PRACTICE">
+    <Class classname="server.ServerConnection">
+      <SourceLine classname="server.ServerConnection" sourcefile="ServerConnection.java" sourcepath="server/ServerConnection.java"/>
+    </Class>
+    <Method classname="server.ServerConnection" name="createAccount" signature="(Ljava/lang/String;Ljava/lang/String;)Lutil/Response;" isStatic="false">
+      <SourceLine classname="server.ServerConnection" start="339" end="389" startBytecode="0" endBytecode="569" sourcefile="ServerConnection.java" sourcepath="server/ServerConnection.java"/>
+    </Method>
+    <Method classname="java.io.File" name="mkdirs" signature="()Z" isStatic="false" role="METHOD_CALLED">
+      <SourceLine classname="java.io.File" start="1334" end="1348" startBytecode="0" endBytecode="222" sourcefile="File.java" sourcepath="java/io/File.java"/>
+    </Method>
+    <SourceLine classname="server.ServerConnection" start="353" end="353" startBytecode="101" endBytecode="101" sourcefile="ServerConnection.java" sourcepath="server/ServerConnection.java"/>
+  </BugInstance>
+  <BugInstance type="RV_RETURN_VALUE_IGNORED_BAD_PRACTICE" priority="2" rank="16" abbrev="RV" category="BAD_PRACTICE">
+    <Class classname="server.ServerConnection">
+      <SourceLine classname="server.ServerConnection" sourcefile="ServerConnection.java" sourcepath="server/ServerConnection.java"/>
+    </Class>
+    <Method classname="server.ServerConnection" name="deleteAccount" signature="(Ljava/lang/String;)Lutil/Response;" isStatic="false">
+      <SourceLine classname="server.ServerConnection" start="437" end="466" startBytecode="0" endBytecode="393" sourcefile="ServerConnection.java" sourcepath="server/ServerConnection.java"/>
+    </Method>
+    <Method classname="java.io.File" name="delete" signature="()Z" isStatic="false" role="METHOD_CALLED">
+      <SourceLine classname="java.io.File" start="1028" end="1035" startBytecode="0" endBytecode="119" sourcefile="File.java" sourcepath="java/io/File.java"/>
+    </Method>
+    <SourceLine classname="server.ServerConnection" start="455" end="455" startBytecode="111" endBytecode="111" sourcefile="ServerConnection.java" sourcepath="server/ServerConnection.java"/>
+    <SourceLine classname="server.ServerConnection" start="460" end="460" startBytecode="126" endBytecode="126" sourcefile="ServerConnection.java" sourcepath="server/ServerConnection.java" role="SOURCE_LINE_ANOTHER_INSTANCE"/>
+  </BugInstance>
+  <BugInstance type="WMI_WRONG_MAP_ITERATOR" priority="2" rank="18" abbrev="WMI" category="PERFORMANCE">
+    <Class classname="server.ServerConnection">
+      <SourceLine classname="server.ServerConnection" sourcefile="ServerConnection.java" sourcepath="server/ServerConnection.java"/>
+    </Class>
+    <Method classname="server.ServerConnection" name="logout" signature="()Lutil/Response;" isStatic="false">
+      <SourceLine classname="server.ServerConnection" start="629" end="641" startBytecode="0" endBytecode="325" sourcefile="ServerConnection.java" sourcepath="server/ServerConnection.java"/>
+    </Method>
+    <Field classname="server.ServerConnection" name="user_table" signature="Ljava/util/Hashtable;" isStatic="false">
+      <SourceLine classname="server.ServerConnection" sourcefile="ServerConnection.java" sourcepath="server/ServerConnection.java"/>
+    </Field>
+    <SourceLine classname="server.ServerConnection" start="632" end="632" startBytecode="74" endBytecode="74" sourcefile="ServerConnection.java" sourcepath="server/ServerConnection.java"/>
+  </BugInstance>
+  <BugInstance type="NP_LOAD_OF_KNOWN_NULL_VALUE" priority="3" rank="19" abbrev="NP" category="STYLE">
+    <Class classname="server.ServerConnectionTest">
+      <SourceLine classname="server.ServerConnectionTest" sourcefile="ServerConnectionTest.java" sourcepath="server/ServerConnectionTest.java"/>
+    </Class>
+    <Method classname="server.ServerConnectionTest" name="testGetPassword" signature="()V" isStatic="false">
+      <SourceLine classname="server.ServerConnectionTest" start="147" end="166" startBytecode="0" endBytecode="60" sourcefile="ServerConnectionTest.java" sourcepath="server/ServerConnectionTest.java"/>
+    </Method>
+    <LocalVariable name="cred" register="2" pc="29" role="LOCAL_VARIABLE_VALUE_OF"/>
+    <SourceLine classname="server.ServerConnectionTest" start="154" end="154" startBytecode="32" endBytecode="32" sourcefile="ServerConnectionTest.java" sourcepath="server/ServerConnectionTest.java"/>
+  </BugInstance>
+  <Errors errors="0" missingClasses="1">
+    <MissingClass>org.junit.Assert</MissingClass>
+  </Errors>
+  <FindBugsSummary timestamp="Fri, 20 Mar 2015 16:36:48 -0400" total_classes="26" referenced_classes="145" total_bugs="94" total_size="3087" num_packages="4" java_version="1.7.0_65" vm_version="24.65-b04" cpu_seconds="37.28" clock_seconds="52.81" peak_mbytes="274.44" alloc_mbytes="683.00" gc_seconds="0.16" priority_3="37" priority_2="47" priority_1="10">
+    <PackageStats package="client" total_bugs="20" total_types="3" total_size="527" priority_3="8" priority_2="10" priority_1="2">
+      <ClassStats class="client.Client" sourceFile="Client.java" interface="false" size="321" bugs="18" priority_3="7" priority_2="9" priority_1="2"/>
+      <ClassStats class="client.ClientKeyGen" sourceFile="ClientKeyGen.java" interface="false" size="14" bugs="1" priority_3="1"/>
+      <ClassStats class="client.Shell" sourceFile="Shell.java" interface="false" size="192" bugs="1" priority_2="1"/>
+    </PackageStats>
+    <PackageStats package="org.json" total_bugs="47" total_types="17" total_size="2013" priority_3="17" priority_2="29" priority_1="1">
+      <ClassStats class="org.json.CDL" sourceFile="CDL.java" interface="false" size="98" bugs="0"/>
+      <ClassStats class="org.json.Cookie" sourceFile="Cookie.java" interface="false" size="66" bugs="0"/>
+      <ClassStats class="org.json.CookieList" sourceFile="CookieList.java" interface="false" size="26" bugs="0"/>
+      <ClassStats class="org.json.HTTP" sourceFile="HTTP.java" interface="false" size="54" bugs="1" priority_3="1"/>
+      <ClassStats class="org.json.HTTPTokener" sourceFile="HTTPTokener.java" interface="false" size="22" bugs="0"/>
+      <ClassStats class="org.json.JSONArray" sourceFile="JSONArray.java" interface="false" size="263" bugs="7" priority_3="2" priority_2="5"/>
+      <ClassStats class="org.json.JSONException" sourceFile="JSONException.java" interface="false" size="12" bugs="0"/>
+      <ClassStats class="org.json.JSONML" sourceFile="JSONML.java" interface="false" size="212" bugs="8" priority_3="2" priority_2="6"/>
+      <ClassStats class="org.json.JSONObject" sourceFile="JSONObject.java" interface="false" size="576" bugs="15" priority_3="9" priority_2="6"/>
+      <ClassStats class="org.json.JSONObject$Null" sourceFile="JSONObject.java" interface="false" size="10" bugs="2" priority_2="2"/>
+      <ClassStats class="org.json.JSONString" sourceFile="JSONString.java" interface="true" size="2" bugs="0"/>
+      <ClassStats class="org.json.JSONStringer" sourceFile="JSONStringer.java" interface="false" size="6" bugs="1" priority_2="1"/>
+      <ClassStats class="org.json.JSONTokener" sourceFile="JSONTokener.java" interface="false" size="177" bugs="1" priority_1="1"/>
+      <ClassStats class="org.json.JSONWriter" sourceFile="JSONWriter.java" interface="false" size="103" bugs="1" priority_3="1"/>
+      <ClassStats class="org.json.Property" sourceFile="Property.java" interface="false" size="19" bugs="0"/>
+      <ClassStats class="org.json.XML" sourceFile="XML.java" interface="false" size="229" bugs="10" priority_3="2" priority_2="8"/>
+      <ClassStats class="org.json.XMLTokener" sourceFile="XMLTokener.java" interface="false" size="138" bugs="1" priority_2="1"/>
+    </PackageStats>
+    <PackageStats package="server" total_bugs="27" total_types="4" total_size="509" priority_3="12" priority_2="8" priority_1="7">
+      <ClassStats class="server.Server" sourceFile="Server.java" interface="false" size="38" bugs="4" priority_3="4"/>
+      <ClassStats class="server.ServerConnection" sourceFile="ServerConnection.java" interface="false" size="356" bugs="22" priority_3="7" priority_2="8" priority_1="7"/>
+      <ClassStats class="server.ServerConnectionTest" sourceFile="ServerConnectionTest.java" interface="false" size="103" bugs="1" priority_3="1"/>
+      <ClassStats class="server.ServerKeyGen" sourceFile="ServerKeyGen.java" interface="false" size="12" bugs="0"/>
+    </PackageStats>
+    <PackageStats package="util" total_bugs="0" total_types="2" total_size="38">
+      <ClassStats class="util.Pair" sourceFile="Pair.java" interface="false" size="12" bugs="0"/>
+      <ClassStats class="util.Response" sourceFile="Response.java" interface="false" size="26" bugs="0"/>
+    </PackageStats>
+    <FindBugsProfile>
+      <ClassProfile name="edu.umd.cs.findbugs.classfile.engine.ClassInfoAnalysisEngine" totalMilliseconds="701" invocations="788" avgMicrosecondsPerInvocation="889" maxMicrosecondsPerInvocation="24675" standardDeviationMircosecondsPerInvocation="2134"/>
+      <ClassProfile name="edu.umd.cs.findbugs.FindBugs2" totalMilliseconds="668" invocations="2" avgMicrosecondsPerInvocation="334449" maxMicrosecondsPerInvocation="471768" standardDeviationMircosecondsPerInvocation="137318"/>
+      <ClassProfile name="edu.umd.cs.findbugs.detect.FieldItemSummary" totalMilliseconds="578" invocations="145" avgMicrosecondsPerInvocation="3990" maxMicrosecondsPerInvocation="36277" standardDeviationMircosecondsPerInvocation="5929"/>
+      <ClassProfile name="edu.umd.cs.findbugs.classfile.engine.bcel.IsNullValueDataflowFactory" totalMilliseconds="504" invocations="286" avgMicrosecondsPerInvocation="1762" maxMicrosecondsPerInvocation="40033" standardDeviationMircosecondsPerInvocation="3121"/>
+      <ClassProfile name="edu.umd.cs.findbugs.OpcodeStack$JumpInfoFactory" totalMilliseconds="495" invocations="669" avgMicrosecondsPerInvocation="740" maxMicrosecondsPerInvocation="11463" standardDeviationMircosecondsPerInvocation="1226"/>
+      <ClassProfile name="edu.umd.cs.findbugs.detect.FindNoSideEffectMethods" totalMilliseconds="483" invocations="145" avgMicrosecondsPerInvocation="3336" maxMicrosecondsPerInvocation="31652" standardDeviationMircosecondsPerInvocation="5310"/>
+      <ClassProfile name="edu.umd.cs.findbugs.classfile.engine.bcel.ValueNumberDataflowFactory" totalMilliseconds="477" invocations="313" avgMicrosecondsPerInvocation="1525" maxMicrosecondsPerInvocation="29533" standardDeviationMircosecondsPerInvocation="2967"/>
+      <ClassProfile name="edu.umd.cs.findbugs.ba.npe.NullDerefAndRedundantComparisonFinder" totalMilliseconds="441" invocations="286" avgMicrosecondsPerInvocation="1543" maxMicrosecondsPerInvocation="16328" standardDeviationMircosecondsPerInvocation="1890"/>
+      <ClassProfile name="edu.umd.cs.findbugs.classfile.engine.bcel.UnconditionalValueDerefDataflowFactory" totalMilliseconds="431" invocations="286" avgMicrosecondsPerInvocation="1507" maxMicrosecondsPerInvocation="35587" standardDeviationMircosecondsPerInvocation="2865"/>
+      <ClassProfile name="edu.umd.cs.findbugs.classfile.engine.bcel.TypeDataflowFactory" totalMilliseconds="396" invocations="307" avgMicrosecondsPerInvocation="1293" maxMicrosecondsPerInvocation="16344" standardDeviationMircosecondsPerInvocation="1868"/>
+      <ClassProfile name="edu.umd.cs.findbugs.classfile.engine.bcel.CFGFactory" totalMilliseconds="300" invocations="286" avgMicrosecondsPerInvocation="1049" maxMicrosecondsPerInvocation="23792" standardDeviationMircosecondsPerInvocation="1804"/>
+      <ClassProfile name="edu.umd.cs.findbugs.detect.FindRefComparison$SpecialTypeAnalysis" totalMilliseconds="217" invocations="279" avgMicrosecondsPerInvocation="780" maxMicrosecondsPerInvocation="15493" standardDeviationMircosecondsPerInvocation="1380"/>
+      <ClassProfile name="edu.umd.cs.findbugs.detect.NoteDirectlyRelevantTypeQualifiers" totalMilliseconds="179" invocations="145" avgMicrosecondsPerInvocation="1237" maxMicrosecondsPerInvocation="11242" standardDeviationMircosecondsPerInvocation="1689"/>
+      <ClassProfile name="edu.umd.cs.findbugs.detect.BuildStringPassthruGraph" totalMilliseconds="149" invocations="145" avgMicrosecondsPerInvocation="1030" maxMicrosecondsPerInvocation="16806" standardDeviationMircosecondsPerInvocation="2159"/>
+      <ClassProfile name="edu.umd.cs.findbugs.detect.BuildObligationPolicyDatabase" totalMilliseconds="125" invocations="145" avgMicrosecondsPerInvocation="863" maxMicrosecondsPerInvocation="6586" standardDeviationMircosecondsPerInvocation="1148"/>
+      <ClassProfile name="edu.umd.cs.findbugs.detect.CalledMethods" totalMilliseconds="122" invocations="145" avgMicrosecondsPerInvocation="843" maxMicrosecondsPerInvocation="10612" standardDeviationMircosecondsPerInvocation="1342"/>
+      <ClassProfile name="edu.umd.cs.findbugs.detect.FunctionsThatMightBeMistakenForProcedures" totalMilliseconds="120" invocations="145" avgMicrosecondsPerInvocation="829" maxMicrosecondsPerInvocation="9718" standardDeviationMircosecondsPerInvocation="1452"/>
+      <ClassProfile name="edu.umd.cs.findbugs.classfile.engine.bcel.ConstantDataflowFactory" totalMilliseconds="116" invocations="286" avgMicrosecondsPerInvocation="407" maxMicrosecondsPerInvocation="4953" standardDeviationMircosecondsPerInvocation="665"/>
+      <ClassProfile name="edu.umd.cs.findbugs.detect.StreamResourceTracker" totalMilliseconds="114" invocations="96" avgMicrosecondsPerInvocation="1191" maxMicrosecondsPerInvocation="10640" standardDeviationMircosecondsPerInvocation="1871"/>
+      <ClassProfile name="edu.umd.cs.findbugs.detect.OverridingEqualsNotSymmetrical" totalMilliseconds="113" invocations="145" avgMicrosecondsPerInvocation="785" maxMicrosecondsPerInvocation="13621" standardDeviationMircosecondsPerInvocation="1572"/>
+      <ClassProfile name="edu.umd.cs.findbugs.ba.obl.ObligationAnalysis" totalMilliseconds="111" invocations="189" avgMicrosecondsPerInvocation="589" maxMicrosecondsPerInvocation="6304" standardDeviationMircosecondsPerInvocation="738"/>
+      <ClassProfile name="edu.umd.cs.findbugs.classfile.engine.bcel.JavaClassAnalysisEngine" totalMilliseconds="107" invocations="199" avgMicrosecondsPerInvocation="541" maxMicrosecondsPerInvocation="16827" standardDeviationMircosecondsPerInvocation="1319"/>
+      <ClassProfile name="edu.umd.cs.findbugs.util.TopologicalSort" totalMilliseconds="100" invocations="742" avgMicrosecondsPerInvocation="135" maxMicrosecondsPerInvocation="3312" standardDeviationMircosecondsPerInvocation="279"/>
+    </FindBugsProfile>
+  </FindBugsSummary>
+  <ClassFeatures></ClassFeatures>
+  <History></History>
+</BugCollection>

@@ -7,14 +7,12 @@ import java.util.concurrent.Executors;
 
 import javax.net.ssl.*;
 
-
-
 public class Server {
 	
    public static void main(String[] args) {
-      String ksName = "herong.jks";
-      char ksPass[] = "HerongJKS".toCharArray();
-      char ctPass[] = "My1stKey".toCharArray();
+      String ksName = "5430_keystore.jks"; //server side keystore
+      char ksPass[] = "security".toCharArray();
+      char ctPass[] = "security".toCharArray();
       try {
          KeyStore ks = KeyStore.getInstance("JKS");
          ks.load(new FileInputStream(ksName), ksPass);
@@ -22,11 +20,13 @@ public class Server {
          KeyManagerFactory.getInstance("SunX509");
          kmf.init(ks, ctPass);
          SSLContext sc = SSLContext.getInstance("TLS");
-         sc.init(kmf.getKeyManagers(), null, null);
+         sc.init(kmf.getKeyManagers(), null, new SecureRandom());
          SSLServerSocketFactory ssf = sc.getServerSocketFactory();
          SSLServerSocket s 
             = (SSLServerSocket) ssf.createServerSocket(8888);
-         printServerSocketInfo(s);
+
+         //printServerSocketInfo(s);
+         
          ExecutorService executor = Executors.newFixedThreadPool(8);
          while (true) {
         	 SSLSocket c = (SSLSocket) s.accept();
@@ -35,7 +35,8 @@ public class Server {
          }
          
       } catch (Exception e) {
-         System.err.println(e.toString());
+         //System.err.println(e.toString());
+         e.printStackTrace();
       }
    }
 
