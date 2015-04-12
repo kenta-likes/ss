@@ -17,7 +17,7 @@ public class Shell {
             return;
         
         while (true) {
-            command = con.readLine("PassHerd-0.2a$ ");
+            command = con.readLine("PassHerd-0.3b$ ");
             splitCommand = command.split(" ");
 
             switch (splitCommand[0]) {
@@ -150,13 +150,13 @@ public class Shell {
         Response err;
 
         if (command.length != 4) {
-            System.out.println("Usage: add <service> <username> <password>");
+            System.out.println("Usage: add <service>");
             return;
         }
 
         service = command[1];
-        username = command[2];
-        password = command[3];
+        username = con.readLine("Username: ");
+        password = con.readLine("Password: ");
 
         err = Client.addCreds(service, username, password);
         printErr(err);
@@ -244,13 +244,13 @@ public class Shell {
         Response err;
         
         if (command.length != 4) {
-            System.out.println("Usage: change <service> <username> <password>");
+            System.out.println("Usage: change <service>");
             return;
         }
 
         service = command[1];
-        username = command[2];
-        password = command[3];
+        username = con.readLine("Username: ");
+        password = con.readLine("Password: ");
 
         err = Client.changeCreds(service, username, password);
         printErr(err);
@@ -275,7 +275,7 @@ public class Shell {
         case "register": helpMsg = "register: initiates the creation of a new account.";
             break;
             
-        case "add": helpMsg = "add <service> <username> <password>: stores the username and password for the service.";
+        case "add": helpMsg = "add <service>: stores the username and password for the service.";
             break;
                 
         case "get":
@@ -285,7 +285,7 @@ public class Shell {
         case "delete": helpMsg = "delete <service>: deletes the credentials associated with the service.  Asks for confirmation before deleting.";
             break;
                 
-        case "change": helpMsg = "change <service> <username> <password>: changes the username and password associated with the service.";
+        case "change": helpMsg = "change <service>: changes the username and password associated with the service.";
             break;
                 
         case "exit":
@@ -314,7 +314,7 @@ public class Shell {
             return;
 
         case BAD_FORMAT:
-            System.out.println("Error: the <tab> / and \\ characters are not allowed.");
+            System.out.println("Error: the <tab>, '..', '/', and ''\\'' characters are not allowed.");
             return;
             
         case WRONG_INPT: /* fall through.  Generic error message in this case. */

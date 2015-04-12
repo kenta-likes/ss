@@ -9,6 +9,9 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
+import java.security.MessageDigest;
+import java.io.File;
 
 import javax.net.ssl.SSLSocket;
 
@@ -37,6 +40,7 @@ public class ServerConnection implements Runnable {
     protected MessageDigest messageDigest;
     protected String curr_dir;
          
+
     public ServerConnection(SSLSocket s) {
     	this.socket = s;
     	messageDigest = null;
@@ -108,12 +112,19 @@ public class ServerConnection implements Runnable {
                             service = req.getString("service");
                             cred = getPassword(service);
                             resp = cred.first();
-
-                            js.object()
-                                .key("response").value(resp.name())
-                                .key("username").value(cred.second().first())
-                                .key("password").value(cred.second().second())
-                                .endObject();
+														if (resp == Response.SUCCESS){
+															js.object()
+																	.key("response").value(resp.name())
+																	.key("username").value(cred.second().first())
+																	.key("password").value(cred.second().second())
+																	.endObject();
+														} else {
+															js.object()
+																	.key("response").value(resp.name())
+																	.key("username").value("")
+																	.key("password").value("")
+																	.endObject();
+														}
                             break;
                             
                         case "DEL":
@@ -249,7 +260,7 @@ public class ServerConnection implements Runnable {
      * Helper fxn for checking valid usernames
      * */
     protected boolean checkUsernameFormat(String usr){
-        return !(usr.contains("/") || usr.contains("\\"));
+        return !(usr.contains("/") || usr.contains("\\") || usr.contains(".."));
     }
     
     /*
@@ -641,4 +652,5 @@ public class ServerConnection implements Runnable {
         return Response.SUCCESS;
             
     }
+>>>>>>> 578337fcf6edce6c09d6a7ed93d8c2ef3e6607e5
 }
