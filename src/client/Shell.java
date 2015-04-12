@@ -314,7 +314,7 @@ public class Shell {
             return;
 
         case BAD_FORMAT:
-            System.out.println("Error: the <tab> / and \\ characters are not allowed.");
+            System.out.println("Error: the <tab>, '..', '/', and ''\\'' characters are not allowed.");
             return;
             
         case WRONG_INPT: /* fall through.  Generic error message in this case. */
