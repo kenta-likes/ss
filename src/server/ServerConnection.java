@@ -4,6 +4,9 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
+import java.security.MessageDigest;
+import java.io.File;
 
 import javax.net.ssl.SSLSocket;
 
@@ -11,9 +14,12 @@ public class ServerConnection implements Runnable {
 	SSLSocket socket;
 
          
-    public ServerConnection(SSLSocket s) {
-    	this.socket = s;
+    // public ServerConnection(SSLSocket s) {
+    // 	this.socket = s;
     	
+    // }
+       public ServerConnection() {
+        
     }
     
     public void run() {
@@ -49,11 +55,34 @@ public class ServerConnection implements Runnable {
     	}
     }
     
-	public void makeAccount(String username, String password) {
+
+	public void makeAccount(String username, String password) throws Exception{
+        new File(username).mkdirs();
+        File file = new File(username.concat("/master"));
+        MessageDigest messageDigest = MessageDigest.getInstance("SHA-256");
+        messageDigest.update(password.getBytes());
+        String hashedpassword = new String(messageDigest.digest());
+
+        PrintWriter writer = new PrintWriter(username.concat("/master"), "UTF-8");
+        writer.println(hashedpassword);
+        writer.close();
+
+
 		   
 	}
-	   
+	 
+
 	public void getAccountCredentialsList(String accountName) {
-		   
+
+		 
+
 	}
+
+    // for test
+    public static void main(String args[]) throws Exception{
+        ServerConnection serverConnection = new ServerConnection();
+        serverConnection.makeAccount("cs5430", "clarkson");
+  }
+
+
 }
