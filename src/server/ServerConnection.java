@@ -112,12 +112,19 @@ public class ServerConnection implements Runnable {
                             service = req.getString("service");
                             cred = getPassword(service);
                             resp = cred.first();
-
-                            js.object()
-                                .key("response").value(resp.name())
-                                .key("username").value(cred.second().first())
-                                .key("password").value(cred.second().second())
-                                .endObject();
+														if (resp == Response.SUCCESS){
+															js.object()
+																	.key("response").value(resp.name())
+																	.key("username").value(cred.second().first())
+																	.key("password").value(cred.second().second())
+																	.endObject();
+														} else {
+															js.object()
+																	.key("response").value(resp.name())
+																	.key("username").value("")
+																	.key("password").value("")
+																	.endObject();
+														}
                             break;
                             
                         case "DEL":
@@ -253,7 +260,7 @@ public class ServerConnection implements Runnable {
      * Helper fxn for checking valid usernames
      * */
     protected boolean checkUsernameFormat(String usr){
-        return !(usr.contains("/") || usr.contains("\\"));
+        return !(usr.contains("/") || usr.contains("\\") || usr.contains(".."));
     }
     
     /*
