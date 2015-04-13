@@ -149,7 +149,7 @@ public class Shell {
         String service, username, password;
         Response err;
 
-        if (command.length != 4) {
+        if (command.length != 2) {
             System.out.println("Usage: add <service>");
             return;
         }
@@ -243,7 +243,7 @@ public class Shell {
         String service, username, password;
         Response err;
         
-        if (command.length != 4) {
+        if (command.length != 2) {
             System.out.println("Usage: change <service>");
             return;
         }
@@ -342,7 +342,9 @@ public class Shell {
         case FAIL: /* Generic error */
             System.out.println("Error: the system encountered an unknown error.");
             return;
-        
+        case MAC:
+        	System.out.println("Error: Server data integrity appears to be compromised - MAC mismatch detected");
+        	return;
         default: /* For recompilation purposes */
             System.out.println("Error: unrecognized error code.  Please recompile.");
         }
