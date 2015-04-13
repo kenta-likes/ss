@@ -1,25 +1,34 @@
 package client;
 
 import java.io.*;
+
 import javax.net.ssl.*;
 
 import java.security.KeyStore;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.List;
 import java.util.ArrayList;
-
 import java.nio.charset.Charset;
 import java.nio.ByteBuffer;
 
 import org.json.*;
+
 import util.*;
 
 import javax.xml.bind.DatatypeConverter;
 
 import java.security.SecureRandom;
+import java.security.spec.KeySpec;
+
 import javax.crypto.KeyGenerator;
+import javax.crypto.Mac;
 import javax.crypto.SecretKey;
 import javax.crypto.Cipher;
+import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.PBEKeySpec;
+import javax.crypto.spec.PBEParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
 public class Client {
@@ -29,13 +38,11 @@ public class Client {
     private static PrintWriter sockWriter;
     private static JSONWriter sockJS;
     private static BufferedReader sockReader;
-    private static SSLSocket c;
     private static SecretKey key;
     private static Cipher encoder, decoder;
     private static String username;
     
     public static void main(String[] args) {
-        PrintStream out = System.out;
         
         String ksName = System.getProperty("user.dir")+"/client/5430ts.jks"; //client side truststore
         char passphrase[] = "security".toCharArray();
@@ -140,17 +147,39 @@ public class Client {
         default: return Response.FAIL;
         }
     }
+    
+    public static byte[] charToBytes(char in[])
+    {
+    	int i;
+    	byte ret[] = new byte[in.length];
+    	for (i = 0; i < in.length; i++)
+    	{
+    		ret[i] = (byte) in[i];
+    	}
+    	return ret;
+    }
 
     /* Login with the master username/password set. */
     protected static Response login(String username, char[] password) {
         JSONObject respPacket = null;
         Response err;
+        byte hashedPassword[];
+        byte passwordBytes[] = charToBytes(password);
+        try {
+			MessageDigest digest = MessageDigest.getInstance("SHA-256");
+			digest.update(passwordBytes);
+			hashedPassword = digest.digest();
+		} catch (NoSuchAlgorithmException e1) {
+			e1.printStackTrace();
+			return Response.FAIL;
+		}
+        
         sockJS = new JSONWriter(sockWriter);
         
         sockJS.object()
             .key("command").value("ATHN")
             .key("username").value(username)
-            .key("password").value(new String(password))
+            .key("password").value(hashedPassword)
             .endObject();
         sockWriter.println();
         sockWriter.flush();
@@ -164,18 +193,14 @@ public class Client {
         	//respPacket =  new JSONObject(s);
         } catch (IOException e) {
             e.printStackTrace();
-        }
-
-        if (respPacket == null)
             return Response.FAIL;
-
+        }
         err = responseFromString(respPacket.getString("response"));
 
         if (err == Response.SUCCESS) {
             Client.username = username;
             try {
-                byte[] encPass, encKey, iv;
-                SecureRandom srand = SecureRandom.getInstance("SHA1PRNG");
+                byte[] salt, iv;
                 IvParameterSpec ivSpec;
                 FileInputStream fin = new FileInputStream(System.getProperty("user.home") +
                                                           "/" + username + ".conf");
@@ -191,19 +216,21 @@ public class Client {
                  * file as the key, but this is potentially a security issue.
                  */
 
-                encKey = new byte[16];
-                fin.read(encKey);
+                salt = new byte[16];
+                fin.read(salt);
 
                 /* Skip the newline character. */
                 fin.skip(1);
                 
                 iv = new byte[16];
                 fin.read(iv);
-
+                fin.close();
                 ivSpec = new IvParameterSpec(iv);
                 
-                key = new SecretKeySpec(encKey, 0, 16, "AES");
-
+                SecretKeyFactory keyFact=SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
+                KeySpec spec = new PBEKeySpec(password, salt, 65536, 256);
+                SecretKey tmp = keyFact.generateSecret(spec);
+                key = new SecretKeySpec(tmp.getEncoded(), "AES");
                 encoder = Cipher.getInstance("AES/CBC/PKCS5Padding");
                 encoder.init(Cipher.ENCRYPT_MODE, key, ivSpec);
 
@@ -228,11 +255,19 @@ public class Client {
         JSONObject respPacket = null;
         Response err;
         sockJS = new JSONWriter(sockWriter);
-        
+        byte hashedPassword[];
+        try {
+			MessageDigest digest = MessageDigest.getInstance("SHA-256");
+			digest.update(password.toString().getBytes());
+			hashedPassword = digest.digest();
+		} catch (NoSuchAlgorithmException e1) {
+			e1.printStackTrace();
+			return Response.FAIL;
+		}
         sockJS.object()
             .key("command").value("RGST")
             .key("username").value(username)
-            .key("password").value(new String(password))
+            .key("password").value(new String(hashedPassword))
             .key("email").value(email)
             .endObject();
 
@@ -254,31 +289,35 @@ public class Client {
         if (err == Response.SUCCESS) {
             Client.username = username;
             try {
-                KeyGenerator keyGen = KeyGenerator.getInstance("AES");
                 byte[] iv = new byte[16];
+                byte[] salt = new byte[16];
                 IvParameterSpec ivSpec;
                 SecureRandom srand = SecureRandom.getInstance("SHA1PRNG");
 
                 srand.nextBytes(iv);
                 ivSpec = new IvParameterSpec(iv);
                 
-                keyGen.init(128);
-                key = keyGen.generateKey();
+                srand.nextBytes(salt);
 
                 FileOutputStream fos = new FileOutputStream
                     (System.getProperty("user.home") + "/" + username +
                      ".conf");
 
-                fos.write(key.getEncoded());
+                fos.write(salt);
                 fos.write((int) '\n');
                 fos.write(iv);
                 fos.close();
-                
+
+                SecretKeyFactory keyFact=SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
+                KeySpec spec = new PBEKeySpec(password, salt, 65536, 256);
+                SecretKey tmp = keyFact.generateSecret(spec);
+                key = new SecretKeySpec(tmp.getEncoded(), "AES");
                 encoder = Cipher.getInstance("AES/CBC/PKCS5Padding");
                 encoder.init(Cipher.ENCRYPT_MODE, key, ivSpec);
 
                 decoder = Cipher.getInstance("AES/CBC/PKCS5Padding");
                 decoder.init(Cipher.DECRYPT_MODE, key, ivSpec);
+
 
             } catch (Exception e) {
                 System.out.println("Error in key generation and writeback!");
@@ -301,12 +340,25 @@ public class Client {
         String encPass = encryptPassword(service + password);
         sockJS = new JSONWriter(sockWriter);
         
-
+        byte code[];
+        try {
+			Mac mac = Mac.getInstance("HmacSHA256");
+			mac.init(key);
+			mac.update(service.getBytes());
+			mac.update(username.getBytes());
+			mac.update(password.getBytes());
+			System.out.println(service + ", " + username + ", " + password);
+			code = mac.doFinal();
+		} catch (Exception e1) {
+			e1.printStackTrace();
+			return Response.FAIL;
+		}
         sockJS.object()
             .key("command").value("ADD")
             .key("service").value(service)
             .key("username").value(username)
             .key("password").value(encPass)
+            .key("mac").value(new String(code))
             .endObject();
         sockWriter.println();
         sockWriter.flush();
@@ -335,7 +387,7 @@ public class Client {
     protected static Pair<Response, Pair<String, char[]>> requestCreds(String service) {
         JSONObject respPacket = null;
         Response err;
-        String username, password;
+        String username, password, mac, computedMac;
         char[] decPass;
         sockJS = new JSONWriter(sockWriter);
 
@@ -361,9 +413,12 @@ public class Client {
             char[] justPass;
             username = respPacket.getString("username");
             password = respPacket.getString("password");
-
+            mac = respPacket.getString("mac");
+            byte code[];
             decPass = decryptPassword(password);
             justPass = new char[decPass.length - service.length()];
+
+
 
             /* Make sure we are retrieving the password for the correct service! See details in design document
              * about the attack that would cause this.
@@ -384,6 +439,24 @@ public class Client {
 
                 for (int i = 0; i < decPass.length; i++)
                     decPass[i] = (char) 0;
+                
+                try {
+        			Mac mac_compute = Mac.getInstance("HmacSHA256");
+        			mac_compute.init(key);
+        			mac_compute.update(service.getBytes());
+        			mac_compute.update(username.getBytes());
+        			mac_compute.update(charToBytes(justPass));
+        			System.out.println(service + ", " + username + ", " + new String(justPass));
+        			code = mac_compute.doFinal();
+        			computedMac = new String(code);
+        			if (!computedMac.equals(mac))
+        			{
+        				return new Pair<Response, Pair<String, char[]>>(Response.MAC, null);
+        			}
+        		} catch (Exception e1) {
+        			e1.printStackTrace();
+        			return new Pair<Response, Pair<String, char[]>>(Response.FAIL, null);
+        		}
                 
                 return new Pair<Response, Pair<String, char[]>>(err, new Pair<String, char[]>(username, justPass));
                 

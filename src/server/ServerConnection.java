@@ -19,6 +19,9 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
+import java.security.MessageDigest;
+import java.io.File;
 
 
 import util.Pair;
@@ -42,16 +45,42 @@ public class ServerConnection implements Runnable {
     protected SSLSocket socket;
     protected String username; //user associated with this account
     protected boolean timed_out = false; //TODO think about this later...
-    protected Hashtable<String, Pair<String, String>> user_table;
+    protected Hashtable<String, Triple<String, String, String>> user_table;
     protected MessageDigest messageDigest;
     protected String curr_dir;
 		protected PrintWriter audit_writer;
 		protected BufferedReader audit_reader;
          
+
     public ServerConnection(SSLSocket s) {
     	this.socket = s;
     	messageDigest = null;
     	curr_dir = "";
+    }
+    
+    class Triple<T1, T2, T3> {
+    	private T1 first;
+    	private T2 second;
+    	private T3 third;
+    	
+    	public T1 first() {
+    		return first;
+    	}
+    	
+    	public T2 second() {
+    		return second;
+    	}
+    	
+    	public T3 third() {
+    		return third;
+    	}
+    	
+    	public Triple(T1 f, T2 s, T3 t)
+    	{
+    		first = f;
+    		second = s;
+    		third = t;
+    	}
     }
     
     public void run() {
@@ -105,8 +134,9 @@ public class ServerConnection implements Runnable {
                             String service = req.getString("service");
                             String sName = req.getString("username");
                             String sPass = req.getString("password");
+                            String sMac = req.getString("mac");
                             js.object()
-                                .key("response").value(addCredential(service,sName,sPass).name())
+                                .key("response").value(addCredential(service,sName,sPass,sMac).name())
                                 .endObject();
                             break;
                         case "GET1":
@@ -135,7 +165,7 @@ public class ServerConnection implements Runnable {
                             break;
                             
                         case "GET2":
-                            Pair<Response, Pair<String, String>> cred;
+                            Pair<Response, Triple<String,String, String>> cred;
                             service = req.getString("service");
                             cred = getPassword(service);
                             resp = cred.first();
@@ -144,12 +174,14 @@ public class ServerConnection implements Runnable {
 																	.key("response").value(resp.name())
 																	.key("username").value(cred.second().first())
 																	.key("password").value(cred.second().second())
+																	.key("mac").value(cred.second().third())
 																	.endObject();
 														} else {
 															js.object()
 																	.key("response").value(resp.name())
 																	.key("username").value("")
 																	.key("password").value("")
+																	.key("mac").value("")
 																	.endObject();
 														}
                             break;
@@ -186,7 +218,8 @@ public class ServerConnection implements Runnable {
                             service = req.getString("service");
                             sName = req.getString("username");
                             sPass = req.getString("password");
-                            resp = updateCredential(service, sName, sPass);
+                            sMac = req.getString("mac");
+                            resp = updateCredential(service, sName, sPass, sMac);
                             
                             js.object()
                                 .key("response").value(resp.name())
@@ -416,7 +449,7 @@ public class ServerConnection implements Runnable {
             return Response.FAIL;
         }
 
-        user_table = new Hashtable<String, Pair<String, String>>();
+        user_table = new Hashtable<String, Triple<String, String, String>>();
         /* set the session to be logged in successfully */
         //username = new_usr; //don't do this actually
         
@@ -539,7 +572,7 @@ public class ServerConnection implements Runnable {
             }
 
             //init hashtable
-            user_table = new Hashtable<String, Pair<String, String>>();
+            user_table = new Hashtable<String, Triple<String, String, String>>();
             username = auth_usr;
             curr_dir = "users/" + auth_usr;
             //load hash table with user's credentials
@@ -549,13 +582,13 @@ public class ServerConnection implements Runnable {
             while ( (line=cred_reader.readLine()) != null ){
                 String[] curr_cred = line.split("\t");
 
-                if (curr_cred.length != 3){
+                if (curr_cred.length != 4){
                     cred_reader.close();
                     logUserResult("Authenticate Account", Response.FAIL);
                     return Response.FAIL;
                 }
                 //System.out.println("Loaded creds for " + curr_cred[0]);
-                user_table.put(curr_cred[0], new Pair<String,String>(curr_cred[1], curr_cred[2]));
+                user_table.put(curr_cred[0], new Triple<String,String,String>(curr_cred[1], curr_cred[2], curr_cred[3]));
             }
             cred_reader.close();
             
@@ -593,26 +626,26 @@ public class ServerConnection implements Runnable {
     /*
      * Get password for specific service
      * */
-    protected Pair<Response, Pair<String, String>> getPassword(String service_name){
+    protected Pair<Response, Triple<String,String, String>> getPassword(String service_name){
         if (!checkInput(new String[]{service_name})){
-            return new Pair<Response,Pair<String,String>>(Response.WRONG_INPT, null);
+            return new Pair<Response,Triple<String,String,String>>(Response.WRONG_INPT, null);
         }
         if (!this.checkDataFormat(new String[] {service_name})){
-            return new Pair<Response,Pair<String,String>>(Response.BAD_FORMAT,null);
+            return new Pair<Response,Triple<String,String,String>>(Response.BAD_FORMAT,null);
         }
     	if (!user_table.containsKey(service_name)){ //credentials not listed in server
             logUserResult("Get Credential", Response.NO_SVC);
-            return new Pair<Response,Pair<String, String>>(Response.NO_SVC, null);
+            return new Pair<Response,Triple<String,String, String>>(Response.NO_SVC, null);
     	}
         logUserResult("Get Credential", Response.SUCCESS);
     	return new Pair<Response,
-            Pair<String, String>>(Response.SUCCESS, user_table.get(service_name));
+            Triple<String,String, String>>(Response.SUCCESS, user_table.get(service_name));
     }
     
     /*
      * Adds new credentials
      * */
-    protected Response addCredential(String service_name, String stored_username, String stored_password){
+    protected Response addCredential(String service_name, String stored_username, String stored_password, String mac){
         if (!checkInput(new String[]{stored_username, stored_password})){
             return Response.WRONG_INPT;
         }
@@ -621,7 +654,7 @@ public class ServerConnection implements Runnable {
         }
     	if (user_table.containsKey(service_name))
             return Response.CRED_EXISTS;
-    	user_table.put(service_name, new Pair<String,String>(stored_username, stored_password));
+    	user_table.put(service_name, new Triple<String,String,String>(stored_username, stored_password, mac));
     	
     	return Response.SUCCESS;
     }
@@ -629,7 +662,7 @@ public class ServerConnection implements Runnable {
     /*
      * Updates credentials with new password
      * */
-    protected Response updateCredential(String service_name, String new_username, String new_stored_pass){
+    protected Response updateCredential(String service_name, String new_username, String new_stored_pass, String new_mac){
         if (!checkInput(new String[]{new_username, new_stored_pass})){
             return Response.WRONG_INPT;
         }
@@ -640,7 +673,7 @@ public class ServerConnection implements Runnable {
             //System.out.println("Service " + service_name + " not in table.");
             return Response.NO_SVC;
         }
-        user_table.put(service_name, new Pair<String,String>(new_username, new_stored_pass));
+        user_table.put(service_name, new Triple<String,String,String>(new_username, new_stored_pass, new_mac));
         return Response.SUCCESS;
     }
     
@@ -667,7 +700,7 @@ public class ServerConnection implements Runnable {
             BufferedWriter writer = new BufferedWriter(
                     new FileWriter(curr_dir.concat("/stored_credentials.txt")));
             for (String k : user_table.keySet()){
-               writer.write(k + "\t" +  user_table.get(k).first() + "\t" + user_table.get(k).second() + "\n");
+               writer.write(k + "\t" +  user_table.get(k).first() + "\t" + user_table.get(k).second() + "\t" + user_table.get(k).third() + "\n");
             }
             writer.flush();
             writer.close();

@@ -9,5 +9,5 @@ public enum Response {
     USER_EXISTS, /*when username is already taken at registration*/
     CRED_EXISTS, /*when adding, the credentials already exist for that service*/
     DUP_LOGIN, /*when user is trying to login again after logging in successfully */
-    BAD_FORMAT /* when user entered ill formatted password, username, or otherwise */
+    BAD_FORMAT /* when user entered ill formatted password, username, or otherwise */, MAC
 }
