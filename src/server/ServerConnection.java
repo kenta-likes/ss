@@ -15,13 +15,18 @@ import java.io.File;
 
 import javax.net.ssl.SSLSocket;
 
+import util.Carrier;
 import util.Pair;
 import util.Response;
-
+import java.util.*;
+import javax.mail.*;
+import javax.mail.internet.*;
+import javax.activation.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Hashtable;
+import java.util.Properties;
 import java.io.PrintWriter;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -231,7 +236,7 @@ public class ServerConnection implements Runnable {
                                 .endObject();
                             
                             break;
-                            
+                        
                         case "RGST":
                             String regName = req.getString("username");
                             String regPass = req.getString("password");
@@ -504,6 +509,70 @@ public class ServerConnection implements Runnable {
         username = null;
         user_table = null;
     	return Response.SUCCESS;
+    }
+    
+    /**
+     * 
+     * @param phoneNumber the phone number to send the code to
+     * @return the code which the user is expected to input, or -1 on error
+     */
+    protected static int sendSmsCode(String phoneNumber, Carrier c) 
+    {
+    	String at;
+    	byte code[] = new byte[4];
+    	int intCode;
+    	switch (c) {
+    		case VERIZON:
+    			at = "@vtext.com";
+    			break;
+    		case SPRINT:
+    			at = "@messaging.sprintpcs.com";
+    			break;
+    		case ATT:
+    			at = "@txt.att.net";
+    			break;
+    		default:
+    			System.out.println("unrecognized gateway");
+    			return -1;
+    	}
+    	new SecureRandom().nextBytes(code);
+    	intCode = code[0];
+        // Assuming you are sending email from localhost
+        String host = "localhost";
+        String from = "mjv58@cornell.edu";
+        // Get system properties
+        Properties properties = System.getProperties();
+
+        // Setup mail server
+        properties.setProperty("mail.smtp.host", host);
+        
+        Session session = Session.getDefaultInstance(properties);
+        
+        try{
+            // Create a default MimeMessage object.
+            MimeMessage message = new MimeMessage(session);
+
+            // Set From: header field of the header.
+            message.setFrom(new InternetAddress(from));
+
+            // Set To: header field of the header.
+            message.addRecipient(Message.RecipientType.TO,
+                                     new InternetAddress(phoneNumber + at));
+
+            // Set Subject: header field
+            message.setSubject("Your verification code");
+
+            // Now set the actual message
+            message.setText(Integer.toString(intCode));
+
+            // Send message
+            Transport.send(message);
+         }catch (MessagingException mex) {
+            mex.printStackTrace();
+         }
+        
+		return 0;
+    	
     }
 	
     /*

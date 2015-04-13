@@ -1,7 +1,7 @@
 /bin/
 *.class
 bin/*
-
+/src/users/
 .DS_Store
 *.*~
 *~

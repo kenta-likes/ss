@@ -1,2 +1,0 @@
-Mon Apr 13 16:34:56 EDT 2015	/127.0.0.1:50115	Create Account	SUCCESS
-Mon Apr 13 16:35:07 EDT 2015	/127.0.0.1:50115	Get Credential	SUCCESS
