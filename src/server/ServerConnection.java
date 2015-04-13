@@ -1,5 +1,15 @@
 package server;
 
+import java.security.KeyStore;
+import javax.net.ssl.*;
+
+import java.security.SecureRandom;
+import javax.crypto.KeyGenerator;
+import javax.crypto.SecretKey;
+import javax.crypto.Cipher;
+import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
+
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.FileInputStream;
@@ -13,7 +23,6 @@ import java.io.PrintWriter;
 import java.security.MessageDigest;
 import java.io.File;
 
-import javax.net.ssl.SSLSocket;
 
 import util.Carrier;
 import util.Pair;
@@ -31,12 +40,12 @@ import java.io.PrintWriter;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.io.File;
-import java.security.SecureRandom;
 
 import org.json.*;
 
 public class ServerConnection implements Runnable {
     static final int SALT_LEN = 32; //use # of bytes of SHA-256 output
+		static final String HOSTNAME = "localhost";
 		
     protected SSLSocket socket;
     protected String username; //user associated with this account
@@ -44,6 +53,8 @@ public class ServerConnection implements Runnable {
     protected Hashtable<String, Triple<String, String, String>> user_table;
     protected MessageDigest messageDigest;
     protected String curr_dir;
+		protected PrintWriter audit_writer;
+		protected BufferedReader audit_reader;
          
 
     public ServerConnection(SSLSocket s) {
@@ -79,6 +90,28 @@ public class ServerConnection implements Runnable {
     
     public void run() {
     	try {
+						/*
+						//set up connection with audit server
+						String ksName = System.getProperty("user.dir")+"/server/audit_ts.jks"; //server side truststore
+						char passphrase[] = "systemsecurity".toCharArray();
+            KeyStore keystore = KeyStore.getInstance("JKS");
+            keystore.load(new FileInputStream(ksName), passphrase);
+            TrustManagerFactory tmf = TrustManagerFactory.getInstance("SunX509");
+            tmf.init(keystore);
+
+            SSLContext context = SSLContext.getInstance("TLS");
+            TrustManager[] trustManagers = tmf.getTrustManagers();
+            context.init(null, trustManagers, new SecureRandom());
+            SSLSocketFactory sf = context.getSocketFactory();
+            SSLSocket audit_socket = (SSLSocket)sf.createSocket(HOSTNAME, 7777);//changed from 8888
+            audit_socket.startHandshake();
+
+						//writer/reader for comm with audit server
+            audit_reader = new BufferedReader(new InputStreamReader(audit_socket.getInputStream()));
+            audit_writer = new PrintWriter(audit_socket.getOutputStream(), true);
+						*/
+						
+						//writer/reader for comm with client
             BufferedWriter w = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
             JSONWriter js;
             BufferedReader r = new BufferedReader(new InputStreamReader(socket.getInputStream()));
@@ -379,7 +412,7 @@ public class ServerConnection implements Runnable {
      * master password.
      * Assumes: username and password are not null
      * Assumes: username and password are valid (we haven't defined valid yet)
-     * */
+     * TODO: talk to audit server to create new log for this user upon success*/
     protected Response createAccount(String new_usr, String password) {
         if (!checkInput(new String[]{new_usr, password})){
             return Response.WRONG_INPT;
@@ -425,7 +458,7 @@ public class ServerConnection implements Runnable {
 
         user_table = new Hashtable<String, Triple<String, String, String>>();
         /* set the session to be logged in successfully */
-        username = new_usr;
+        //username = new_usr; //don't do this actually
         
         //Logging
 		logCenter(username, "Create Account", Response.SUCCESS);
