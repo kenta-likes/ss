@@ -652,5 +652,4 @@ public class ServerConnection implements Runnable {
         return Response.SUCCESS;
             
     }
->>>>>>> 578337fcf6edce6c09d6a7ed93d8c2ef3e6607e5
 }

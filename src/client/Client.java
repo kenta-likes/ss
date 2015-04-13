@@ -19,6 +19,7 @@ import util.*;
 import javax.xml.bind.DatatypeConverter;
 
 import java.security.SecureRandom;
+import java.security.spec.KeySpec;
 
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
@@ -37,7 +38,7 @@ public class Client {
     private static JSONWriter sockJS;
     private static BufferedReader sockReader;
     private static SSLSocket c;
-    private static PBEKeySpec key;
+    private static SecretKey key;
     private static Cipher encoder, decoder;
     private static String username;
     
@@ -228,14 +229,16 @@ public class Client {
 
                 ivSpec = new IvParameterSpec(iv);
                 
-                key = new PBEKeySpec(password);
-                SecretKeyFactory keyFact=SecretKeyFactory.getInstance("DESede");
+                SecretKeyFactory keyFact=SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
+                KeySpec spec = new PBEKeySpec(password, salt, 65536, 256);
+                SecretKey tmp = keyFact.generateSecret(spec);
+                key = new SecretKeySpec(tmp.getEncoded(), "AES");
                 PBEParameterSpec defParams=new PBEParameterSpec(salt,0);
                 encoder = Cipher.getInstance("AES/CBC/PKCS5Padding");
-                encoder.init(Cipher.ENCRYPT_MODE, keyFact.generateSecret(key), ivSpec);
+                encoder.init(Cipher.ENCRYPT_MODE, key, ivSpec);
 
                 decoder = Cipher.getInstance("AES/CBC/PKCS5Padding");
-                decoder.init(Cipher.DECRYPT_MODE, keyFact.generateSecret(key), ivSpec);
+                decoder.init(Cipher.DECRYPT_MODE, key, ivSpec);
 
             } catch (Exception e) {
                 System.out.println("Issues finding the key!");
@@ -289,9 +292,9 @@ public class Client {
         if (err == Response.SUCCESS) {
             Client.username = username;
             try {
-                KeyGenerator keyGen = KeyGenerator.getInstance("DESede");
-                byte[] iv = new byte[16];
-                byte[] salt = new byte[16];
+                KeyGenerator keyGen = KeyGenerator.getInstance("AES");
+                byte[] iv = new byte[8];
+                byte[] salt = new byte[8];
                 IvParameterSpec ivSpec;
                 SecureRandom srand = SecureRandom.getInstance("SHA1PRNG");
 
@@ -308,16 +311,18 @@ public class Client {
                 fos.write((int) '\n');
                 fos.write(iv);
                 fos.close();
-                
-                key = new PBEKeySpec(password);
+
                 SecretKeyFactory keyFact=SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
-                System.out.println(keyFact.getProvider());
+                KeySpec spec = new PBEKeySpec(password, salt, 65536, 256);
+                SecretKey tmp = keyFact.generateSecret(spec);
+                key = new SecretKeySpec(tmp.getEncoded(), "AES");
+
                 PBEParameterSpec defParams=new PBEParameterSpec(salt,0);
                 encoder = Cipher.getInstance("AES/CBC/PKCS5Padding");
-                encoder.init(Cipher.ENCRYPT_MODE, keyFact.generateSecret(key), ivSpec);
+                encoder.init(Cipher.ENCRYPT_MODE, key, ivSpec);
 
                 decoder = Cipher.getInstance("AES/CBC/PKCS5Padding");
-                decoder.init(Cipher.DECRYPT_MODE, keyFact.generateSecret(key), ivSpec);
+                decoder.init(Cipher.DECRYPT_MODE, key, ivSpec);
 
 
             } catch (Exception e) {
