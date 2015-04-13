@@ -229,7 +229,7 @@ public class Client {
                 ivSpec = new IvParameterSpec(iv);
                 
                 key = new PBEKeySpec(password);
-                SecretKeyFactory keyFact=SecretKeyFactory.getInstance("AES/CBC/PKCS5Padding");
+                SecretKeyFactory keyFact=SecretKeyFactory.getInstance("DESede");
                 PBEParameterSpec defParams=new PBEParameterSpec(salt,0);
                 encoder = Cipher.getInstance("AES/CBC/PKCS5Padding");
                 encoder.init(Cipher.ENCRYPT_MODE, keyFact.generateSecret(key), ivSpec);
@@ -289,7 +289,7 @@ public class Client {
         if (err == Response.SUCCESS) {
             Client.username = username;
             try {
-                KeyGenerator keyGen = KeyGenerator.getInstance("AES");
+                KeyGenerator keyGen = KeyGenerator.getInstance("DESede");
                 byte[] iv = new byte[16];
                 byte[] salt = new byte[16];
                 IvParameterSpec ivSpec;
@@ -310,7 +310,8 @@ public class Client {
                 fos.close();
                 
                 key = new PBEKeySpec(password);
-                SecretKeyFactory keyFact=SecretKeyFactory.getInstance("AES/CBC/PKCS5Padding");
+                SecretKeyFactory keyFact=SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
+                System.out.println(keyFact.getProvider());
                 PBEParameterSpec defParams=new PBEParameterSpec(salt,0);
                 encoder = Cipher.getInstance("AES/CBC/PKCS5Padding");
                 encoder.init(Cipher.ENCRYPT_MODE, keyFact.generateSecret(key), ivSpec);
