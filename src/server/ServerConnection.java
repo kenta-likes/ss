@@ -85,6 +85,7 @@ public class ServerConnection implements Runnable {
     
     public void run() {
     	try {
+						/*
 						//set up connection with audit server
 						String ksName = System.getProperty("user.dir")+"/server/audit_ts.jks"; //server side truststore
 						char passphrase[] = "systemsecurity".toCharArray();
@@ -103,6 +104,7 @@ public class ServerConnection implements Runnable {
 						//writer/reader for comm with audit server
             audit_reader = new BufferedReader(new InputStreamReader(audit_socket.getInputStream()));
             audit_writer = new PrintWriter(audit_socket.getOutputStream(), true);
+						*/
 						
 						//writer/reader for comm with client
             BufferedWriter w = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
