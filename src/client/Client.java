@@ -311,10 +311,12 @@ public class Client {
                 fos.write((int) '\n');
                 fos.write(iv);
                 fos.close();
+
                 SecretKeyFactory keyFact=SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
                 KeySpec spec = new PBEKeySpec(password, salt, 65536, 256);
                 SecretKey tmp = keyFact.generateSecret(spec);
                 key = new SecretKeySpec(tmp.getEncoded(), "AES");
+
                 PBEParameterSpec defParams=new PBEParameterSpec(salt,0);
                 encoder = Cipher.getInstance("AES/CBC/PKCS5Padding");
                 encoder.init(Cipher.ENCRYPT_MODE, key, ivSpec);
