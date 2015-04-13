@@ -149,7 +149,7 @@ public class Shell {
         String service, username, password;
         Response err;
 
-        if (command.length != 4) {
+        if (command.length != 2) {
             System.out.println("Usage: add <service>");
             return;
         }
@@ -243,7 +243,7 @@ public class Shell {
         String service, username, password;
         Response err;
         
-        if (command.length != 4) {
+        if (command.length != 2) {
             System.out.println("Usage: change <service>");
             return;
         }
