@@ -109,7 +109,7 @@ public class Shell {
     }
 
     private static void handleRegister() {
-        String username, email;
+        String username, phone;
         char[] password0, password1;
         Response err;
         boolean samePassword = true, containsComma = false;
@@ -131,9 +131,12 @@ public class Shell {
         }
 
         if (samePassword) {
-            email = con.readLine("Email address: ");
+            phone = con.readLine("10 digit phone number (e.g. 4081234567): ");
+						while (!(phone.matches("[0-9]+") && phone.length() == 10)) {
+            	phone = con.readLine("Bad format. Please try again: ");
+						}
             
-            err = Client.register(username, password0, email);
+            err = Client.register(username, password0, phone);
             printErr(err);
         } else {
             System.out.println("Error: passwords do not match.");
