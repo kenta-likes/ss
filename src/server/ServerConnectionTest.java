@@ -109,7 +109,7 @@ public class ServerConnectionTest {
 		    sc.deleteAccount("helloworld");
 		}
 	}
-
+/*
 	@Test
 	public void testRetrieveCredentials() {
 		ServerConnection sc = new ServerConnection(null);
@@ -281,5 +281,5 @@ public class ServerConnectionTest {
             sc.deleteAccount("baz");
         }
 	}
-
+*/
 }
