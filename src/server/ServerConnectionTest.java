@@ -10,7 +10,7 @@ import org.junit.Test;
 
 
 public class ServerConnectionTest {
-    /*
+   /*
      * All of these functions are protected and only called by the server loop. They work with
      * assumptions on input/state that are written under each of the specs.
      * */

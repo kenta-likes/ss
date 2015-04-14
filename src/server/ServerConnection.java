@@ -694,7 +694,7 @@ public class ServerConnection implements Runnable {
 			phone_reader.read(phone, 0, PHONE_LEN);
 			carrier = phone_reader.read(); // use this later
 			two_step_code = Integer.toString(sendSmsCode(new String(phone),
-					Carrier.ATT)); // TODO: change ATT to user's carrier
+					Carrier.VERIZON)); // TODO: change ATT to user's carrier
 		} catch (IOException e) {
 			e.printStackTrace();
 			return Response.FAIL;

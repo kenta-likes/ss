@@ -6,3 +6,16 @@ kyle	Mon Apr 13 16:09:26 EDT 2015	/127.0.0.1:49788	Create Account	SUCCESS
 cat	Mon Apr 13 16:29:04 EDT 2015	/127.0.0.1:50109	Create Account	SUCCESS
 poo	Mon Apr 13 16:32:41 EDT 2015	/127.0.0.1:50113	Create Account	SUCCESS
 paper	Mon Apr 13 16:34:56 EDT 2015	/127.0.0.1:50115	Create Account	SUCCESS
+N/A	Mon Apr 13 22:14:56 EDT 2015	/127.0.0.1:52035	Create Account	SUCCESS
+N/A	Mon Apr 13 22:17:17 EDT 2015	/127.0.0.1:52037	Create Account	SUCCESS
+N/A	Mon Apr 13 22:19:34 EDT 2015	/127.0.0.1:52072	Create Account	SUCCESS
+N/A	Mon Apr 13 22:21:36 EDT 2015	/127.0.0.1:52076	Create Account	SUCCESS
+yolo	Mon Apr 13 22:21:40 EDT 2015	/127.0.0.1:52076	Authenticate Account	WRONG_INPT
+N/A	Mon Apr 13 22:23:31 EDT 2015	/127.0.0.1:52079	Create Account	SUCCESS
+N/A	Mon Apr 13 22:27:16 EDT 2015	/127.0.0.1:52082	Create Account	SUCCESS
+N/A	Mon Apr 13 22:30:57 EDT 2015	/127.0.0.1:52090	Create Account	SUCCESS
+N/A	Mon Apr 13 22:33:20 EDT 2015	/127.0.0.1:52095	Create Account	SUCCESS
+N/A	Mon Apr 13 22:34:27 EDT 2015	/127.0.0.1:52099	Create Account	SUCCESS
+kenta	Mon Apr 13 22:34:32 EDT 2015	/127.0.0.1:52099	Authenticate Account	WRONG_INPT
+kenta	Mon Apr 13 22:34:54 EDT 2015	/127.0.0.1:52099	Authenticate Account	SUCCESS
+kenta	Mon Apr 13 22:35:28 EDT 2015	/127.0.0.1:52101	Authenticate Account	SUCCESS

@@ -179,7 +179,7 @@ public class Client {
         sockJS.object()
             .key("command").value("LGIN")
             .key("username").value(username)
-            .key("password").value(hashedPassword)
+            .key("password").value(new String(hashedPassword))
             .endObject();
         sockWriter.println();
         sockWriter.flush();
@@ -219,7 +219,7 @@ public class Client {
         sockJS.object()
             .key("command").value("ATHN")
             .key("username").value(username)
-            .key("password").value(hashedPassword)
+            .key("password").value(new String(hashedPassword))
             .key("code").value(code)
             .endObject();
         sockWriter.println();
@@ -297,9 +297,10 @@ public class Client {
         Response err;
         sockJS = new JSONWriter(sockWriter);
         byte hashedPassword[];
+        byte passwordbytes[] = charToBytes(password);
         try {
 			MessageDigest digest = MessageDigest.getInstance("SHA-256");
-			digest.update(password.toString().getBytes());
+			digest.update(passwordbytes);
 			hashedPassword = digest.digest();
 		} catch (NoSuchAlgorithmException e1) {
 			e1.printStackTrace();
