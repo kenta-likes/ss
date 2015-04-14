@@ -712,7 +712,7 @@ public class ServerConnection implements Runnable {
 				}
 
 				//this should be the second step in two step verification
-				if (this.two_step_code != code){
+				if (!this.two_step_code.equals(code)){
 					return Response.BAD_CODE;
 				}
 
