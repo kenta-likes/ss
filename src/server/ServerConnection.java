@@ -1,9 +1,11 @@
 package server;
 
 import java.security.KeyStore;
+
 import javax.net.ssl.*;
 
 import java.security.SecureRandom;
+
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 import javax.crypto.Cipher;
@@ -23,14 +25,16 @@ import java.io.PrintWriter;
 import java.security.MessageDigest;
 import java.io.File;
 
-
 import util.Carrier;
 import util.Pair;
 import util.Response;
+
 import java.util.*;
+
 import javax.mail.*;
 import javax.mail.internet.*;
 import javax.activation.*;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -121,6 +125,9 @@ public class ServerConnection implements Runnable {
             BufferedReader r = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             String m, command;
             JSONObject req;
+            String authName;
+            String authPass;
+            Response resp;
             while (true){
                 while ((m = r.readLine()) != null) {
 
@@ -152,7 +159,6 @@ public class ServerConnection implements Runnable {
                             break;
                         case "GET1":
                             ArrayList<String> creds;
-                            Response resp;
                             Pair<Response, ArrayList<String>> pair = retrieveCredentials();
                             resp = pair.first();
                             creds = pair.second();
@@ -264,11 +270,19 @@ public class ServerConnection implements Runnable {
                         
                     } else { //only allow registration or authentication
                         switch (command) {
+                        case "LGIN":
+                        	authName = req.getString("username");
+                            authPass = req.getString("password"); 
+                            resp = verifyPassword(authName, authPass);
+                            js.object()
+                            	.key("response").value(resp.name())
+                            	.endObject();
+                            break;
                         case "ATHN":
-                            String authName = req.getString("username");
-                            String authPass = req.getString("password");
-														String code = req.getString("code");
-                            Response resp = authAccount(authName, authPass, code);
+                            authName = req.getString("username");
+                            authPass = req.getString("password");
+							String code = req.getString("code");
+                            resp = authAccount(authName, authPass, code);
                             js.object()
                                 .key("response").value(resp.name())
                                 .endObject();
@@ -550,6 +564,10 @@ public class ServerConnection implements Runnable {
     	return Response.SUCCESS;
     }
     
+    public static void main(String args[]) {
+    	sendSmsCode("6082258090", Carrier.VERIZON);
+    }
+    
     /**
      * 
      * @param phoneNumber the phone number to send the code to
@@ -557,6 +575,8 @@ public class ServerConnection implements Runnable {
      */
     protected static int sendSmsCode(String phoneNumber, Carrier c) 
     {
+    	final String username = "passherd133t@gmail.com";
+    	final String password = "3lit3haxors";
     	String at;
     	byte code[] = new byte[4];
     	int intCode;
@@ -575,24 +595,30 @@ public class ServerConnection implements Runnable {
     			return -1;
     	}
     	new SecureRandom().nextBytes(code);
-    	intCode = code[0];
+    	intCode = Math.abs(code[0]) + 4*Math.abs(code[1]) + 16*Math.abs(code[2]) + 64*Math.abs(code[3]);
         // Assuming you are sending email from localhost
         String host = "localhost";
         String from = "mjv58@cornell.edu";
         // Get system properties
-        Properties properties = System.getProperties();
-
-        // Setup mail server
-        properties.setProperty("mail.smtp.host", host);
+        Properties props = System.getProperties();
+		props.put("mail.smtp.auth", "true");
+		props.put("mail.smtp.starttls.enable", "true");
+		props.put("mail.smtp.host", "smtp.gmail.com");
+		props.put("mail.smtp.port", "587");
         
-        Session session = Session.getDefaultInstance(properties);
+		Session session = Session.getInstance(props,
+				  new javax.mail.Authenticator() {
+					protected PasswordAuthentication getPasswordAuthentication() {
+						return new PasswordAuthentication(username, password);
+					}
+				  });
         
         try{
             // Create a default MimeMessage object.
             MimeMessage message = new MimeMessage(session);
 
             // Set From: header field of the header.
-            message.setFrom(new InternetAddress(from));
+            message.setFrom(new InternetAddress(username));
 
             // Set To: header field of the header.
             message.addRecipient(Message.RecipientType.TO,
@@ -608,9 +634,10 @@ public class ServerConnection implements Runnable {
             Transport.send(message);
          }catch (MessagingException mex) {
             mex.printStackTrace();
+            return -1;
          }
         
-		return 0;
+		return intCode;
     	
     }
 
