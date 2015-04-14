@@ -123,6 +123,9 @@ public class ServerConnection implements Runnable {
             BufferedReader r = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             String m, command;
             JSONObject req;
+            String authName;
+            String authPass;
+            Response resp;
             while (true){
                 while ((m = r.readLine()) != null) {
 
@@ -154,7 +157,6 @@ public class ServerConnection implements Runnable {
                             break;
                         case "GET1":
                             ArrayList<String> creds;
-                            Response resp;
                             Pair<Response, ArrayList<String>> pair = retrieveCredentials();
                             resp = pair.first();
                             creds = pair.second();
@@ -266,11 +268,19 @@ public class ServerConnection implements Runnable {
                         
                     } else { //only allow registration or authentication
                         switch (command) {
+                        case "LGIN":
+                        	authName = req.getString("username");
+                            authPass = req.getString("password"); 
+                            resp = verifyPassword(authName, authPass);
+                            js.object()
+                            	.key("response").value(resp.name())
+                            	.endObject();
+                            break;
                         case "ATHN":
-                            String authName = req.getString("username");
-                            String authPass = req.getString("password");
-														String code = req.getString("code");
-                            Response resp = authAccount(authName, authPass, code);
+                            authName = req.getString("username");
+                            authPass = req.getString("password");
+							String code = req.getString("code");
+                            resp = authAccount(authName, authPass, code);
                             js.object()
                                 .key("response").value(resp.name())
                                 .endObject();
@@ -621,9 +631,10 @@ public class ServerConnection implements Runnable {
             Transport.send(message);
          }catch (MessagingException mex) {
             mex.printStackTrace();
+            return -1;
          }
         
-		return 0;
+		return intCode;
     	
     }
 
