@@ -690,7 +690,7 @@ public class ServerConnection implements Runnable {
 					FileInputStream phone_reader = new FileInputStream(("users/" + auth_usr).concat("/master.txt"));
 					phone_reader.skip(PASS_LEN + SALT_LEN);
 					phone_reader.read(phone, 0, PHONE_LEN);
-					carrier = phone_reader.read(); //use this later
+					//carrier = phone_reader.read(); //use this later
 					two_step_code = Integer.toString(sendSmsCode(new String(phone), Carrier.ATT)); //TODO: change ATT to user's carrier
 				} catch (IOException e){
 					e.printStackTrace();
