@@ -55,6 +55,8 @@ public class ServerConnection implements Runnable {
     protected String curr_dir;
 		protected PrintWriter audit_writer;
 		protected BufferedReader audit_reader;
+		protected boolean verified_password = false;
+		protected String two_step_code;
          
 
     public ServerConnection(SSLSocket s) {
@@ -263,7 +265,8 @@ public class ServerConnection implements Runnable {
                         case "ATHN":
                             String authName = req.getString("username");
                             String authPass = req.getString("password");
-                            Response resp = authAccount(authName, authPass);
+														String code = req.getString("code");
+                            Response resp = authAccount(authName, authPass, code);
                             js.object()
                                 .key("response").value(resp.name())
                                 .endObject();
@@ -474,7 +477,7 @@ public class ServerConnection implements Runnable {
         if (!checkInput(new String[]{old_password, new_password})){
             return Response.WRONG_INPT;
         }
-    	if (this.authAccount(this.username, old_password) != Response.SUCCESS){
+    	if (this.verifyPassword(this.username, old_password) != Response.SUCCESS){
     		// Logging
     		logUserResult("Change Account Password", Response.FAIL);
     		return Response.FAIL;
@@ -512,10 +515,10 @@ public class ServerConnection implements Runnable {
      * Delete this account and log out the user.
      * */
     protected Response deleteAccount(String password){
-        if (!checkInput(new String[]{password})){
-            return Response.WRONG_INPT;
-        }
-    	Response r = this.authAccount(this.username, password);
+			if (!checkInput(new String[]{password})){
+					return Response.WRONG_INPT;
+			}
+    	Response r = this.verifyPassword(this.username, password);
     	if (r != Response.SUCCESS){
     		// Logging
     		logCenter(this.username,"Delete Account", r);
@@ -607,11 +610,8 @@ public class ServerConnection implements Runnable {
 		return 0;
     	
     }
-	
-    /*
-     * Authenticate user to system
-     * */
-    protected Response authAccount(String auth_usr, String password){
+
+		protected Response verifyPassword(String auth_usr, String password){
         if (!checkInput(new String[]{auth_usr, password})){
             return Response.WRONG_INPT;
         }
@@ -641,10 +641,42 @@ public class ServerConnection implements Runnable {
                 logUserResult("Authenticate Account", Response.WRONG_INPT);
                 return Response.WRONG_INPT;
             }
+        } catch (IOException e2) {
+            e2.printStackTrace();
+            logCenter(auth_usr,"Authenticate Account", Response.FAIL);
+            logUserResult("Authenticate Account", Response.FAIL);
+            return Response.FAIL;
+        }
+				return Response.SUCCESS;
+		}
+	
+    /*
+     * Authenticate user to system
+     * */
+    protected Response authAccount(String auth_usr, String password, String code){
+				if (username != null){//already logged in
+					return Response.LOGGED_IN;
+				}
+				if (!verified_password){
+					Response passResponse = verifyPassword(auth_usr, password);
+					//first try password login
+					if (passResponse != Response.SUCCESS){
+						return passResponse;	
+					}
+					//TODO: code to send SMS...
+					verified_password = true;
+					return Response.SUCCESS; //first step success
+				}
 
+				//this should be the second step in two step verification
+				if (this.two_step_code != code){
+					return Response.BAD_CODE;
+				}
+
+				try{
             //init hashtable
-            user_table = new Hashtable<String, Triple<String, String, String>>();
             username = auth_usr;
+            user_table = new Hashtable<String, Triple<String, String, String>>();
             curr_dir = "users/" + auth_usr;
             //load hash table with user's credentials
             BufferedReader cred_reader = new BufferedReader(
