@@ -127,15 +127,39 @@ public class Shell {
     }
 
     private static void handleRegister() {
-        String username, email;
+        String username, email, phone, carrier;
         char[] password0, password1;
         Response err;
-        boolean samePassword = true, containsComma = false;
-
+        boolean samePassword = true, containsComma = false, validCarrier = true, validPhone = true;
+        int c, p;
         username = con.readLine("Username: ");
         password0 = con.readPassword("Password: ");
         password1 = con.readPassword("Verify password: ");
-
+        email = con.readLine("Email: ");
+        phone = con.readLine("Phone Number (format: XXXXXXXXXX): ");
+        carrier = con.readLine("Carrier (0 = Verizon, 1 = AT&T, 2 = Sprint): ");
+        try {
+        	
+        	p = Integer.parseInt(phone);
+        } catch (NumberFormatException e)
+        {
+        	validPhone = false;
+        }
+        try {
+        	c = Integer.parseInt(carrier);
+        } catch (NumberFormatException e)
+        {
+        	validCarrier = false;
+        }
+        c = Integer.parseInt(carrier);
+        if (c != 0 && c != 1 && c != 2)
+        {
+        	validCarrier = false;
+        }
+        if (phone.length() < 10)
+        {
+        	validPhone = false;
+        }
         if (password0.length != password1.length)
             samePassword = false;
         else {
@@ -148,13 +172,18 @@ public class Shell {
             }
         }
 
-        if (samePassword) {
+        if (samePassword && validCarrier && validPhone) {
             email = con.readLine("Email address: ");
             
-            err = Client.register(username, password0, email);
+            err = Client.register(username, password0, email, phone, carrier);
             printErr(err);
         } else {
-            System.out.println("Error: passwords do not match.");
+        	if (!samePassword)
+        		System.out.println("Error: passwords do not match.");
+        	if (!validCarrier)
+        		System.out.println("Error: carrier invalid.");
+        	if (!validPhone)
+        		System.out.println("Error: phone number invalid");
         }
 
         /* Clear the password from memory. */

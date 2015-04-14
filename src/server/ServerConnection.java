@@ -291,8 +291,9 @@ public class ServerConnection implements Runnable {
                             String regName = req.getString("username");
                             String regPass = req.getString("password");
                             String email = req.getString("email");
-
-                            resp = createAccount(regName, regPass);
+                            String carrier = req.getString("carrier");
+                            String phone = req.getString("phone");
+                            resp = createAccount(regName, regPass, email, carrier, phone);
                             js.object()
                                 .key("response").value(resp.name())
                                 .endObject();
