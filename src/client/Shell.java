@@ -115,10 +115,6 @@ public class Shell {
     
     private static int handleAuth(String username, char[] password) {
         Response err;
-        
-        username = con.readLine("Username: ");
-        
-        password = con.readPassword("Password: ");
         String code = con.readLine("2-factor Authentication Code: ");
         
         err = Client.auth(username, password, code);
