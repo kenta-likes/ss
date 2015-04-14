@@ -49,6 +49,8 @@ import org.json.*;
 
 public class ServerConnection implements Runnable {
     static final int SALT_LEN = 32; //use # of bytes of SHA-256 output
+    static final int PASS_LEN = 32; //use # of bytes of SHA-256 output
+    static final int PHONE_LEN = 10; //use # of bytes of SHA-256 output
 		static final String HOSTNAME = "localhost";
 		
     protected SSLSocket socket;
@@ -277,14 +279,13 @@ public class ServerConnection implements Runnable {
                             	.endObject();
                             break;
                         case "ATHN":
-                            authName = req.getString("username");
-                            authPass = req.getString("password");
-							String code = req.getString("code");
-                            resp = authAccount(authName, authPass, code);
-                            js.object()
-                                .key("response").value(resp.name())
-                                .endObject();
-                            
+														authName = req.getString("username");
+														authPass = req.getString("password");
+														String code = req.getString("code");
+														resp = authAccount(authName, authPass, code);
+														js.object()
+																.key("response").value(resp.name())
+																.endObject();
                             break;
                         
                         case "RGST":
@@ -293,7 +294,8 @@ public class ServerConnection implements Runnable {
                             String email = req.getString("email");
                             String carrier = req.getString("carrier");
                             String phone = req.getString("phone");
-                            resp = createAccount(regName, regPass, email, carrier, phone);
+                            resp = createAccount(regName, regPass, phone, carrier);
+
                             js.object()
                                 .key("response").value(resp.name())
                                 .endObject();
@@ -431,7 +433,7 @@ public class ServerConnection implements Runnable {
      * Assumes: username and password are not null
      * Assumes: username and password are valid (we haven't defined valid yet)
      * TODO: talk to audit server to create new log for this user upon success*/
-    protected Response createAccount(String new_usr, String password) {
+    protected Response createAccount(String new_usr, String password, String phone, String carrier) {
         if (!checkInput(new String[]{new_usr, password})){
             return Response.WRONG_INPT;
         }
@@ -459,6 +461,7 @@ public class ServerConnection implements Runnable {
             FileOutputStream writer = new FileOutputStream(curr_dir.concat("/master.txt"));
             writer.write(hashedpassword);
             writer.write(salt);
+						writer.write(phone.getBytes("UTF-8"));
             writer.flush();
             writer.close();
     		
@@ -654,11 +657,11 @@ public class ServerConnection implements Runnable {
         }
         
         byte salt[] = new byte[SALT_LEN];
-        byte stored_pass[] = new byte[32];
+        byte stored_pass[] = new byte[PASS_LEN];
         FileInputStream reader;
         try {
             reader = new FileInputStream(("users/" + auth_usr).concat("/master.txt"));
-            reader.read(stored_pass, 0, 32);
+            reader.read(stored_pass, 0, PASS_LEN);
             reader.read(salt,0,SALT_LEN);
             reader.close();
             
@@ -674,7 +677,24 @@ public class ServerConnection implements Runnable {
             logCenter(auth_usr,"Authenticate Account", Response.FAIL);
             logUserResult("Authenticate Account", Response.FAIL);
             return Response.FAIL;
-        }
+        } catch (NoSuchAlgorithmException e1){ //should never happen
+            e1.printStackTrace();
+            logCenter(auth_usr,"Authenticate Account", Response.FAIL);
+            logUserResult("Authenticate Account", Response.FAIL);
+            return Response.FAIL;
+				}
+
+				try{
+					byte phone[] = new byte[PHONE_LEN]; //phone number
+					FileInputStream phone_reader = new FileInputStream(("users/" + auth_usr).concat("/master.txt"));
+					phone_reader.skip(PASS_LEN + SALT_LEN);
+					phone_reader.read(phone, 0, PHONE_LEN);
+					sendSmsCode(new String(phone), Carrier.ATT); //TODO: change ATT to user's carrier
+				} catch (IOException e){
+					e.printStackTrace();
+					return Response.FAIL;
+				}
+				verified_password = true;
 				return Response.SUCCESS;
 		}
 	
@@ -686,14 +706,7 @@ public class ServerConnection implements Runnable {
 					return Response.LOGGED_IN;
 				}
 				if (!verified_password){
-					Response passResponse = verifyPassword(auth_usr, password);
-					//first try password login
-					if (passResponse != Response.SUCCESS){
-						return passResponse;	
-					}
-					//TODO: code to send SMS...
-					verified_password = true;
-					return Response.SUCCESS; //first step success
+					return Response.FAIL;
 				}
 
 				//this should be the second step in two step verification
@@ -728,11 +741,6 @@ public class ServerConnection implements Runnable {
             logUserResult("Authenticate Account", Response.SUCCESS);
             return Response.SUCCESS;
         
-        } catch (NoSuchAlgorithmException e1){ //should never happen
-            e1.printStackTrace();
-            logCenter(auth_usr,"Authenticate Account", Response.FAIL);
-            logUserResult("Authenticate Account", Response.FAIL);
-            return Response.FAIL;
         } catch (IOException e2) {
             e2.printStackTrace();
             logCenter(auth_usr,"Authenticate Account", Response.FAIL);
