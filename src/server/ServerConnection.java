@@ -291,9 +291,11 @@ public class ServerConnection implements Runnable {
                         case "RGST":
                             String regName = req.getString("username");
                             String regPass = req.getString("password");
-														String phone = req.getString("phone");
+                            String email = req.getString("email");
+                            String carrier = req.getString("carrier");
+                            String phone = req.getString("phone");
+                            resp = createAccount(regName, regPass, phone, carrier);
 
-                            resp = createAccount(regName, regPass, phone);
                             js.object()
                                 .key("response").value(resp.name())
                                 .endObject();
@@ -431,7 +433,7 @@ public class ServerConnection implements Runnable {
      * Assumes: username and password are not null
      * Assumes: username and password are valid (we haven't defined valid yet)
      * TODO: talk to audit server to create new log for this user upon success*/
-    protected Response createAccount(String new_usr, String password, String phone) {
+    protected Response createAccount(String new_usr, String password, String phone, String carrier) {
         if (!checkInput(new String[]{new_usr, password})){
             return Response.WRONG_INPT;
         }
