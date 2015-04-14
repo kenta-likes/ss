@@ -177,9 +177,50 @@ public class Client {
         sockJS = new JSONWriter(sockWriter);
         
         sockJS.object()
+            .key("command").value("LGIN")
+            .key("username").value(username)
+            .key("password").value(hashedPassword)
+            .endObject();
+        sockWriter.println();
+        sockWriter.flush();
+
+        try {
+            respPacket = new JSONObject(sockReader.readLine());
+        	
+        	//test:
+        	//String s = sockReader.readLine();
+        	//System.out.println("socket says:"+s);
+        	//respPacket =  new JSONObject(s);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return Response.FAIL;
+        }
+        err = responseFromString(respPacket.getString("response"));
+        return err;
+    }
+    
+    /* Login with the master username/password set. */
+    protected static Response auth(String username, char[] password, String code) {
+        JSONObject respPacket = null;
+        Response err;
+        byte hashedPassword[];
+        byte passwordBytes[] = charToBytes(password);
+        try {
+			MessageDigest digest = MessageDigest.getInstance("SHA-256");
+			digest.update(passwordBytes);
+			hashedPassword = digest.digest();
+		} catch (NoSuchAlgorithmException e1) {
+			e1.printStackTrace();
+			return Response.FAIL;
+		}
+        
+        sockJS = new JSONWriter(sockWriter);
+        
+        sockJS.object()
             .key("command").value("ATHN")
             .key("username").value(username)
             .key("password").value(hashedPassword)
+            .key("code").value(code)
             .endObject();
         sockWriter.println();
         sockWriter.flush();

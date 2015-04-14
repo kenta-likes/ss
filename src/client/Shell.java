@@ -100,11 +100,33 @@ public class Shell {
 
         err = Client.login(username, password);
 
+        
+
+        printErr(err);
+        if (err == Response.SUCCESS)
+        	handleAuth(username, password);
+        else
+        {
+        	/* Clear the password from memory. */
+            java.util.Arrays.fill(password, ' ');
+        }
+        return 0;
+    }
+    
+    private static int handleAuth(String username, char[] password) {
+        Response err;
+        
+        username = con.readLine("Username: ");
+        
+        password = con.readPassword("Password: ");
+        String code = con.readLine("2-factor Authentication Code: ");
+        
+        err = Client.auth(username, password, code);
+
         /* Clear the password from memory. */
         java.util.Arrays.fill(password, ' ');
 
         printErr(err);
-
         return 0;
     }
 
