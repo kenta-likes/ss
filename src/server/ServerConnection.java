@@ -270,7 +270,7 @@ public class ServerConnection implements Runnable {
 							authName = req.getString("username");
 							authPass = req.getString("password");
 							resp = verifyPassword(authName, authPass);
-							
+
 							js.object().key("response").value(resp.name())
 									.endObject();
 							break;
@@ -640,66 +640,68 @@ public class ServerConnection implements Runnable {
 
 		return intCode;
 
-    }
+	}
 
-		protected Response verifyPassword(String auth_usr, String password){
-        if (!checkInput(new String[]{auth_usr, password})){
-            return Response.WRONG_INPT;
-        }
-        if (!this.checkUsernameFormat(auth_usr)){
-            return Response.BAD_FORMAT;
-        }
-        // Note: Not thread-safe 
-        if ( !(new File("users/" + auth_usr).isDirectory())){
-        	// Logging
-        	logCenter(auth_usr,"Authenticate Account", Response.WRONG_INPT);
-            return Response.WRONG_INPT;
-        }
-        
-        byte salt[] = new byte[SALT_LEN];
-        byte stored_pass[] = new byte[PASS_LEN];
-        FileInputStream reader;
-        try {
-            reader = new FileInputStream(("users/" + auth_usr).concat("/master.txt"));
-            reader.read(stored_pass, 0, PASS_LEN);
-            reader.read(salt,0,SALT_LEN);
-            reader.close();
-            
-            byte[] hashedpassword = saltAndHash(password, salt);
-            if (!Arrays.equals(hashedpassword,stored_pass)){
-            	// Logging
-            	logCenter(auth_usr, "Authenticate Account", Response.WRONG_INPT);
-                logUserResult("Authenticate Account", Response.WRONG_INPT);
-                return Response.WRONG_INPT;
-            }
-        } catch (IOException e2) {
-            e2.printStackTrace();
-            logCenter(auth_usr,"Authenticate Account", Response.FAIL);
-            logUserResult("Authenticate Account", Response.FAIL);
-            return Response.FAIL;
-        } catch (NoSuchAlgorithmException e1){ //should never happen
-            e1.printStackTrace();
-            logCenter(auth_usr,"Authenticate Account", Response.FAIL);
-            logUserResult("Authenticate Account", Response.FAIL);
-            return Response.FAIL;
-				}
-				//password is now verified, send the SMS message
-				try{
-					byte phone[] = new byte[PHONE_LEN]; //phone number
-					int carrier; //hold the carrier info
-					FileInputStream phone_reader = new FileInputStream(("users/" + auth_usr).concat("/master.txt"));
-					phone_reader.skip(PASS_LEN + SALT_LEN);
-					phone_reader.read(phone, 0, PHONE_LEN);
-					carrier = phone_reader.read(); //use this later
-					two_step_code = Integer.toString(sendSmsCode(new String(phone), Carrier.ATT)); //TODO: change ATT to user's carrier
-				} catch (IOException e){
-					e.printStackTrace();
-					return Response.FAIL;
-				}
-				verified_password = true;
-				return Response.SUCCESS;
+	protected Response verifyPassword(String auth_usr, String password) {
+		if (!checkInput(new String[] { auth_usr, password })) {
+			return Response.WRONG_INPT;
 		}
-	
+		if (!this.checkUsernameFormat(auth_usr)) {
+			return Response.BAD_FORMAT;
+		}
+		// Note: Not thread-safe
+		if (!(new File("users/" + auth_usr).isDirectory())) {
+			// Logging
+			logCenter(auth_usr, "Authenticate Account", Response.WRONG_INPT);
+			return Response.WRONG_INPT;
+		}
+
+		byte salt[] = new byte[SALT_LEN];
+		byte stored_pass[] = new byte[PASS_LEN];
+		FileInputStream reader;
+		try {
+			reader = new FileInputStream(
+					("users/" + auth_usr).concat("/master.txt"));
+			reader.read(stored_pass, 0, PASS_LEN);
+			reader.read(salt, 0, SALT_LEN);
+			reader.close();
+
+			byte[] hashedpassword = saltAndHash(password, salt);
+			if (!Arrays.equals(hashedpassword, stored_pass)) {
+				// Logging
+				logCenter(auth_usr, "Authenticate Account", Response.WRONG_INPT);
+				logUserResult("Authenticate Account", Response.WRONG_INPT);
+				return Response.WRONG_INPT;
+			}
+		} catch (IOException e2) {
+			e2.printStackTrace();
+			logCenter(auth_usr, "Authenticate Account", Response.FAIL);
+			logUserResult("Authenticate Account", Response.FAIL);
+			return Response.FAIL;
+		} catch (NoSuchAlgorithmException e1) { // should never happen
+			e1.printStackTrace();
+			logCenter(auth_usr, "Authenticate Account", Response.FAIL);
+			logUserResult("Authenticate Account", Response.FAIL);
+			return Response.FAIL;
+		}
+		// password is now verified, send the SMS message
+		try {
+			byte phone[] = new byte[PHONE_LEN]; // phone number
+			int carrier; // hold the carrier info
+			FileInputStream phone_reader = new FileInputStream(
+					("users/" + auth_usr).concat("/master.txt"));
+			phone_reader.skip(PASS_LEN + SALT_LEN);
+			phone_reader.read(phone, 0, PHONE_LEN);
+			carrier = phone_reader.read(); // use this later
+			two_step_code = Integer.toString(sendSmsCode(new String(phone),
+					Carrier.ATT)); // TODO: change ATT to user's carrier
+		} catch (IOException e) {
+			e.printStackTrace();
+			return Response.FAIL;
+		}
+		verified_password = true;
+		return Response.SUCCESS;
+	}
 
 	/*
 	 * Authenticate user to system
@@ -711,9 +713,8 @@ public class ServerConnection implements Runnable {
 		if (!verified_password) {
 			return Response.FAIL;
 		}
-
 		// this should be the second step in two step verification
-		if (this.two_step_code != code) {
+		if (!this.two_step_code.equals(code)) {
 			return Response.BAD_CODE;
 		}
 
