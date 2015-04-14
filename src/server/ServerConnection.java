@@ -639,8 +639,10 @@ public class ServerConnection implements Runnable {
 		}
 
 		return intCode;
+    }
 
-	}
+	
+
 
 	protected Response verifyPassword(String auth_usr, String password) {
 		if (!checkInput(new String[] { auth_usr, password })) {
