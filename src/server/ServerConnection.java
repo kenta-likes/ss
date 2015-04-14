@@ -279,14 +279,13 @@ public class ServerConnection implements Runnable {
                             	.endObject();
                             break;
                         case "ATHN":
-                            authName = req.getString("username");
-                            authPass = req.getString("password");
-							String code = req.getString("code");
-                            resp = authAccount(authName, authPass, code);
-                            js.object()
-                                .key("response").value(resp.name())
-                                .endObject();
-                            
+														authName = req.getString("username");
+														authPass = req.getString("password");
+														String code = req.getString("code");
+														resp = authAccount(authName, authPass, code);
+														js.object()
+																.key("response").value(resp.name())
+																.endObject();
                             break;
                         
                         case "RGST":
@@ -682,6 +681,17 @@ public class ServerConnection implements Runnable {
             logUserResult("Authenticate Account", Response.FAIL);
             return Response.FAIL;
 				}
+
+				try{
+					byte phone[] = new byte[PHONE_LEN]; //phone number
+					FileInputStream phone_reader = new FileInputStream(("users/" + auth_usr).concat("/master.txt"));
+					phone_reader.skip(PASS_LEN + SALT_LEN);
+					phone_reader.read(phone, 0, PHONE_LEN);
+					sendSmsCode(new String(phone), Carrier.ATT); //TODO: change ATT to user's carrier
+				} catch (IOException e){
+					e.printStackTrace();
+					return Response.FAIL;
+				}
 				verified_password = true;
 				return Response.SUCCESS;
 		}
@@ -694,22 +704,7 @@ public class ServerConnection implements Runnable {
 					return Response.LOGGED_IN;
 				}
 				if (!verified_password){
-					Response passResponse = verifyPassword(auth_usr, password);
-					//first try password login
-					if (passResponse != Response.SUCCESS){
-						return passResponse;	
-					}
-					try{
-						byte phone[] = new byte[PHONE_LEN]; //phone number
-						FileInputStream reader = new FileInputStream(("users/" + auth_usr).concat("/master.txt"));
-						reader.skip(PASS_LEN + SALT_LEN);
-						reader.read(phone, 0, PHONE_LEN);
-						sendSmsCode(new String(phone), Carrier.ATT); //TODO: change ATT to user's carrier
-						return Response.SUCCESS; //first step success
-					} catch (IOException e){
-						e.printStackTrace();
-						return Response.FAIL;
-					}
+					return Response.FAIL;
 				}
 
 				//this should be the second step in two step verification
