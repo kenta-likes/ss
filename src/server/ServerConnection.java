@@ -15,6 +15,7 @@ import javax.crypto.SecretKeyFactory;
 import javax.crypto.Mac;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
+import javax.crypto.KeyGenerator;
 
 import javax.xml.bind.DatatypeConverter;
 
@@ -459,6 +460,18 @@ public class ServerConnection implements Runnable {
             writer.flush();
             writer.close();
 
+            /* Create authentication key for logging. */
+            PrintWriter keyWriter = new PrintWriter(curr_dir.concat("/key.conf"));
+
+            KeyGenerator keyGen = KeyGenerator.getInstance("AES");
+            keyGen.init(128);
+            SecretKey authKey = keyGen.generateKey();
+
+            byte[] keyBytes = authKey.getEncoded();
+            keyWriter.println(DatatypeConverter.printBase64Binary(keyBytes));
+            keyWriter.flush();
+            keyWriter.close();
+
             /* create new file for credentials */
             PrintWriter creds_writer = new PrintWriter(
                                                        curr_dir.concat("/stored_credentials.txt"), "UTF-8");
@@ -561,10 +574,6 @@ public class ServerConnection implements Runnable {
         username = null;
         user_table = null;
         return Response.SUCCESS;
-    }
-
-    public static void main(String args[]) {
-        sendSmsCode("6082258090", Carrier.VERIZON);
     }
 
     /**
@@ -701,6 +710,23 @@ public class ServerConnection implements Runnable {
             return Response.FAIL;
         }
         verified_password = true;
+
+        /* Make sure there is a key for the user! */
+        try {
+            BufferedReader b = new BufferedReader(new FileReader(("users/" + auth_usr).concat("/key.conf")));
+            String encoded = b.readLine();
+
+            keyBytes = DatatypeConverter.parseBase64Binary(encoded);
+
+            SecretKeySpec keySpec = new SecretKeySpec(keyBytes, "AES");
+            SecretKeyFactory keyFactory = SecretKeyFactory.getInstance("AES/CBC/PKCS5Padding");
+            key = keyFactory.generateSecret(keySpec);
+        } catch (Exception e) {
+            e.printStackTrace();
+            verified_password = false;
+            return Response.FAIL;
+        }
+        
         return Response.SUCCESS;
     }
 
@@ -893,8 +919,8 @@ public class ServerConnection implements Runnable {
             md = MessageDigest.getInstance("SHA-1");
             encKeyBytes = md.digest(keyBytes);
 
-            keyFact = SecretKeyFactory.getInstance("AES/CBC/PKCS5Padding");
             encKeySpec = new SecretKeySpec(encKeyBytes, "AES");
+            keyFact = SecretKeyFactory.getInstance("AES/CBC/PKCS5Padding");
             encKey = keyFact.generateSecret(encKeySpec);
         
             encoder = Cipher.getInstance("AES/CBC/PKCS5Padding");
