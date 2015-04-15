@@ -427,10 +427,12 @@ public class ServerConnection implements Runnable {
      */
     protected Response createAccount(String new_usr, String password,
                                      String phone, String carrier) {
-        if (!checkInput(new String[] { new_usr, password })) {
+        if (!checkInput(new String[] { new_usr, password }) ) {
             return Response.WRONG_INPT;
         }
-        if (!this.checkUsernameFormat(new_usr)) {
+        if (!this.checkUsernameFormat(new_usr)
+              || !(phone.matches("[0-9]+") && phone.length() == 10)
+              || Integer.parseInt(carrier) < 0 || Integer.parseInt(carrier) > 2 ) {
             return Response.BAD_FORMAT;
         }
         // Directory already exists
@@ -451,11 +453,11 @@ public class ServerConnection implements Runnable {
         try {
             hashedpassword = saltAndHash(password, salt);
 
-            FileOutputStream writer = new FileOutputStream(
-                                                           curr_dir.concat("/master.txt"));
+            FileOutputStream writer = new FileOutputStream(curr_dir.concat("/master.txt"));
             writer.write(hashedpassword);
             writer.write(salt);
             writer.write(phone.getBytes("UTF-8"));
+            writer.write(carrier.getBytes("UTF-8"));
             writer.flush();
             writer.close();
 
@@ -697,13 +699,12 @@ public class ServerConnection implements Runnable {
         try {
             byte phone[] = new byte[PHONE_LEN]; // phone number
             int carrier; // hold the carrier info
-            FileInputStream phone_reader = new FileInputStream(
-                                                               ("users/" + auth_usr).concat("/master.txt"));
+            FileInputStream phone_reader = new FileInputStream(("users/" + auth_usr).concat("/master.txt"));
             phone_reader.skip(PASS_LEN + SALT_LEN);
             phone_reader.read(phone, 0, PHONE_LEN);
-            carrier = phone_reader.read(); // use this later
+            carrier = phone_reader.read() - '0'; // use this later
             two_step_code = Integer.toString(sendSmsCode(new String(phone),
-                                                         Carrier.ATT)); // TODO: change ATT to user's carrier
+                                                         Carrier.values()[carrier])); // TODO: change ATT to user's carrier
         } catch (IOException e) {
             e.printStackTrace();
             return Response.FAIL;
