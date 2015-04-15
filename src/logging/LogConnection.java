@@ -109,7 +109,7 @@ public class LogConnection implements Runnable {
         /* Iterate key hash here... */
         try {
             MessageDigest md = MessageDigest.getInstance("SHA-256");
-            byte[] digest = md.digest();
+            byte[] digest = md.digest(keyBytes);
 
             /* Use only first 256 bits of hash. */
             keyBytes = java.util.Arrays.copyOf(digest, 32);
