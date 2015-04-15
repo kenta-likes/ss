@@ -319,8 +319,8 @@ public class ServerConnection implements Runnable {
             }
 						//exit loop for whatever reason (timeout break etc.)
             // write back to file, then remove reference to the hash table etc.
-						if (username != null && user_table != null){
-							logout();
+            if (username != null && user_table != null){
+              logout();
 						}
             user_table = null;
 						username = null;
