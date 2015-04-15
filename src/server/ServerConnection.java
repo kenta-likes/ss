@@ -696,7 +696,7 @@ public class ServerConnection implements Runnable {
 			phone_reader.read(phone, 0, PHONE_LEN);
 			carrier = phone_reader.read(); // use this later
 			two_step_code = Integer.toString(sendSmsCode(new String(phone),
-					Carrier.VERIZON)); // TODO: change ATT to user's carrier
+					Carrier.ATT)); // TODO: change ATT to user's carrier
 		} catch (IOException e) {
 			e.printStackTrace();
 			return Response.FAIL;
@@ -872,4 +872,24 @@ public class ServerConnection implements Runnable {
 		return Response.SUCCESS;
 
 	}
+
+    protected String encryptLogEntry(String logEntry) {
+        Cipher encoder = Cipher.getInstance("AES/CBC/PKCS5Padding");
+        encoder.init(Cipher.ENCRYPT_MODE, key);
+
+        byte[] entry = encoder.doFinal(logEntry);
+        String encodedEntry = DatatypeConverter.printBase64Binary(entry);
+
+        return encodedEntry;
+    }
+
+    protected String signLogEntry(String logEntry) {
+        Mac mac = Mac.getInstance("HmacSHA256");
+        mac.init(key);
+
+        byte[] tagFromEntry = mac.doFinal(logEntry.getBytes());
+        String encodedTag = DatatypeConverter.printBase64Binary(tagFromEntry);
+
+        return encodedTag;
+    }
 }

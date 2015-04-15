@@ -356,6 +356,7 @@ public class Client {
                 KeySpec spec = new PBEKeySpec(password, salt, 65536, 256);
                 SecretKey tmp = keyFact.generateSecret(spec);
                 key = new SecretKeySpec(tmp.getEncoded(), "AES");
+
                 encoder = Cipher.getInstance("AES/CBC/PKCS5Padding");
                 encoder.init(Cipher.ENCRYPT_MODE, key, ivSpec);
 

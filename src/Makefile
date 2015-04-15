@@ -8,9 +8,12 @@ server: json server/Server.java server/ServerConnection.java util/Pair.java util
 client: json client/Client.java client/Shell.java util/Pair.java util/Response.java
 	javac client/Client.java client/Shell.java util/Pair.java util/Response.java
 
-default: server client
+logging: json logging/LogServer.java logging/LogConnection.java util/Pair.java util/Response.java
+	 javac logging/LogServer.java logging/LogConnection.java util/Pair.java util/Response.java
+
+default: server client logging
 
 clean:
-	rm server/*.class client/*.class org/json/*.class util/*.class
+	rm server/*.class client/*.class org/json/*.class util/*.class logging/*.class
 
-all: server client json
+all: server client logging json
