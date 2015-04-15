@@ -57,11 +57,12 @@ public class Client {
             TrustManagerFactory tmf = TrustManagerFactory.getInstance("SunX509");
             tmf.init(keystore);
 
-            SSLContext context = SSLContext.getInstance("TLS");
+            SSLContext context = SSLContext.getInstance("TLSv1.2");
             TrustManager[] trustManagers = tmf.getTrustManagers();
             context.init(null, trustManagers, new SecureRandom());
             SSLSocketFactory sf = context.getSocketFactory();
             SSLSocket c = (SSLSocket)sf.createSocket(HOSTNAME, 8888);
+						c.setEnabledCipherSuites(Consts.ACCEPTED_SUITES);
             c.startHandshake();
 
             sockReader = new BufferedReader(new InputStreamReader(c.getInputStream()));

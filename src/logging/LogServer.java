@@ -5,6 +5,7 @@ import javax.net.ssl.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.security.*;
+import util.Consts.*;
 
 public class LogServer {
 

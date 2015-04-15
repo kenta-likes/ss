@@ -34,6 +34,7 @@ import java.io.File;
 import util.Carrier;
 import util.Pair;
 import util.Response;
+import util.Consts;
 
 import java.util.*;
 
@@ -96,37 +97,34 @@ public class ServerConnection implements Runnable {
 
     public void run() {
         try {
-            /*
-             * //set up connection with audit server String ksName =
-             * System.getProperty("user.dir")+"/server/audit_ts.jks"; //server
-             * side truststore char passphrase[] =
-             * "systemsecurity".toCharArray(); KeyStore keystore =
-             * KeyStore.getInstance("JKS"); keystore.load(new
-             * FileInputStream(ksName), passphrase); TrustManagerFactory tmf =
-             * TrustManagerFactory.getInstance("SunX509"); tmf.init(keystore);
-             * 
-             * SSLContext context = SSLContext.getInstance("TLS");
-             * TrustManager[] trustManagers = tmf.getTrustManagers();
-             * context.init(null, trustManagers, new SecureRandom());
-             * SSLSocketFactory sf = context.getSocketFactory(); SSLSocket
-             * audit_socket = (SSLSocket)sf.createSocket(HOSTNAME,
-             * 7777);//changed from 8888 audit_socket.startHandshake();
-             * 
-             * //writer/reader for comm with audit server audit_reader = new
-             * BufferedReader(new
-             * InputStreamReader(audit_socket.getInputStream())); audit_writer =
-             * new PrintWriter(audit_socket.getOutputStream(), true);
-             */
+						//set up connection with audit server
+						/*
+						String ksName = "audit_ts.jks"; //server
+						char passphrase[] = "systemsecurity".toCharArray();
+						KeyStore keystore = KeyStore.getInstance("JKS");
+						keystore.load(new FileInputStream(ksName), passphrase);
+						TrustManagerFactory tmf = TrustManagerFactory.getInstance("SunX509");
+						tmf.init(keystore);
+						
+						SSLContext context = SSLContext.getInstance("TLS");
+						TrustManager[] trustManagers = tmf.getTrustManagers();
+						context.init(null, trustManagers, new SecureRandom());
+						SSLSocketFactory sf = context.getSocketFactory();
+						SSLSocket audit_socket = (SSLSocket)sf.createSocket(HOSTNAME, 7777);
+						//changed from 8888
+						audit_socket.startHandshake();
+						
+						//writer/reader for comm with audit server
+						audit_reader = new BufferedReader(new InputStreamReader(audit_socket.getInputStream()));
+						audit_writer = new PrintWriter(audit_socket.getOutputStream(), true);
+						*/
 
-            // writer/reader for comm with client
-            BufferedWriter w = new BufferedWriter(new OutputStreamWriter(
-                                                                         socket.getOutputStream()));
+            // writer,reader for comm with client
+            BufferedWriter w = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
             JSONWriter js;
-            BufferedReader r = new BufferedReader(new InputStreamReader(
-                                                                        socket.getInputStream()));
+            BufferedReader r = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             String m, command;
-            JSONObject req;
-            String authName;
+            JSONObject req; String authName;
             String authPass;
             Response resp;
             while (true) {

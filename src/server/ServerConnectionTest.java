@@ -14,7 +14,6 @@ public class ServerConnectionTest {
      * All of these functions are protected and only called by the server loop. They work with
      * assumptions on input/state that are written under each of the specs.
      * */
-
 	@Test
 	public void testLog_Center() {
 		ServerConnection sc = new ServerConnection(null);
@@ -30,7 +29,7 @@ public class ServerConnectionTest {
     	ServerConnection sc = new ServerConnection(null);
     	try{
     		// case0. invalid inputs
-    		assertEquals(Response.BAD_FORMAT, sc.createAccount("fo/ o", "helloworld"));
+    		assertEquals(Response.BAD_FORMAT, sc.createAccount("fo/ o", "helloworld", "abc", "abc"));
     		
     		// case1. success
     		assertEquals(Response.SUCCESS, sc.createAccount("foo", "helloworld"));
