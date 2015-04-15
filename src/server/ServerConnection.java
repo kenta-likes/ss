@@ -131,182 +131,174 @@ public class ServerConnection implements Runnable {
                 while ((m = r.readLine()) != null) {
                     js = new JSONWriter(w);
                     req = new JSONObject(m);
-										try {
-											command = req.getString("command");
+            try {
+                command = req.getString("command");
+                // check for authenticated user
+                // System.out.println("ServerConnection: command="
+                // +command);
+                if (username != null) {
+                    switch (command) {
+                    case "ATHN":
+                    case "RGST":
+                      js.object().key("response").value(Response.DUP_LOGIN).endObject();
+                    break;
+                    case "ADD":
+                        String service = req.getString("service");
+                        String sName = req.getString("username");
+                        String sPass = req.getString("password");
+                        String sMac = req.getString("mac");
+                        js.object()
+                          .key("response")
+                          .value(addCredential(service, sName, sPass,
+                                               sMac).name()).endObject();
+                        break;
+                    case "GET1":
+                        ArrayList<String> creds;
+                        Pair<Response, ArrayList<String>> pair = retrieveCredentials();
+                        resp = pair.first();
+                        creds = pair.second();
+                        js.object().key("response").value(resp.name());
+                        if (resp == Response.SUCCESS) {
+                            js.key("data").object().key("credentials")
+                                .array();
 
-											// check for authenticated user
-											// System.out.println("ServerConnection: command="
-											// +command);
-											if (username != null) {
+                            for (String s : creds)
+                                js.value(s);
 
-													switch (command) {
+                            js.endArray();
 
-													case "ATHN":
-													case "RGST":
-															js.object().key("response")
-															.value(Response.DUP_LOGIN).endObject();
-													break;
+                            js.endObject();
+                        }
+                        js.endObject();
+                        break;
 
-													case "ADD":
-															String service = req.getString("service");
-															String sName = req.getString("username");
-															String sPass = req.getString("password");
-															String sMac = req.getString("mac");
-															js.object()
-																	.key("response")
-																	.value(addCredential(service, sName, sPass,
-																											 sMac).name()).endObject();
-															break;
-													case "GET1":
-															ArrayList<String> creds;
-															Pair<Response, ArrayList<String>> pair = retrieveCredentials();
-															resp = pair.first();
-															creds = pair.second();
+                    case "GET2":
+                        Pair<Response, Triple<String, String, String>> cred;
+                        service = req.getString("service");
+                        cred = getPassword(service);
+                        resp = cred.first();
+                        if (resp == Response.SUCCESS) {
+                            js.object().key("response").value(resp.name())
+                                .key("username")
+                                .value(cred.second().first())
+                                .key("password")
+                                .value(cred.second().second())
+                                .key("mac")
+                                .value(cred.second().third())
+                                .endObject();
+                        } else {
+                            js.object().key("response").value(resp.name())
+                                .key("username").value("")
+                                .key("password").value("").key("mac")
+                                .value("").endObject();
+                        }
+                        break;
 
-															js.object().key("response").value(resp.name());
+                    case "DEL":
+                        String password = req.getString("password");
+                        resp = deleteAccount(password);
 
-															if (resp == Response.SUCCESS) {
-																	js.key("data").object().key("credentials")
-																			.array();
+                        js.object().key("response").value(resp.name())
+                            .endObject();
 
-																	for (String s : creds)
-																			js.value(s);
+                        break;
 
-																	js.endArray();
+                    case "CHNG":
+                        String oldPass = req.getString("oldPassword");
+                        String newPass = req.getString("newPassword");
+                        resp = changeAccountPassword(oldPass, newPass);
 
-																	js.endObject();
-															}
+                        js.object().key("response").value(resp.name())
+                            .endObject();
+                        break;
 
-															js.endObject();
-															break;
+                    case "REMV":
+                        service = req.getString("service");
+                        resp = deleteCredential(service);
+                        js.object().key("response").value(resp.name())
+                            .endObject();
+                        break;
 
-													case "GET2":
-															Pair<Response, Triple<String, String, String>> cred;
-															service = req.getString("service");
-															cred = getPassword(service);
-															resp = cred.first();
-															if (resp == Response.SUCCESS) {
-																	js.object().key("response").value(resp.name())
-																			.key("username")
-																			.value(cred.second().first())
-																			.key("password")
-																			.value(cred.second().second())
-																			.key("mac")
-																			.value(cred.second().third())
-																			.endObject();
-															} else {
-																	js.object().key("response").value(resp.name())
-																			.key("username").value("")
-																			.key("password").value("").key("mac")
-																			.value("").endObject();
-															}
-															break;
+                    case "EDIT":
+                        service = req.getString("service");
+                        sName = req.getString("username");
+                        sPass = req.getString("password");
+                        sMac = req.getString("mac");
+                        resp = updateCredential(service, sName, sPass, sMac);
 
-													case "DEL":
-															String password = req.getString("password");
-															resp = deleteAccount(password);
+                        js.object().key("response").value(resp.name())
+                            .endObject();
 
-															js.object().key("response").value(resp.name())
-																	.endObject();
+                        break;
 
-															break;
+                    case "CLOSE":
+                        resp = logout();
+                        js.object().key("response").value(resp.name())
+                            .endObject();
 
-													case "CHNG":
-															String oldPass = req.getString("oldPassword");
-															String newPass = req.getString("newPassword");
-															resp = changeAccountPassword(oldPass, newPass);
+                        if (resp == Response.SUCCESS) {
+                            w.newLine();
+                            w.flush();
+                            socket.close();
+                            return;
+                        }
 
-															js.object().key("response").value(resp.name())
-																	.endObject();
-															break;
+                    default:
+                        // System.out.println("username is not null: command is "+command);
+                        // TODO: this is a stub to prevent json from
+                        // breaking
+                        js.object().key("response").value("NAUTH")
+                            .endObject();
+                    }
 
-													case "REMV":
-															service = req.getString("service");
-															resp = deleteCredential(service);
-															js.object().key("response").value(resp.name())
-																	.endObject();
-															break;
+                    w.newLine();
+                    w.flush();
 
-													case "EDIT":
-															service = req.getString("service");
-															sName = req.getString("username");
-															sPass = req.getString("password");
-															sMac = req.getString("mac");
-															resp = updateCredential(service, sName, sPass, sMac);
+                } else { // only allow registration or authentication
+                    switch (command) {
+                    case "LGIN":
+                        authName = req.getString("username");
+                        authPass = req.getString("password");
+                        resp = verifyPassword(authName, authPass);
 
-															js.object().key("response").value(resp.name())
-																	.endObject();
+                        js.object().key("response").value(resp.name())
+                            .endObject();
+                        break;
+                    case "ATHN":
+                        authName = req.getString("username");
+                        authPass = req.getString("password");
+                        String code = req.getString("code");
+                        resp = authAccount(authName, authPass, code);
+                        js.object().key("response").value(resp.name())
+                            .endObject();
+                        break;
 
-															break;
+                    case "RGST":
+                        String regName = req.getString("username");
+                        String regPass = req.getString("password");
+                        String email = req.getString("email");
+                        String carrier = req.getString("carrier");
+                        String phone = req.getString("phone");
+                        resp = createAccount(regName, regPass, phone,
+                                             carrier);
 
-													case "CLOSE":
-															resp = logout();
-															js.object().key("response").value(resp.name())
-																	.endObject();
+                        js.object().key("response").value(resp.name())
+                            .endObject();
 
-															if (resp == Response.SUCCESS) {
-																	w.newLine();
-																	w.flush();
-																	socket.close();
-																	return;
-															}
-
-													default:
-															// System.out.println("username is not null: command is "+command);
-															// TODO: this is a stub to prevent json from
-															// breaking
-															js.object().key("response").value("NAUTH")
-																	.endObject();
-													}
-
-													w.newLine();
-													w.flush();
-
-											} else { // only allow registration or authentication
-													switch (command) {
-													case "LGIN":
-															authName = req.getString("username");
-															authPass = req.getString("password");
-															resp = verifyPassword(authName, authPass);
-
-															js.object().key("response").value(resp.name())
-																	.endObject();
-															break;
-													case "ATHN":
-															authName = req.getString("username");
-															authPass = req.getString("password");
-															String code = req.getString("code");
-															resp = authAccount(authName, authPass, code);
-															js.object().key("response").value(resp.name())
-																	.endObject();
-															break;
-
-													case "RGST":
-															String regName = req.getString("username");
-															String regPass = req.getString("password");
-															String email = req.getString("email");
-															String carrier = req.getString("carrier");
-															String phone = req.getString("phone");
-															resp = createAccount(regName, regPass, phone,
-																									 carrier);
-
-															js.object().key("response").value(resp.name())
-																	.endObject();
-
-															break;
-													case "CLOSE":
-															logout();
-															js.object().key("response").value("SUCCESS")
-																	.endObject();
-															break;
-													default:
-															js.object().key("response").value("NAUTH")
-																	.endObject();
-													}
-													w.newLine();
-													w.flush();
-											}
-										} catch (JSONException je){
+                        break;
+                    case "CLOSE":
+                        logout();
+                        js.object().key("response").value("SUCCESS")
+                            .endObject();
+                        break;
+                    default:
+                        js.object().key("response").value("NAUTH")
+                            .endObject();
+                    }
+                    w.newLine();
+                    w.flush();
+                }
+            } catch (JSONException je){
 											je.printStackTrace(); //catch, then move on...
 											js.object().key("response").value("BAD_FORMAT").endObject();//send fail to client
 											w.newLine();
