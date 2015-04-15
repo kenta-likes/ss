@@ -900,6 +900,7 @@ public class ServerConnection implements Runnable {
             encoder = Cipher.getInstance("AES/CBC/PKCS5Padding");
             encoder.init(Cipher.ENCRYPT_MODE, encKey);
 
+            /* XXX TODO: what do we do about IV?? */
             entry = encoder.doFinal(logEntry.getBytes());
         
             /* Return the bytes encoded in Base64 format for easy printing. */
