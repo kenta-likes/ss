@@ -388,11 +388,9 @@ public class Client {
         try {
 			Mac mac = Mac.getInstance("HmacSHA256");
 			mac.init(key);
-			mac.update(service.getBytes());
-			mac.update(username.getBytes());
-			mac.update(password.getBytes());
-			System.out.println(service + ", " + username + ", " + password);
+			mac.update((service + username + password).getBytes());
 			code = mac.doFinal();
+			System.out.println((service + username + password).getBytes());
 		} catch (Exception e1) {
 			e1.printStackTrace();
 			return Response.FAIL;
@@ -404,6 +402,7 @@ public class Client {
             .key("password").value(encPass)
             .key("mac").value(new String(code))
             .endObject();
+        System.out.println(password.toCharArray());
         sockWriter.println();
         sockWriter.flush();
         
@@ -487,14 +486,13 @@ public class Client {
                 try {
         			Mac mac_compute = Mac.getInstance("HmacSHA256");
         			mac_compute.init(key);
-        			mac_compute.update(service.getBytes());
-        			mac_compute.update(username.getBytes());
-        			mac_compute.update(charToBytes(justPass));
-        			System.out.println(service + ", " + username + ", " + new String(justPass));
+        			mac_compute.update((service + username + new String(justPass)).getBytes());
+        			System.out.println((service + username + new String(justPass)).getBytes());
         			code = mac_compute.doFinal();
         			computedMac = new String(code);
         			if (!computedMac.equals(mac))
         			{
+        				System.out.println(computedMac + "   ,   " + mac);
         				return new Pair<Response, Pair<String, char[]>>(Response.MAC, null);
         			}
         		} catch (Exception e1) {
