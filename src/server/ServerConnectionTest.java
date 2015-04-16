@@ -32,10 +32,10 @@ public class ServerConnectionTest {
     		assertEquals(Response.BAD_FORMAT, sc.createAccount("fo/ o", "helloworld", "abc", "abc"));
     		
     		// case1. success
-    		assertEquals(Response.SUCCESS, sc.createAccount("foo", "helloworld", "4083107790", "1"));
+    		assertEquals(Response.SUCCESS, sc.createAccount("foo", "helloworld", "0003107790", "1"));
     		
     		// case2. try to create a duplicate account
-    		assertEquals(Response.USER_EXISTS, sc.createAccount("foo", "helloworld", "4083107790", "1"));
+    		assertEquals(Response.USER_EXISTS, sc.createAccount("foo", "helloworld", "0003107790", "1"));
 
             //login
             assertEquals(Response.SUCCESS, sc.verifyPassword("foo", "helloworld"));
@@ -51,7 +51,7 @@ public class ServerConnectionTest {
 		ServerConnection sc = new ServerConnection(null);
 		
 		try{
-    		assertEquals(Response.SUCCESS, sc.createAccount("kjd88", "test", "4083107790", "1"));
+    		assertEquals(Response.SUCCESS, sc.createAccount("kjd88", "test", "0003107790", "1"));
 
     		// 2. login
             assertEquals(Response.SUCCESS, sc.verifyPassword("kjd88", "test"));
@@ -78,7 +78,7 @@ public class ServerConnectionTest {
     	// 1. Create an account
     	ServerConnection sc = new ServerConnection(null);
         try {
-    		assertEquals(Response.SUCCESS, sc.createAccount("kl459", "kenta", "4083107790", "1"));
+    		assertEquals(Response.SUCCESS, sc.createAccount("kl459", "kenta", "0003107790", "1"));
 
             // 2. login
             assertEquals(Response.SUCCESS, sc.verifyPassword("kl459", "kenta"));
@@ -99,7 +99,7 @@ public class ServerConnectionTest {
 		ServerConnection sc = new ServerConnection(null);
 		try {
 		    //create account
-            assertEquals(Response.SUCCESS, sc.createAccount("cs794", "helloworld", "4083107790", "1"));
+            assertEquals(Response.SUCCESS, sc.createAccount("cs794", "helloworld", "0003107790", "1"));
             //test auth with wrong password, correct username
     		assertEquals(Response.WRONG_INPT, sc.verifyPassword("cs794", "halloworld"));
     		//test auth with wrong username, correct password
@@ -123,7 +123,7 @@ public class ServerConnectionTest {
 		ServerConnection sc = new ServerConnection(null);
 		try {
 		    //create account
-            assertEquals(Response.SUCCESS, sc.createAccount("foo1", "test", "4083107790", "1"));
+            assertEquals(Response.SUCCESS, sc.createAccount("foo1", "test", "0003107790", "1"));
             
             //login
             assertEquals(Response.SUCCESS, sc.verifyPassword("foo1", "test"));
@@ -166,7 +166,7 @@ public class ServerConnectionTest {
 		ServerConnection sc = new ServerConnection(null);
 		try {
 		    //create account
-            assertEquals(Response.SUCCESS, sc.createAccount("foo2", "test", "4083107790", "1"));
+            assertEquals(Response.SUCCESS, sc.createAccount("foo2", "test", "0003107790", "1"));
             
             //case1. retrieve a credential that does not exist
             Pair<String, String> cred = null;
@@ -195,7 +195,7 @@ public class ServerConnectionTest {
         ServerConnection sc = new ServerConnection(null);
         try {
             //create account Note: this logins the user
-            assertEquals(Response.SUCCESS, sc.createAccount("foobar", "baz", "4083107790", "1"));
+            assertEquals(Response.SUCCESS, sc.createAccount("foobar", "baz", "0003107790", "1"));
 
             // 2. login
             assertEquals(Response.SUCCESS, sc.verifyPassword("foobar", "baz"));
@@ -242,7 +242,7 @@ public class ServerConnectionTest {
 		ServerConnection sc = new ServerConnection(null);
         try {
         	//create account and add a credential Note: this logins the user
-            assertEquals(Response.SUCCESS, sc.createAccount("foo", "test", "4083107790", "1"));
+            assertEquals(Response.SUCCESS, sc.createAccount("foo", "test", "0003107790", "1"));
             
             // 2. login
             assertEquals(Response.SUCCESS, sc.verifyPassword("foo", "test"));
@@ -270,7 +270,7 @@ public class ServerConnectionTest {
         ServerConnection sc = new ServerConnection(null);
         try {
             //create account Note: this logins the user
-            assertEquals(Response.SUCCESS, sc.createAccount("foobar", "baz", "4083107790", "1"));
+            assertEquals(Response.SUCCESS, sc.createAccount("foobar", "baz", "0003107790", "1"));
 
             // 2. login
             assertEquals(Response.SUCCESS, sc.verifyPassword("foobar", "baz"));
