@@ -1,8 +1,11 @@
 package client;
 
 import util.*;
+
 import java.io.Console;
 import java.util.List;
+
+import password.PasswordClassifier;
 
 public class Shell {
     private static Console con;
@@ -132,12 +135,18 @@ public class Shell {
         Response err;
         boolean samePassword = true, containsComma = false, validCarrier = true;
         int c, p;
+        PasswordClassifier passTest = new PasswordClassifier();
         username = con.readLine("Username: ");
         password0 = con.readPassword("Password: ");
         password1 = con.readPassword("Verify password: ");
+        while (!(passTest.isStrong(new String(password0))))
+        {
+        	password0 = con.readPassword("That password is too weak. Please use a more complex password: ");
+        	password1 = con.readPassword("Verify password: ");
+        }
         email = con.readLine("Email: ");
         phone = con.readLine("10 digit phone number (e.g. 4081234567): ");
-					while (!(phone.matches("[0-9]+") && phone.length() == 10)) {
+		while (!(phone.matches("[0-9]+") && phone.length() == 10)) {
         	phone = con.readLine("Bad format. Please try again: ");
 					}
         carrier = con.readLine("Carrier (0 = Verizon, 1 = AT&T, 2 = Sprint): ");

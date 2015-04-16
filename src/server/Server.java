@@ -25,7 +25,7 @@ public class Server {
 			 	sc.init(kmf.getKeyManagers(), null, new SecureRandom());
 			 	SSLServerSocketFactory ssf = sc.getServerSocketFactory();
 			 	SSLServerSocket s = (SSLServerSocket) ssf.createServerSocket(Consts.SERVER_PORT);
-				s.setEnabledCipherSuites(Consts.ACCEPTED_SUITES);
+				//s.setEnabledCipherSuites(Consts.ACCEPTED_SUITES);
         //printServerSocketInfo(s);
         ExecutorService executor = Executors.newFixedThreadPool(8);
         while (true) {

@@ -62,7 +62,7 @@ public class Client {
             context.init(null, trustManagers, new SecureRandom());
             SSLSocketFactory sf = context.getSocketFactory();
             SSLSocket c = (SSLSocket)sf.createSocket(HOSTNAME, 8888);
-						c.setEnabledCipherSuites(Consts.ACCEPTED_SUITES);
+			//c.setEnabledCipherSuites(Consts.ACCEPTED_SUITES);
             c.startHandshake();
 
             sockReader = new BufferedReader(new InputStreamReader(c.getInputStream()));
@@ -392,7 +392,7 @@ public class Client {
 			mac.init(key);
 			mac.update((service + username + password).getBytes());
 			code = mac.doFinal();
-			System.out.println((service + username + password).getBytes());
+			System.out.println((service + username + password));
 		} catch (Exception e1) {
 			e1.printStackTrace();
 			return Response.FAIL;
@@ -404,7 +404,6 @@ public class Client {
             .key("password").value(encPass)
             .key("mac").value(new String(code))
             .endObject();
-        System.out.println(password.toCharArray());
         sockWriter.println();
         sockWriter.flush();
         
