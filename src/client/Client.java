@@ -33,7 +33,7 @@ import javax.crypto.spec.SecretKeySpec;
 
 public class Client {
 
-    private static final String HOSTNAME = "localhost";
+    private static final String HOSTNAME = "dhcp-rhodes-3145.redrover.cornell.edu";
     
     private static PrintWriter sockWriter;
     private static JSONWriter sockJS;
