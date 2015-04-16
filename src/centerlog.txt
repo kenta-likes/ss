@@ -43,3 +43,5 @@ kyle	Wed Apr 15 21:27:51 EDT 2015	/10.148.12.73:53716	Delete Account	WRONG_INPT
 kyle	Wed Apr 15 21:28:10 EDT 2015	/10.148.12.73:53719	Authenticate Account	SUCCESS
 kyle	Wed Apr 15 21:28:20 EDT 2015	/10.148.12.73:53719	Authenticate Account	WRONG_INPT
 kyle	Wed Apr 15 21:28:20 EDT 2015	/10.148.12.73:53719	Delete Account	WRONG_INPT
+N/A	Wed Apr 15 21:51:21 EDT 2015	/127.0.0.1:55639	Create Account	SUCCESS
+baz	Wed Apr 15 21:51:56 EDT 2015	/127.0.0.1:55639	Authenticate Account	SUCCESS

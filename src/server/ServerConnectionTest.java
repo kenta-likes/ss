@@ -32,10 +32,10 @@ public class ServerConnectionTest {
     		assertEquals(Response.BAD_FORMAT, sc.createAccount("fo/ o", "helloworld", "abc", "abc"));
     		
     		// case1. success
-    		assertEquals(Response.SUCCESS, sc.createAccount("foo", "helloworld"));
+    		assertEquals(Response.SUCCESS, sc.createAccount("foo", "helloworld", "4083107790", "1"));
     		
     		// case2. try to create a duplicate account
-    		assertEquals(Response.USER_EXISTS, sc.createAccount("foo", "helloworld"));
+    		assertEquals(Response.USER_EXISTS, sc.createAccount("foo", "helloworld", "4083107790", "1"));
 
 	    } finally {
 	        sc.deleteAccount("helloworld");
@@ -48,19 +48,20 @@ public class ServerConnectionTest {
 		ServerConnection sc = new ServerConnection(null);
 		
 		try{
-    		assertEquals(Response.SUCCESS, sc.createAccount("kjd88", "test"));
-    		
+    		assertEquals(Response.SUCCESS, sc.createAccount("kjd88", "test", "4083107790", "1"));
+    		/* Below Deprecated since we do two step authentication which requires manual intervention
     		// 2. Change password
     		assertEquals(Response.SUCCESS, sc.changeAccountPassword("test", "test1"));
     		
     		// 3. Authenticate with the old password
-    		assertEquals(Response.WRONG_INPT, sc.authAccount("kjd88", "test"));
+    		assertEquals(Response.WRONG_INPT, sc.verifyPassword("kjd88", "test"));
     		
     		// 4. Authenticate with the new password
-    		assertEquals(Response.SUCCESS, sc.authAccount("kjd88", "test1"));
+    		assertEquals(Response.SUCCESS, sc.verifyPassword("kjd88", "test1"));
     		
     		// 5. Delete account
     		sc.deleteAccount("test1");
+    		*/
 		} finally {
 		    sc.deleteAccount("test1");
 		}
@@ -72,13 +73,15 @@ public class ServerConnectionTest {
     	// 1. Create an account
     	ServerConnection sc = new ServerConnection(null);
         try {
-    		assertEquals(Response.SUCCESS, sc.createAccount("kl459", "kenta"));
+    		assertEquals(Response.SUCCESS, sc.createAccount("kl459", "kenta", "4083107790", "1"));
     		
+    		/*Below deprecated because it requires two step authentication
     		// 2. Delete with wrong password
     		assertEquals(Response.WRONG_INPT, sc.deleteAccount("kent"));
     		
     		// 3. Delete with correct password
     		assertEquals(Response.SUCCESS, sc.deleteAccount("kenta"));
+    		*/
 	    } finally {
 	        sc.deleteAccount("kenta");
 	    }
@@ -90,25 +93,25 @@ public class ServerConnectionTest {
 		ServerConnection sc = new ServerConnection(null);
 		try {
 		    //create account
-            assertEquals(Response.SUCCESS, sc.createAccount("cs794", "helloworld"));
+            assertEquals(Response.SUCCESS, sc.createAccount("cs794", "helloworld", "4083107790", "1"));
             //test auth with wrong password, correct username
-    		assertEquals(Response.WRONG_INPT, sc.authAccount("cs794", "halloworld"));
+    		assertEquals(Response.WRONG_INPT, sc.verifyPassword("cs794", "halloworld"));
     		//test auth with wrong username, correct password
-    		assertEquals(Response.WRONG_INPT, sc.authAccount("foobar", "helloworld"));
+    		assertEquals(Response.WRONG_INPT, sc.verifyPassword("foobar", "helloworld"));
             //test auth with wrong username, wrong password
-            assertEquals(Response.WRONG_INPT, sc.authAccount("foobar", "baz"));
+            assertEquals(Response.WRONG_INPT, sc.verifyPassword("foobar", "baz"));
             //test auth with empty login credentials
-            assertEquals(Response.WRONG_INPT, sc.authAccount("", ""));
+            assertEquals(Response.WRONG_INPT, sc.verifyPassword("", ""));
             //test auth with null login credentials
-            assertEquals(Response.WRONG_INPT, sc.authAccount(null, null));
+            assertEquals(Response.WRONG_INPT, sc.verifyPassword(null, null));
     		
     		//test auth with correct login credentials
-            assertEquals(Response.SUCCESS, sc.authAccount("cs794", "helloworld"));
+            assertEquals(Response.SUCCESS, sc.verifyPassword("cs794", "helloworld"));
 		} finally {
 		    sc.deleteAccount("helloworld");
 		}
 	}
-/*
+/* Below deprecated because of two step verification requirement
 	@Test
 	public void testRetrieveCredentials() {
 		ServerConnection sc = new ServerConnection(null);

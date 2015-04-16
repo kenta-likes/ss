@@ -432,7 +432,7 @@ public class ServerConnection implements Runnable {
         }
         if (!this.checkUsernameFormat(new_usr)
               || !(phone.matches("[0-9]+") && phone.length() == 10)
-              || Integer.parseInt(carrier) < 0 || Integer.parseInt(carrier) > 2 ) {
+              || !(carrier.matches("[0-9]+") && Integer.parseInt(carrier) >= 0 && Integer.parseInt(carrier) <= 2) ) {
             return Response.BAD_FORMAT;
         }
         // Directory already exists
