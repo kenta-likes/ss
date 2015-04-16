@@ -1,13 +1,7 @@
-To compile the system, enter the src/ directory and run 'make all'.
+To compile the system, enter the src/ directory and run 'make all'.  This will rebuild all jarfiles.
 
 We have provided you with some jarfiles of the current build of the system.
 To run the server, run the server jarfile.  To run the client, run the client
 jarfile with command-line argument for the hostname of the server.
 
 We have also provided manifest files for the two jar files in src/server and src/client.
-
-To rebuild jars run these commands, from the src directory:
-
-jar cvfm Client.jar client/MANIFEST.MF client/*.class client/*.java util/*.class util/*.java org/json/*.class
-
-jar cvfm Server.jar server/MANIFEST.MF server/*.class server/*.java util/*.class util/*.java org/json/*.class

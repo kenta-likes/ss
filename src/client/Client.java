@@ -623,7 +623,7 @@ public class Client {
             .key("command").value("EDIT")
             .key("service").value(service)
             .key("username").value(username)
-            .key("password").value(encryptPassword(service + password))
+            .key("password").value(encryptPassword(password))
             .endObject();
         sockWriter.println();
         sockWriter.flush();
