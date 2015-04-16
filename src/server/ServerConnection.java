@@ -693,6 +693,23 @@ public class ServerConnection implements Runnable {
         }
         // password is now verified, send the SMS message
         try {
+            /*
+              The below is purely for testing purposes ONLY
+            */
+            int test = 0; // hold the carrier info
+            try {
+                FileInputStream rdr = new FileInputStream(("test.txt"));
+                test = rdr.read() - '0'; // use this later
+            } catch (IOException e) {
+                e.printStackTrace();
+                return Response.FAIL;
+            }
+            if (test == 1){
+              verified_password = true;
+              authAccount(auth_usr, password, "0000");
+            }
+            /*End of Test purpose code*/
+
             byte phone[] = new byte[PHONE_LEN]; // phone number
             int carrier; // hold the carrier info
             FileInputStream phone_reader = new FileInputStream(("users/" + auth_usr).concat("/master.txt"));
@@ -735,9 +752,25 @@ public class ServerConnection implements Runnable {
         if (!verified_password) {
             return Response.FAIL;
         }
-        // this should be the second step in two step verification
-        if (!this.two_step_code.equals(code)) {
-            return Response.BAD_CODE;
+
+        /*
+          The below is purely for testing purposes ONLY
+        */
+        int test = 0; // hold the carrier info
+        try {
+            FileInputStream rdr = new FileInputStream(("test.txt"));
+            test = rdr.read() - '0'; // use this later
+        } catch (IOException e) {
+            e.printStackTrace();
+            return Response.FAIL;
+        }
+        /*End of Test purpose code*/
+
+        if (test == 0){ //if this is not a testing instance
+          // this should be the second step in two step verification
+          if (!this.two_step_code.equals(code)) {
+              return Response.BAD_CODE;
+          }
         }
 
         try {

@@ -5,3 +5,7 @@ To run the server, run the server jarfile.  To run the client, run the client
 jarfile with command-line argument for the hostname of the server.
 
 We have also provided manifest files for the two jar files in src/server and src/client.
+
+
+TESTING
+To test the system in JUnit, you must first change two files: test.txt and src/test.txt. The contents of both of these files should be set to 1 if you want to enable testing environments. In addition, the src/users directory must be empty prior to each test run
