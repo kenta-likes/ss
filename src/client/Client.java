@@ -678,12 +678,23 @@ public class Client {
     protected static Response unregister(char[] password) {
         Response err;
         JSONObject respPacket = null;
+        byte[] hashedPassword;
+        byte[] passwordBytes = charToBytes(password);
+
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            digest.update(passwordBytes);
+            hashedPassword = digest.digest();
+        } catch (NoSuchAlgorithmException e1) {
+            e1.printStackTrace();
+            return Response.FAIL;
+        }
         
         sockJS = new JSONWriter(sockWriter);
 
         sockJS.object()
             .key("command").value("DEL")
-            .key("password").value(new String(password))
+            .key("password").value(new String(hashedPassword))
             .endObject();
 
         sockWriter.println();

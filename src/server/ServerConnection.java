@@ -877,7 +877,9 @@ public class ServerConnection implements Runnable {
     }
 
     protected Response logout() {
-
+        if (username == null){
+          return Response.SUCCESS;
+        }
         try {
             BufferedWriter writer = new BufferedWriter(new FileWriter(
                                                                       curr_dir.concat("/stored_credentials.txt")));
