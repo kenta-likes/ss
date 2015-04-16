@@ -33,8 +33,7 @@ import javax.crypto.spec.SecretKeySpec;
 
 public class Client {
 
-    //private static final String HOSTNAME = "dhcp-rhodes-3145.redrover.cornell.edu";
-    private static final String HOSTNAME = "localhost";
+    //    private static final String HOSTNAME = "localhost";
     
     private static PrintWriter sockWriter;
     private static JSONWriter sockJS;
@@ -47,6 +46,13 @@ public class Client {
         
         String ksName = System.getProperty("user.dir")+"/client/5430ts.jks"; //client side truststore
         char passphrase[] = "security".toCharArray();
+
+        if (args.length != 1) {
+            System.out.println("Usage: java -jar Client.jar <server hostname>");
+            return;
+        }
+
+        String hostname = args[0];
 
         sockReader = null;
         sockWriter = null;
@@ -62,8 +68,8 @@ public class Client {
             TrustManager[] trustManagers = tmf.getTrustManagers();
             context.init(null, trustManagers, new SecureRandom());
             SSLSocketFactory sf = context.getSocketFactory();
-            SSLSocket c = (SSLSocket)sf.createSocket(HOSTNAME, 8888);
-			//c.setEnabledCipherSuites(Consts.ACCEPTED_SUITES);
+            SSLSocket c = (SSLSocket)sf.createSocket(hostname, 8888);
+            //c.setEnabledCipherSuites(Consts.ACCEPTED_SUITES);
             c.startHandshake();
 
             sockReader = new BufferedReader(new InputStreamReader(c.getInputStream()));
@@ -155,9 +161,9 @@ public class Client {
     	int i;
     	byte ret[] = new byte[in.length];
     	for (i = 0; i < in.length; i++)
-    	{
+            {
     		ret[i] = (byte) in[i];
-    	}
+            }
     	return ret;
     }
 
@@ -168,13 +174,13 @@ public class Client {
         byte hashedPassword[];
         byte passwordBytes[] = charToBytes(password);
         try {
-			MessageDigest digest = MessageDigest.getInstance("SHA-256");
-			digest.update(passwordBytes);
-			hashedPassword = digest.digest();
-		} catch (NoSuchAlgorithmException e1) {
-			e1.printStackTrace();
-			return Response.FAIL;
-		}
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            digest.update(passwordBytes);
+            hashedPassword = digest.digest();
+        } catch (NoSuchAlgorithmException e1) {
+            e1.printStackTrace();
+            return Response.FAIL;
+        }
         
         sockJS = new JSONWriter(sockWriter);
         
@@ -189,10 +195,10 @@ public class Client {
         try {
             respPacket = new JSONObject(sockReader.readLine());
         	
-        	//test:
-        	//String s = sockReader.readLine();
-        	//System.out.println("socket says:"+s);
-        	//respPacket =  new JSONObject(s);
+            //test:
+            //String s = sockReader.readLine();
+            //System.out.println("socket says:"+s);
+            //respPacket =  new JSONObject(s);
         } catch (IOException e) {
             e.printStackTrace();
             return Response.FAIL;
@@ -208,13 +214,13 @@ public class Client {
         byte hashedPassword[];
         byte passwordBytes[] = charToBytes(password);
         try {
-			MessageDigest digest = MessageDigest.getInstance("SHA-256");
-			digest.update(passwordBytes);
-			hashedPassword = digest.digest();
-		} catch (NoSuchAlgorithmException e1) {
-			e1.printStackTrace();
-			return Response.FAIL;
-		}
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            digest.update(passwordBytes);
+            hashedPassword = digest.digest();
+        } catch (NoSuchAlgorithmException e1) {
+            e1.printStackTrace();
+            return Response.FAIL;
+        }
         
         sockJS = new JSONWriter(sockWriter);
         
@@ -230,10 +236,10 @@ public class Client {
         try {
             respPacket = new JSONObject(sockReader.readLine());
         	
-        	//test:
-        	//String s = sockReader.readLine();
-        	//System.out.println("socket says:"+s);
-        	//respPacket =  new JSONObject(s);
+            //test:
+            //String s = sockReader.readLine();
+            //System.out.println("socket says:"+s);
+            //respPacket =  new JSONObject(s);
         } catch (IOException e) {
             e.printStackTrace();
             return Response.FAIL;
@@ -301,13 +307,13 @@ public class Client {
         byte hashedPassword[];
         byte passwordbytes[] = charToBytes(password);
         try {
-			MessageDigest digest = MessageDigest.getInstance("SHA-256");
-			digest.update(passwordbytes);
-			hashedPassword = digest.digest();
-		} catch (NoSuchAlgorithmException e1) {
-			e1.printStackTrace();
-			return Response.FAIL;
-		}
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            digest.update(passwordbytes);
+            hashedPassword = digest.digest();
+        } catch (NoSuchAlgorithmException e1) {
+            e1.printStackTrace();
+            return Response.FAIL;
+        }
         sockJS.object()
             .key("command").value("RGST")
             .key("username").value(username)
@@ -384,26 +390,29 @@ public class Client {
     protected static Response addCreds(String service, String username, String password) {
         JSONObject respPacket = null;
         Response err;
-        String encPass = encryptPassword(service + password);
+        String encPass = encryptPassword(password);
         sockJS = new JSONWriter(sockWriter);
+        /*        SecretKey macKey = new SecretKeySpec(key.getEncoded(), "HmacSHA256");
+        String message = service + username + password;
         
         byte code[];
+        
         try {
-			Mac mac = Mac.getInstance("HmacSHA256");
-			mac.init(key);
-			mac.update((service + username + password).getBytes());
-			code = mac.doFinal();
-			System.out.println((service + username + password));
-		} catch (Exception e1) {
-			e1.printStackTrace();
-			return Response.FAIL;
-		}
+            Mac mac = Mac.getInstance("HmacSHA256");
+            mac.init(macKey);
+            
+            code = mac.doFinal("This is a very long string...hopefully it works.".getBytes());
+        } catch (Exception e1) {
+            e1.printStackTrace();
+            return Response.FAIL;
+            }*/
+        
         sockJS.object()
             .key("command").value("ADD")
             .key("service").value(service)
             .key("username").value(username)
             .key("password").value(encPass)
-            .key("mac").value(new String(code))
+            //            .key("mac").value(DatatypeConverter.printBase64Binary(code))
             .endObject();
         sockWriter.println();
         sockWriter.flush();
@@ -432,8 +441,9 @@ public class Client {
     protected static Pair<Response, Pair<String, char[]>> requestCreds(String service) {
         JSONObject respPacket = null;
         Response err;
-        String username, password, mac, computedMac;
+        String username, password, computedMac;
         char[] decPass;
+        byte[] mac;
         sockJS = new JSONWriter(sockWriter);
 
         sockJS.object()
@@ -458,10 +468,18 @@ public class Client {
             char[] justPass;
             username = respPacket.getString("username");
             password = respPacket.getString("password");
-            mac = respPacket.getString("mac");
+
+            System.out.println("Credentials for " + service);
+            System.out.println("Username: " + username);
+            System.out.println("Password: " + new String(decryptPassword(password)));
+            
+            /*            mac = DatatypeConverter.parseBase64Binary(respPacket.getString("mac"));
             byte code[];
             decPass = decryptPassword(password);
             justPass = new char[decPass.length - service.length()];
+
+            SecretKey macKey = new SecretKeySpec(key.getEncoded(), "HmacSHA256");
+            */
 
 
 
@@ -472,7 +490,7 @@ public class Client {
              * and storing it on the server.
              */
 
-            /* Substring for char array and string comparison */
+            /* Substring for char array and string comparison 
             for (int i = 0; i < service.length(); i++) {
                 correctService &= (decPass[i] == service.charAt(i));
             }
@@ -486,31 +504,34 @@ public class Client {
                     decPass[i] = (char) 0;
                 
                 try {
-        			Mac mac_compute = Mac.getInstance("HmacSHA256");
-        			mac_compute.init(key);
-        			mac_compute.update((service + username + new String(justPass)).getBytes());
-        			System.out.println((service + username + new String(justPass)).getBytes());
-        			code = mac_compute.doFinal();
-        			computedMac = new String(code);
-        			if (!computedMac.equals(mac))
-        			{
-        				System.out.println(computedMac + "   ,   " + mac);
-        				return new Pair<Response, Pair<String, char[]>>(Response.MAC, null);
-        			}
-        		} catch (Exception e1) {
-        			e1.printStackTrace();
-        			return new Pair<Response, Pair<String, char[]>>(Response.FAIL, null);
-        		}
+                    Mac mac_compute = Mac.getInstance("HmacSHA256");
+                    mac_compute.init(macKey);
+
+                    String s = new String(justPass);
+                    String message = service + username + justPass;
+                    
+                    code = mac_compute.doFinal("This is a very long string...hopefully it works.".getBytes());
+                    
+                    computedMac = new String(code);
+                    if (!java.util.Arrays.equals(mac, code)) //!computedMac.equals(new String(mac)))
+                        {
+                            System.out.println(computedMac + "   ,   " + new String(mac));
+                            return new Pair<Response, Pair<String, char[]>>(Response.MAC, null);
+                        }
+                } catch (Exception e1) {
+                    e1.printStackTrace();
+                    return new Pair<Response, Pair<String, char[]>>(Response.FAIL, null);
+                }
                 
                 return new Pair<Response, Pair<String, char[]>>(err, new Pair<String, char[]>(username, justPass));
-                
+            
             } else {
                 for (int i = 0; i < decPass.length; i++)
                     decPass[i] = (char) 0;
 
                 System.out.println("Error: detected password for incorrect service!  Please contact a system administrator.");
                 return new Pair<Response, Pair<String, char[]>>(Response.FAIL, null);
-            }
+                }*/
         }
 
         return new Pair<Response, Pair<String, char[]>>(err, null);
@@ -602,7 +623,7 @@ public class Client {
             .key("command").value("EDIT")
             .key("service").value(service)
             .key("username").value(username)
-            .key("password").value(encryptPassword(service + password))
+            .key("password").value(encryptPassword(password))
             .endObject();
         sockWriter.println();
         sockWriter.flush();
