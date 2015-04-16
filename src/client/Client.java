@@ -33,7 +33,7 @@ import javax.crypto.spec.SecretKeySpec;
 
 public class Client {
 
-    private static final String HOSTNAME = "localhost";
+    private static final String HOSTNAME = "dhcp-rhodes-3145.redrover.cornell.edu";
     
     private static PrintWriter sockWriter;
     private static JSONWriter sockJS;
@@ -678,12 +678,23 @@ public class Client {
     protected static Response unregister(char[] password) {
         Response err;
         JSONObject respPacket = null;
+        byte[] hashedPassword;
+        byte[] passwordBytes = charToBytes(password);
+
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            digest.update(passwordBytes);
+            hashedPassword = digest.digest();
+        } catch (NoSuchAlgorithmException e1) {
+            e1.printStackTrace();
+            return Response.FAIL;
+        }
         
         sockJS = new JSONWriter(sockWriter);
 
         sockJS.object()
             .key("command").value("DEL")
-            .key("password").value(new String(password))
+            .key("password").value(new String(hashedPassword))
             .endObject();
 
         sockWriter.println();
