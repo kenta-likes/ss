@@ -718,9 +718,8 @@ public class ServerConnection implements Runnable {
 
             keyBytes = DatatypeConverter.parseBase64Binary(encoded);
 
-            SecretKeySpec keySpec = new SecretKeySpec(keyBytes, "AES");
-            SecretKeyFactory keyFactory = SecretKeyFactory.getInstance("AES/CBC/PKCS5Padding");
-            key = keyFactory.generateSecret(keySpec);
+            key = new SecretKeySpec(keyBytes, "AES/CBC/PKCS5Padding");
+            
         } catch (Exception e) {
             e.printStackTrace();
             verified_password = false;
