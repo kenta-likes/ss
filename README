@@ -1,8 +1,13 @@
-To compile the system, enter the src/ directory and run 'make all'.  The client is configured
-to connect to a server running on the localhost; if you wish to change the server address find
-the variable HOSTNAME (the first static variable in the Client class) and change its value
-to the address of the server.
+To compile the system, enter the src/ directory and run 'make all'.
 
-To run the server, from the src/ directory run "java server.Server".
+We have provided you with some jarfiles of the current build of the system.
+To run the server, run the server jarfile.  To run the client, run the client
+jarfile with command-line argument for the hostname of the server.
 
-To run the client, from the src/ directory run "java client.Client".
+We have also provided manifest files for the two jar files in src/server and src/client.
+
+To rebuild jars run these commands, from the src directory:
+
+jar cvfm Client.jar client/MANIFEST.MF client/*.class client/*.java util/*.class util/*.java org/json/*.class
+
+jar cvfm Server.jar server/MANIFEST.MF server/*.class server/*.java util/*.class util/*.java org/json/*.class
