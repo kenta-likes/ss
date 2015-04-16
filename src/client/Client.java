@@ -57,11 +57,12 @@ public class Client {
             TrustManagerFactory tmf = TrustManagerFactory.getInstance("SunX509");
             tmf.init(keystore);
 
-            SSLContext context = SSLContext.getInstance("TLS");
+            SSLContext context = SSLContext.getInstance("TLSv1.2");
             TrustManager[] trustManagers = tmf.getTrustManagers();
             context.init(null, trustManagers, new SecureRandom());
             SSLSocketFactory sf = context.getSocketFactory();
             SSLSocket c = (SSLSocket)sf.createSocket(HOSTNAME, 8888);
+						c.setEnabledCipherSuites(Consts.ACCEPTED_SUITES);
             c.startHandshake();
 
             sockReader = new BufferedReader(new InputStreamReader(c.getInputStream()));
@@ -356,6 +357,7 @@ public class Client {
                 KeySpec spec = new PBEKeySpec(password, salt, 65536, 256);
                 SecretKey tmp = keyFact.generateSecret(spec);
                 key = new SecretKeySpec(tmp.getEncoded(), "AES");
+
                 encoder = Cipher.getInstance("AES/CBC/PKCS5Padding");
                 encoder.init(Cipher.ENCRYPT_MODE, key, ivSpec);
 

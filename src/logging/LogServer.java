@@ -4,6 +4,8 @@ import java.net.*;
 import javax.net.ssl.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.security.*;
+import util.Consts.*;
 
 public class LogServer {
 
@@ -23,9 +25,10 @@ public class LogServer {
             SSLServerSocket s 
                 = (SSLServerSocket) ssf.createServerSocket(8888);
 
+            ExecutorService executor = Executors.newFixedThreadPool(8);
             while (true) {
                 SSLSocket c = (SSLSocket) s.accept();
-                Runnable connection = new LogConnection(c);
+                Runnable connection = new logging.LogConnection(c);
                 executor.execute(connection);
             }
          
