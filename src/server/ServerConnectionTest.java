@@ -32,10 +32,13 @@ public class ServerConnectionTest {
     		assertEquals(Response.BAD_FORMAT, sc.createAccount("fo/ o", "helloworld", "abc", "abc"));
     		
     		// case1. success
-    		assertEquals(Response.SUCCESS, sc.createAccount("foo", "helloworld"));
+    		assertEquals(Response.SUCCESS, sc.createAccount("foo", "helloworld", "0003107790", "1"));
     		
     		// case2. try to create a duplicate account
-    		assertEquals(Response.USER_EXISTS, sc.createAccount("foo", "helloworld"));
+    		assertEquals(Response.USER_EXISTS, sc.createAccount("foo", "helloworld", "0003107790", "1"));
+
+            //login
+            assertEquals(Response.SUCCESS, sc.verifyPassword("foo", "helloworld"));
 
 	    } finally {
 	        sc.deleteAccount("helloworld");
@@ -48,21 +51,24 @@ public class ServerConnectionTest {
 		ServerConnection sc = new ServerConnection(null);
 		
 		try{
-    		assertEquals(Response.SUCCESS, sc.createAccount("kjd88", "test"));
-    		
-    		// 2. Change password
+    		assertEquals(Response.SUCCESS, sc.createAccount("kjd88", "test", "0003107790", "1"));
+
+    		// 2. login
+            assertEquals(Response.SUCCESS, sc.verifyPassword("kjd88", "test"));
+            
     		assertEquals(Response.SUCCESS, sc.changeAccountPassword("test", "test1"));
+    		/*
+    		sc.logout();
     		
     		// 3. Authenticate with the old password
-    		assertEquals(Response.WRONG_INPT, sc.authAccount("kjd88", "test"));
+    		assertEquals(Response.WRONG_INPT, sc.verifyPassword("kjd88", "test"));
     		
     		// 4. Authenticate with the new password
-    		assertEquals(Response.SUCCESS, sc.authAccount("kjd88", "test1"));
+    		assertEquals(Response.SUCCESS, sc.verifyPassword("kjd88", "test1"));
+    		*/
     		
-    		// 5. Delete account
-    		sc.deleteAccount("test1");
 		} finally {
-		    sc.deleteAccount("test1");
+		    //sc.deleteAccount("test1");
 		}
 		
 	}
@@ -72,7 +78,10 @@ public class ServerConnectionTest {
     	// 1. Create an account
     	ServerConnection sc = new ServerConnection(null);
         try {
-    		assertEquals(Response.SUCCESS, sc.createAccount("kl459", "kenta"));
+    		assertEquals(Response.SUCCESS, sc.createAccount("kl459", "kenta", "0003107790", "1"));
+
+            // 2. login
+            assertEquals(Response.SUCCESS, sc.verifyPassword("kl459", "kenta"));
     		
     		// 2. Delete with wrong password
     		assertEquals(Response.WRONG_INPT, sc.deleteAccount("kent"));
@@ -90,31 +99,34 @@ public class ServerConnectionTest {
 		ServerConnection sc = new ServerConnection(null);
 		try {
 		    //create account
-            assertEquals(Response.SUCCESS, sc.createAccount("cs794", "helloworld"));
+            assertEquals(Response.SUCCESS, sc.createAccount("cs794", "helloworld", "0003107790", "1"));
             //test auth with wrong password, correct username
-    		assertEquals(Response.WRONG_INPT, sc.authAccount("cs794", "halloworld"));
+    		assertEquals(Response.WRONG_INPT, sc.verifyPassword("cs794", "halloworld"));
     		//test auth with wrong username, correct password
-    		assertEquals(Response.WRONG_INPT, sc.authAccount("foobar", "helloworld"));
+    		assertEquals(Response.WRONG_INPT, sc.verifyPassword("foobar", "helloworld"));
             //test auth with wrong username, wrong password
-            assertEquals(Response.WRONG_INPT, sc.authAccount("foobar", "baz"));
+            assertEquals(Response.WRONG_INPT, sc.verifyPassword("foobar", "baz"));
             //test auth with empty login credentials
-            assertEquals(Response.WRONG_INPT, sc.authAccount("", ""));
+            assertEquals(Response.WRONG_INPT, sc.verifyPassword("", ""));
             //test auth with null login credentials
-            assertEquals(Response.WRONG_INPT, sc.authAccount(null, null));
+            assertEquals(Response.WRONG_INPT, sc.verifyPassword(null, null));
     		
     		//test auth with correct login credentials
-            assertEquals(Response.SUCCESS, sc.authAccount("cs794", "helloworld"));
+            assertEquals(Response.SUCCESS, sc.verifyPassword("cs794", "helloworld"));
 		} finally {
 		    sc.deleteAccount("helloworld");
 		}
 	}
-/*
+
 	@Test
 	public void testRetrieveCredentials() {
 		ServerConnection sc = new ServerConnection(null);
 		try {
 		    //create account
-            assertEquals(Response.SUCCESS, sc.createAccount("foo", "test"));
+            assertEquals(Response.SUCCESS, sc.createAccount("foo1", "test", "0003107790", "1"));
+            
+            //login
+            assertEquals(Response.SUCCESS, sc.verifyPassword("foo1", "test"));
             
             //retrieve 0
             ArrayList<String> cred_list = new ArrayList<String>();
@@ -154,7 +166,7 @@ public class ServerConnectionTest {
 		ServerConnection sc = new ServerConnection(null);
 		try {
 		    //create account
-            assertEquals(Response.SUCCESS, sc.createAccount("foo", "test"));
+            assertEquals(Response.SUCCESS, sc.createAccount("foo2", "test", "0003107790", "1"));
             
             //case1. retrieve a credential that does not exist
             Pair<String, String> cred = null;
@@ -183,8 +195,11 @@ public class ServerConnectionTest {
         ServerConnection sc = new ServerConnection(null);
         try {
             //create account Note: this logins the user
-            assertEquals(Response.SUCCESS, sc.createAccount("foobar", "baz"));
+            assertEquals(Response.SUCCESS, sc.createAccount("foobar", "baz", "0003107790", "1"));
 
+            // 2. login
+            assertEquals(Response.SUCCESS, sc.verifyPassword("foobar", "baz"));
+            
             //try to add credentials with empty inputs
             assertEquals(Response.WRONG_INPT, sc.addCredential("", "", ""));
             //try to add credentials with null inputs
@@ -227,7 +242,11 @@ public class ServerConnectionTest {
 		ServerConnection sc = new ServerConnection(null);
         try {
         	//create account and add a credential Note: this logins the user
-            assertEquals(Response.SUCCESS, sc.createAccount("foo", "test"));
+            assertEquals(Response.SUCCESS, sc.createAccount("foo", "test", "0003107790", "1"));
+            
+            // 2. login
+            assertEquals(Response.SUCCESS, sc.verifyPassword("foo", "test"));
+            
             assertEquals(Response.SUCCESS, sc.addCredential("Cornell", "kenta", "iamkent"));
             
             // case1. Update attempt on a credential that does not exist
@@ -251,8 +270,10 @@ public class ServerConnectionTest {
         ServerConnection sc = new ServerConnection(null);
         try {
             //create account Note: this logins the user
-            assertEquals(Response.SUCCESS, sc.createAccount("foobar", "baz"));
-            
+            assertEquals(Response.SUCCESS, sc.createAccount("foobar", "baz", "0003107790", "1"));
+
+            // 2. login
+            assertEquals(Response.SUCCESS, sc.verifyPassword("foobar", "baz"));
             
             //try to delete credentials with empty inputs
             assertEquals(Response.WRONG_INPT, sc.deleteCredential(""));
@@ -280,5 +301,4 @@ public class ServerConnectionTest {
             sc.deleteAccount("baz");
         }
 	}
-*/
 }

@@ -1,0 +1,2 @@
+Class-Path: . client org/json util
+Main-Class: client.Client
