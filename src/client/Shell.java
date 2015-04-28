@@ -139,11 +139,33 @@ public class Shell {
         username = con.readLine("Username: ");
         password0 = con.readPassword("Password: ");
         password1 = con.readPassword("Verify password: ");
+
+        while (username.length() == 0 || password0.length == 0 || password1.length == 0) {
+            System.out.println("Usernames and passwords cannot be empty.  Please try again.");
+
+            username = con.readLine("Username: ");
+            password0 = con.readPassword("Password: ");
+            password1 = con.readPassword("Verify password: ");
+        }
+        
         while (!(passTest.isStrong(new String(password0))))
         {
         	password0 = con.readPassword("That password is too weak. Please use a more complex password: ");
         	password1 = con.readPassword("Verify password: ");
         }
+
+               if (password0.length != password1.length)
+            samePassword = false;
+        else {
+            for (int i = 0; i < password0.length; i++) {
+                /* Make sure the user entered the password they intended - twice. */
+                samePassword &= (password0[i] == password1[i]);
+
+                if (password0[i] == ',')
+                    containsComma = true;
+            }
+        }
+
         email = con.readLine("Email: ");
         phone = con.readLine("10 digit phone number (e.g. 4081234567): ");
 		while (!(phone.matches("[0-9]+") && phone.length() == 10)) {
@@ -161,17 +183,6 @@ public class Shell {
         if (c != 0 && c != 1 && c != 2)
         {
         	validCarrier = false;
-        }
-        if (password0.length != password1.length)
-            samePassword = false;
-        else {
-            for (int i = 0; i < password0.length; i++) {
-                /* Make sure the user entered the password they intended - twice. */
-                samePassword &= (password0[i] == password1[i]);
-
-                if (password0[i] == ',')
-                    containsComma = true;
-            }
         }
 
         if (samePassword && validCarrier) {
