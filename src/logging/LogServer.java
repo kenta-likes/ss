@@ -56,8 +56,11 @@ public class LogServer {
 
             /* Read in key. */
             File keyFile = new File("ls_logkey.conf");
-            if (keyFile.exists() && !keyFile.isDirectory()) {
-                BufferedReader f = new BufferedReader(new FileReader("logkey.conf"));
+            File originalKeyFile = new File("original_logkey.conf");
+
+            /* Make sure we have the original and the current key. */
+            if (keyFile.exists() && !keyFile.isDirectory() && originalKeyFile.exists() && !originalKeyFile.isDirectory()) {
+                BufferedReader f = new BufferedReader(new FileReader("ls_logkey.conf"));
                 keyBytes = DatatypeConverter.parseBase64Binary(f.readLine());
                 newKey = false;
                 
