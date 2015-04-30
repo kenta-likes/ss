@@ -9,6 +9,7 @@ import javax.crypto.Mac;
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
+import javax.crypto.spec.IvParameterSpec;
 import java.security.spec.KeySpec;
 import javax.crypto.Cipher;
 
@@ -26,7 +27,7 @@ public class Logger implements Runnable {
     private BufferedReader sockReader;
     private PrintWriter sockWriter;
         
-    private byte[] entry, keyBytes;
+    private byte[] entry, keyBytes, iv;
     private String encodedEntry, logHostname, logKSName;
     private char[] logPassphrase;
     private Cipher encoder;
@@ -42,15 +43,17 @@ public class Logger implements Runnable {
         this.logPassphrase = logPassphrase;
 
         try {
-            File keyFile = new File("logkey.conf");
+            File keyFile = new File("s_logkey.conf");
             byte[] keyBytes;
 
             /* Look for an existing authentication key. */
             if (keyFile.exists() && !keyFile.isDirectory()) {
                 BufferedReader b = new BufferedReader(new FileReader(keyFile));
                 String base64Key = b.readLine();
+                String base64IV = b.readLine();
 
                 keyBytes = DatatypeConverter.parseBase64Binary(base64Key);
+                iv = DatatypeConverter.parseBase64Binary(base64IV);
                 newKey = false;
                     
             } else {
@@ -59,6 +62,11 @@ public class Logger implements Runnable {
                 keyBytes = new byte[32];
                     
                 rand.nextBytes(keyBytes);
+                key = new SecretKeySpec(keyBytes, "AES");
+
+                iv = new byte[16];
+                rand.nextBytes(iv);
+                
                 newKey = true;
             }
 
@@ -67,7 +75,7 @@ public class Logger implements Runnable {
              * signer is used to generate tags from log lines.
              * iterator is used to iterate the authentication key.
              */
-            keyGenerator = MessageDigest.getInstance("SHA-1");
+            keyGenerator = MessageDigest.getInstance("SHA-384");
             iterator = MessageDigest.getInstance("SHA-256");
             signer = Mac.getInstance("HmacSHA256");
 
@@ -92,10 +100,10 @@ public class Logger implements Runnable {
             context.init(null, trustManagers, new SecureRandom());
             SSLSocketFactory fact = context.getSocketFactory();
             
-            SSLSocket c = (SSLSocket) fact.createSocket(logHostname, 8889);
+            SSLSocket c = (SSLSocket) fact.createSocket(logHostname, Consts.LOGSERVER_PORT);
             c.setEnabledCipherSuites(Consts.ACCEPTED_SUITES);
             c.startHandshake();
-
+            
             sockReader = new BufferedReader(new InputStreamReader(c.getInputStream()));
             sockWriter = new PrintWriter(c.getOutputStream(), true);
         } catch (Exception e) {
@@ -110,11 +118,13 @@ public class Logger implements Runnable {
                 keyRand.nextBytes(keyBytes);
 
                 String k = DatatypeConverter.printBase64Binary(keyBytes);
+                String i = DatatypeConverter.printBase64Binary(iv);
 
                 JSONWriter w = new JSONWriter(sockWriter);
                 w.object()
                     .key("command").value("KEY")
                     .key("key").value(k)
+                    .key("iv").value(i)
                     .endObject();
 
                 sockWriter.println();
@@ -126,6 +136,8 @@ public class Logger implements Runnable {
                     System.out.println("Please reconfigure logserver & server keys!");
                     return;
                 }
+
+                newKey = false;
             } catch (Exception e) {
                 System.out.println("New key transmission failed.");
                 e.printStackTrace();
@@ -198,12 +210,10 @@ public class Logger implements Runnable {
      */
     private String encryptLogEntry(String logEntry) {
         try {
-            byte[] encryptionKeyBytes = keyGenerator.digest(keyBytes);
-            SecretKeySpec encryptionKeySpec = new SecretKeySpec(encryptionKeyBytes, "AES");
-            SecretKeyFactory keyFact = SecretKeyFactory.getInstance("AES/CBC/PKCS5Padding");
-            SecretKey encryptionKey = keyFact.generateSecret(encryptionKeySpec);
-                
-            encoder.init(Cipher.ENCRYPT_MODE, encryptionKey);
+            byte[] encryptionKeyBytes = java.util.Arrays.copyOf(keyGenerator.digest(keyBytes), 32);
+            SecretKey encryptionKey = new SecretKeySpec(encryptionKeyBytes, "AES");
+
+            encoder.init(Cipher.ENCRYPT_MODE, encryptionKey, new IvParameterSpec(iv));
 
             byte[] entry = encoder.doFinal(logEntry.getBytes());
             String encodedEntry = DatatypeConverter.printBase64Binary(entry);
@@ -219,9 +229,10 @@ public class Logger implements Runnable {
     private String signLogEntry(String logEntry) {
         byte[] tag;
         String encodedTag;
+        SecretKey macKey = new SecretKeySpec(keyBytes, "HmacSHA256");
 
         try {
-            signer.init(key);
+            signer.init(macKey);
 
             tag = signer.doFinal(DatatypeConverter.parseBase64Binary(logEntry));
             encodedTag = DatatypeConverter.printBase64Binary(tag);
@@ -237,6 +248,9 @@ public class Logger implements Runnable {
         try {
             byte[] digest = iterator.digest(keyBytes);
             keyBytes = java.util.Arrays.copyOf(digest, 32);
+
+            digest = iterator.digest(iv);
+            iv = java.util.Arrays.copyOf(digest, 16);
 
             key = new SecretKeySpec(keyBytes, "AES/CBC/PKCS5Padding");
 

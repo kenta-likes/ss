@@ -51,15 +51,17 @@ public class Server {
             KeyManagerFactory kmf = 
                 KeyManagerFactory.getInstance("SunX509");
             kmf.init(ks, ctPass);
+            
             SSLContext sc = SSLContext.getInstance("TLSv1.2");
             sc.init(kmf.getKeyManagers(), null, new SecureRandom());
             SSLServerSocketFactory ssf = sc.getServerSocketFactory();
             SSLServerSocket s = (SSLServerSocket) ssf.createServerSocket(Consts.SERVER_PORT);
             s.setEnabledCipherSuites(Consts.ACCEPTED_SUITES);
             //printServerSocketInfo(s);
-            ExecutorService executor = Executors.newFixedThreadPool(8);
+            ExecutorService executor = Executors.newFixedThreadPool(9);
 
-            Runnable logger = new Logger(args[0], "auditstore.jks", "systemsecurity".toCharArray());
+            Runnable logger = new Logger(args[0], "server/5430ts.jks", "security".toCharArray());
+            executor.execute(logger);
             
             while (true) {
                 SSLSocket c = (SSLSocket) s.accept();

@@ -8,8 +8,8 @@ server: json server/Server.java server/ServerConnection.java server/Logger.java 
 client: json client/Client.java client/Shell.java util/Pair.java util/Response.java
 	javac client/Client.java client/Shell.java util/Pair.java util/Response.java
 
-logging: json logging/LogServer.java logging/LogConnection.java util/Pair.java util/Response.java
-	 javac logging/LogServer.java logging/LogConnection.java util/Pair.java util/Response.java
+logging: json logging/LogServer.java logging/LogClient.java logging/LogConnection.java util/Pair.java util/Response.java
+	 javac logging/LogServer.java logging/LogConnection.java util/Pair.java util/Response.java logging/LogClient.java
 
 default: server client logging
 
@@ -23,6 +23,6 @@ serverjar: json server
 	jar cvfm Server.jar server/MANIFEST.MF server/*.class server/*.java util/*.class util/*.java org/json/*.class javamail-1.4.7/mail.jar
 
 loggingjar: json logging
-	jar cvfm LogServer.jar logging/MANIFEST.MF logging/*.class logging/*.java util/*.class util/*.java org/json/*.class
+	jar cvfm LogServer.jar logging/server/MANIFEST.MF logging/LogServer.class logging/LogConnection.class util/*.class util/*.java org/json/*.class; jar cvfm LogClient.jar logging/client/MANIFEST.MF logging/LogClient.class util/*.class org/json/*.class
 
 all: server client json clientjar serverjar

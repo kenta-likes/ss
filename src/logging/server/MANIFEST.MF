@@ -1,0 +1,2 @@
+Class-Path: . logging org/json util
+Main-Class: logging.LogServer

@@ -386,7 +386,9 @@ public class ServerConnection implements Runnable {
             
             Server.logLock.lock();
             Server.logLines.add(logLine);
-            
+
+            /* Notify that there is a new line to consume! */
+            Server.logCondition.signal();
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
@@ -604,7 +606,6 @@ public class ServerConnection implements Runnable {
             MimeMessage message = new MimeMessage(session);
 
             // Set From: header field of the header.
-            System.out.println("Username is " + username);
             message.setFrom(new InternetAddress(username));
 
             // Set To: header field of the header.
@@ -693,6 +694,7 @@ public class ServerConnection implements Runnable {
             phone_reader.skip(PASS_LEN + SALT_LEN);
             phone_reader.read(phone, 0, PHONE_LEN);
             carrier = phone_reader.read() - '0'; // use this later
+            
             two_step_code = Integer.toString(sendSmsCode(new String(phone),
                                                          Carrier.values()[carrier])); // TODO: change ATT to user's carrier
         } catch (IOException e) {
