@@ -9,6 +9,7 @@ import javax.crypto.Mac;
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
+import javax.crypto.spec.IvParameterSpec;
 import java.security.spec.KeySpec;
 import javax.crypto.Cipher;
 
@@ -26,7 +27,7 @@ public class Logger implements Runnable {
     private BufferedReader sockReader;
     private PrintWriter sockWriter;
         
-    private byte[] entry, keyBytes;
+    private byte[] entry, keyBytes, iv;
     private String encodedEntry, logHostname, logKSName;
     private char[] logPassphrase;
     private Cipher encoder;
@@ -49,8 +50,10 @@ public class Logger implements Runnable {
             if (keyFile.exists() && !keyFile.isDirectory()) {
                 BufferedReader b = new BufferedReader(new FileReader(keyFile));
                 String base64Key = b.readLine();
+                String base64IV = b.readLine();
 
                 keyBytes = DatatypeConverter.parseBase64Binary(base64Key);
+                iv = DatatypeConverter.parseBase64Binary(base64IV);
                 newKey = false;
                     
             } else {
@@ -60,6 +63,9 @@ public class Logger implements Runnable {
                     
                 rand.nextBytes(keyBytes);
                 key = new SecretKeySpec(keyBytes, "AES");
+
+                iv = new byte[16];
+                rand.nextBytes(iv);
                 
                 newKey = true;
             }
@@ -112,11 +118,13 @@ public class Logger implements Runnable {
                 keyRand.nextBytes(keyBytes);
 
                 String k = DatatypeConverter.printBase64Binary(keyBytes);
+                String i = DatatypeConverter.printBase64Binary(iv);
 
                 JSONWriter w = new JSONWriter(sockWriter);
                 w.object()
                     .key("command").value("KEY")
                     .key("key").value(k)
+                    .key("iv").value(i)
                     .endObject();
 
                 sockWriter.println();
@@ -205,7 +213,7 @@ public class Logger implements Runnable {
             byte[] encryptionKeyBytes = java.util.Arrays.copyOf(keyGenerator.digest(keyBytes), 32);
             SecretKey encryptionKey = new SecretKeySpec(encryptionKeyBytes, "AES");
 
-            encoder.init(Cipher.ENCRYPT_MODE, encryptionKey);
+            encoder.init(Cipher.ENCRYPT_MODE, encryptionKey, new IvParameterSpec(iv));
 
             byte[] entry = encoder.doFinal(logEntry.getBytes());
             String encodedEntry = DatatypeConverter.printBase64Binary(entry);
@@ -240,6 +248,9 @@ public class Logger implements Runnable {
         try {
             byte[] digest = iterator.digest(keyBytes);
             keyBytes = java.util.Arrays.copyOf(digest, 32);
+
+            digest = iterator.digest(iv);
+            iv = java.util.Arrays.copyOf(digest, 16);
 
             key = new SecretKeySpec(keyBytes, "AES/CBC/PKCS5Padding");
 

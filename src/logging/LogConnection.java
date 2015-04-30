@@ -75,12 +75,13 @@ public class LogConnection implements Runnable {
 
                 case "GET":
                     String log;
+                    int lines = req.getInt("lines");
                     js = js.object();
                             
                     if (!authenticated)
                         resp = Response.FAIL;
                     else {
-                        log = LogServer.getLog();
+                        log = LogServer.getLog(lines);
                         js = js.key("log").value(log);
                         resp = Response.SUCCESS;
                     }
@@ -96,9 +97,24 @@ public class LogConnection implements Runnable {
                     else {
                         resp = Response.SUCCESS;
                         String base64Key = req.getString("key");
+                        String base64IV = req.getString("iv");
                         LogServer.keyBytes = DatatypeConverter.parseBase64Binary(base64Key);
                         LogServer.key = new SecretKeySpec(LogServer.keyBytes, "AES/CBC/PKCS5PAdding");
+                        LogServer.iv = DatatypeConverter.parseBase64Binary(base64IV);
                         LogServer.newKey = false;
+
+                        try {
+                            BufferedWriter w1 = new BufferedWriter(new FileWriter("original_logkey.conf"));
+                            w1.write(base64Key);
+                            w1.newLine();
+                            w1.write(base64IV);
+                            w1.newLine();
+                            w1.flush();
+                            w1.close();
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            resp = Response.FAIL;
+                        }
                     }
 
                     js.object()

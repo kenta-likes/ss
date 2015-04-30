@@ -14,15 +14,18 @@ import javax.xml.bind.DatatypeConverter;
 import javax.crypto.Mac;
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.SecretKey;
+import javax.crypto.Cipher;
 import javax.crypto.spec.SecretKeySpec;
+import javax.crypto.spec.IvParameterSpec;
+import java.lang.StringBuilder;
 import java.security.spec.KeySpec;
 
 public class LogServer {
 
     protected static SecretKey key;
-    protected static byte[] keyBytes;
+    protected static byte[] keyBytes, iv;
     protected static String HOSTNAME;
-    protected static String ADMIN_PASSWORD;
+    protected static String ADMIN_PASSWORD = "systemsecurity";
     protected static boolean newKey;
 
     public static void main(String[] args) {
@@ -103,8 +106,64 @@ public class LogServer {
         return Response.SUCCESS;
     }
 
-    protected static String getLog() {
-        return null;
+    protected static String getLog(int lines) {
+        SecretKey k;
+        byte[] authKeyBytes, iv, encKeyBytes;
+        Cipher decoder;
+        StringBuilder b = new StringBuilder();
+        MessageDigest keyGenerator, iterator;
+        
+
+        try {
+            keyGenerator = MessageDigest.getInstance("SHA-384");
+            iterator = MessageDigest.getInstance("SHA-256");
+            
+            BufferedReader r = new BufferedReader(new FileReader("original_logkey.conf"));
+            String encKey = r.readLine();
+            String encIV = r.readLine();
+
+            authKeyBytes = DatatypeConverter.parseBase64Binary(encKey);
+            iv = DatatypeConverter.parseBase64Binary(encIV);
+
+            decoder = Cipher.getInstance("AES/CBC/PKCS5Padding");
+
+            r = new BufferedReader(new FileReader("log.txt"));
+
+            for (int i = 0; i < lines; i++) {
+                 // tag is a tab character after the message. Discard it.
+                String line = r.readLine();
+
+                if (line == null)
+                    break;
+                
+                String base64EncLine = line.split("\t")[0];
+
+                byte[] encLine = DatatypeConverter.parseBase64Binary(base64EncLine);
+
+                byte[] digest = keyGenerator.digest(authKeyBytes);
+                
+                encKeyBytes = java.util.Arrays.copyOf(digest, 32);
+                k = new SecretKeySpec(encKeyBytes, "AES");
+
+                decoder.init(Cipher.DECRYPT_MODE, k, new IvParameterSpec(iv));
+                String decLine = new String(decoder.doFinal(encLine));
+
+                b.append(decLine);
+                b.append("\n");
+
+                digest = iterator.digest(authKeyBytes);
+                authKeyBytes = java.util.Arrays.copyOf(digest, 32);
+                
+                digest = iterator.digest(iv);
+                iv = java.util.Arrays.copyOf(digest, 16);
+            }
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+
+        return b.toString();
     }
 
     private static boolean authenticate(String logLine, String tagLine) {
@@ -143,6 +202,14 @@ public class LogServer {
             BufferedWriter w = new BufferedWriter(new FileWriter("ls_logkey.conf"));
             w.write(base64Key);
             w.newLine();
+
+            digest = md.digest(iv);
+            iv = java.util.Arrays.copyOf(digest, 16);
+            String base64IV = DatatypeConverter.printBase64Binary(iv);
+            
+            w.write(base64IV);
+            w.newLine();
+            
             w.flush();
             w.close();
             
