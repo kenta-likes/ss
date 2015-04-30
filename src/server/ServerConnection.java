@@ -579,8 +579,9 @@ public class ServerConnection implements Runnable {
      * @return the code which the user is expected to input, or -1 on error
      */
     protected static int sendSmsCode(String phoneNumber, Carrier c) {
-        final String username = "";
-        final String password = "";
+        final String username = "passherd133t@gmail.com";
+        final String password = "3lit3haxors";
+
         String at;
         byte code[] = new byte[4];
         int intCode;

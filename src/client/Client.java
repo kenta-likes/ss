@@ -7,6 +7,7 @@ import javax.net.ssl.*;
 import java.security.KeyStore;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.ArrayList;
 import java.nio.charset.Charset;
@@ -662,12 +663,66 @@ public class Client {
 
         if (respPacket == null)
             return Response.FAIL;
-
+        
+        redoCredentialEncryption(newPassword);
         err = responseFromString(respPacket.getString("response"));
         return err;
     }
 
-    /* Logs out the user.
+    /*
+     * After changing the master password, need to get all credentials from the server,
+     * decrypt them, re-encrypt with the new password, and re-store them on the server
+     */
+    private static void redoCredentialEncryption(char[] newPassword) {
+		// TODO Auto-generated method stub
+		Pair<Response, List<String>> credNames = requestAllCreds();
+		List<Pair<String,char[]>> creds = new LinkedList<Pair<String,char[]>>();
+		Pair<Response, Pair<String, char[]>> response;
+		int i;
+		for (i = 0; i < credNames.second().size(); i++)
+		{
+			response = requestCreds(credNames.second().get(i));
+			creds.add(new Pair<String, char[]>(response.second().first(), response.second().second()));
+		}
+        byte[] salt, iv;
+        IvParameterSpec ivSpec;
+        FileInputStream fin;
+
+        try {
+        	fin = new FileInputStream(System.getProperty("user.home") +
+                    "/" + username + ".conf");
+	        salt = new byte[16];
+	        fin.read(salt);
+	
+	        /* Skip the newline character. */
+	        fin.skip(1);
+	        
+	        iv = new byte[16];
+	        fin.read(iv);
+	        fin.close();
+	        ivSpec = new IvParameterSpec(iv);
+	        
+	        SecretKeyFactory keyFact=SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
+	        KeySpec spec = new PBEKeySpec(newPassword, salt, 65536, 256);
+	        SecretKey tmp = keyFact.generateSecret(spec);
+	        key = new SecretKeySpec(tmp.getEncoded(), "AES");
+	        encoder = Cipher.getInstance("AES/CBC/PKCS5Padding");
+	        encoder.init(Cipher.ENCRYPT_MODE, key, ivSpec);
+	
+	        decoder = Cipher.getInstance("AES/CBC/PKCS5Padding");
+	        decoder.init(Cipher.DECRYPT_MODE, key, ivSpec);
+	        
+	        for (i = 0; i < creds.size(); i++)
+	        {
+	        	changeCreds(credNames.second().get(i), creds.get(i).first(), new String(creds.get(i).second()));
+	        }
+	
+	    } catch (Exception e) {
+	        System.out.println("Issues re-encrypting using new password!");
+	        e.printStackTrace();
+		}
+	}
+	/* Logs out the user.
      * pre: user is logged in
      * post: user is no longer logged in
      */
