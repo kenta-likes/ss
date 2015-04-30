@@ -7,6 +7,7 @@ import util.Pair;
 import util.Response;
 import org.json.*;
 import javax.xml.bind.DatatypeConverter;
+import javax.crypto.spec.SecretKeySpec;
 
 public class LogConnection implements Runnable {
 
@@ -36,11 +37,12 @@ public class LogConnection implements Runnable {
 
                     switch (command) {
                     case "ADD":
-                        /* Make sure we are contacted by the right person. */
-                        if (!socket.getInetAddress().getHostName().equals(LogServer.HOSTNAME))
+                        /* Make sure we are contacted by the right person.
+                         * If not, terminate connection. */
+                        if (!socket.getInetAddress().getHostName().equals(LogServer.HOSTNAME)) {
                             resp = Response.FAIL;
-                        else {
-                            
+                            return;
+                        } else {
                             String entry = req.getString("entry");
                             String tag = req.getString("tag");
                             resp = LogServer.log(entry, tag);
@@ -49,6 +51,10 @@ public class LogConnection implements Runnable {
                         js.object()
                             .key("response").value(resp.name())
                             .endObject();
+
+                        /* If we fail to authenticate, then terminate connection. */
+                        if (resp == Response.FAIL)
+                            return;
 
                         break;
 
@@ -77,11 +83,31 @@ public class LogConnection implements Runnable {
                         else {
                             log = LogServer.getLog();
                             js = js.key("log").value(log);
+                            resp = Response.SUCCESS;
                         }
 
                         js.key("response").value(resp.name())
                             .endObject();
+
+                        break;
+
+                    case "KEY":
+                        if (LogServer.newKey == true)
+                            resp = Response.FAIL;
+                        else {
+                            resp = Response.SUCCESS;
+                            String base64Key = req.getString("key");
+                            LogServer.keyBytes = DatatypeConverter.parseBase64Binary(base64Key);
+                            LogServer.key = new SecretKeySpec(LogServer.keyBytes, "AES/CBC/PKCS5PAdding");
+                        }
+
+                        js.object()
+                            .key("response").value(resp)
+                            .endObject();
                     }
+
+                    w.newLine();
+                    w.flush();
                 }
             }
         } catch (Exception e) {

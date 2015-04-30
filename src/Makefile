@@ -2,7 +2,7 @@
 json: org/json/*.java
 	javac org/json/*.java
 
-server: json server/Server.java server/ServerConnection.java util/Pair.java util/Response.java util/Carrier.java
+server: json server/Server.java server/ServerConnection.java server/Logger.java util/Pair.java util/Response.java util/Carrier.java
 	javac -cp javamail-1.4.7/mail.jar:. server/Server.java server/ServerConnection.java util/Pair.java util/Response.java util/Carrier.java util/Consts.java
 
 client: json client/Client.java client/Shell.java util/Pair.java util/Response.java
@@ -21,5 +21,8 @@ clientjar: json client
 
 serverjar: json server
 	jar cvfm Server.jar server/MANIFEST.MF server/*.class server/*.java util/*.class util/*.java org/json/*.class javamail-1.4.7/mail.jar
+
+loggingjar: json logging
+	jar cvfm LogServer.jar logging/MANIFEST.MF logging/*.class logging/*.java util/*.class util/*.java org/json/*.class
 
 all: server client json clientjar serverjar

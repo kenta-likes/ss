@@ -1,4 +1,5 @@
 package logging;
+
 import java.io.*;
 import java.net.*;
 import javax.net.ssl.*;
@@ -22,9 +23,10 @@ public class LogServer {
     protected static byte[] keyBytes;
     protected static String HOSTNAME;
     protected static String ADMIN_PASSWORD;
+    protected static boolean newKey;
 
     public static void main(String[] args) {
-        String ksName = "auditstore.jks"; //server side keystore
+        String ksName = "audit_ts.jks"; //server side keystore
         char ksPass[] = "systemsecurity".toCharArray();
         char ctPass[] = "systemsecurity".toCharArray();
 
@@ -46,18 +48,21 @@ public class LogServer {
             sc.init(kmf.getKeyManagers(), null, new SecureRandom());
             SSLServerSocketFactory ssf = sc.getServerSocketFactory();
             SSLServerSocket s
-                = (SSLServerSocket) ssf.createServerSocket(8888);
+                = (SSLServerSocket) ssf.createServerSocket(8889);
 
             ExecutorService executor = Executors.newFixedThreadPool(8);
 
             /* Read in key. */
-            BufferedReader f = new BufferedReader(new FileReader("logkey.conf"));
-            keyBytes = DatatypeConverter.parseBase64Binary(f.readLine());
-
-            SecretKeyFactory keyFact = SecretKeyFactory.getInstance("AES");
-            KeySpec spec = new SecretKeySpec(keyBytes, "AES/CBC/PKCS5Padding");
-            key = keyFact.generateSecret(spec);
-
+            File keyFile = new File("logkey.conf");
+            if (keyFile.exists() && !keyFile.isDirectory()) {
+                BufferedReader f = new BufferedReader(new FileReader("logkey.conf"));
+                keyBytes = DatatypeConverter.parseBase64Binary(f.readLine());
+                newKey = false;
+                
+                key = new SecretKeySpec(keyBytes, "AES/CBC/PKCS5Padding");
+            } else {
+                newKey = true;
+            }
 
             while (true) {
                 SSLSocket c = (SSLSocket) s.accept();
@@ -92,7 +97,7 @@ public class LogServer {
     }
 
     protected static String getLog() {
-        failwith "Not implemented!"
+        return null;
     }
 
     private static boolean authenticate(String logLine, String tagLine) {
@@ -131,9 +136,15 @@ public class LogServer {
             /* Use only first 256 bits of hash. */
             keyBytes = java.util.Arrays.copyOf(digest, 32);
 
-            SecretKeyFactory keyFact = SecretKeyFactory.getInstance("AES");
-            KeySpec spec = new SecretKeySpec(keyBytes, "AES/CBC/PKCS5Padding");
-            key = keyFact.generateSecret(spec);
+            key = new SecretKeySpec(keyBytes, "AES/CBC/PKCS5Padding");
+
+            String base64Key = DatatypeConverter.printBase64Binary(keyBytes);
+            BufferedWriter w = new BufferedWriter(new FileWriter("ls_logkey.conf"));
+            w.write(base64Key);
+            w.newLine();
+            w.flush();
+            w.close();
+            
         } catch (Exception e) {
             e.printStackTrace();
         }
