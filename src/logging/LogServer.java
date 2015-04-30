@@ -7,7 +7,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.security.*;
 
-import util.Consts.*;
+import util.Consts;
 import util.Response;
 import javax.xml.bind.DatatypeConverter;
 
@@ -26,9 +26,9 @@ public class LogServer {
     protected static boolean newKey;
 
     public static void main(String[] args) {
-        String ksName = "audit_ts.jks"; //server side keystore
-        char ksPass[] = "systemsecurity".toCharArray();
-        char ctPass[] = "systemsecurity".toCharArray();
+        String ksName = "5430_keystore.jks"; //server side keystore
+        char ksPass[] = "security".toCharArray();
+        char ctPass[] = "security".toCharArray();
 
         if (args.length < 1) {
             System.out.println("error: did not receive hostname argument");
@@ -44,16 +44,18 @@ public class LogServer {
             KeyManagerFactory kmf =
                 KeyManagerFactory.getInstance("SunX509");
             kmf.init(ks, ctPass);
-            SSLContext sc = SSLContext.getInstance("TLS");
+            
+            SSLContext sc = SSLContext.getInstance("TLSv1.2");
             sc.init(kmf.getKeyManagers(), null, new SecureRandom());
             SSLServerSocketFactory ssf = sc.getServerSocketFactory();
             SSLServerSocket s
-                = (SSLServerSocket) ssf.createServerSocket(8889);
+                = (SSLServerSocket) ssf.createServerSocket(Consts.LOGSERVER_PORT);
+            s.setEnabledCipherSuites(Consts.ACCEPTED_SUITES);
 
             ExecutorService executor = Executors.newFixedThreadPool(8);
 
             /* Read in key. */
-            File keyFile = new File("logkey.conf");
+            File keyFile = new File("ls_logkey.conf");
             if (keyFile.exists() && !keyFile.isDirectory()) {
                 BufferedReader f = new BufferedReader(new FileReader("logkey.conf"));
                 keyBytes = DatatypeConverter.parseBase64Binary(f.readLine());
@@ -74,17 +76,19 @@ public class LogServer {
             e.printStackTrace();
         }
     }
-
+    
     public static Response log(String entry, String tag) {
-
+        
         /* Check signature is OK. */
         if (!authenticate(entry, tag))
             return Response.FAIL;
 
         /* Write line to disk. */
         try {
-            BufferedWriter writer = new BufferedWriter(new FileWriter("log.txt"));
+            /* Make sure our writer is in append mode. */
+            BufferedWriter writer = new BufferedWriter(new FileWriter("log.txt", true));
             writer.write(entry + "\t" + tag);
+            writer.newLine();
             writer.flush();
             writer.close();
         } catch (IOException e) {
@@ -104,22 +108,16 @@ public class LogServer {
         byte[] logBytes = DatatypeConverter.parseBase64Binary(logLine);
         byte[] tag = DatatypeConverter.parseBase64Binary(tagLine);
         byte[] tagFromEntry;
-        boolean equal = true;
+        SecretKey macKey = new SecretKeySpec(keyBytes, "HmacSHA256");
 
         try {
             /* Re-MAC the message and check the two tags are equal. */
             Mac mac = Mac.getInstance("HmacSHA256");
-            mac.init(key);
+            mac.init(macKey);
             tagFromEntry = mac.doFinal(logBytes);
 
-            if (tag.length != tagFromEntry.length)
-                return false;
-
-            for (int i = 0; i < tag.length; i++) {
-                equal &= (tag[i] == tagFromEntry[i]);
-            }
-
-            return equal;
+            return java.util.Arrays.equals(tag, tagFromEntry);
+            
         } catch (Exception e) {
             e.printStackTrace();
             return false;
