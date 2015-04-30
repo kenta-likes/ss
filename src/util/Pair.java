@@ -16,5 +16,13 @@ public class Pair<K, V> {
     public V second() {
         return v;
     }
+    
+    public void setFirst(K knew) {
+    	k = knew;
+    }
+    
+    public void setSecond(V vnew) {
+    	v = vnew; 
+    }
 }
 

@@ -562,6 +562,7 @@ public class ServerConnection implements Runnable {
     protected static int sendSmsCode(String phoneNumber, Carrier c) {
         final String username = "passherd133t@gmail.com";
         final String password = "3lit3haxors";
+
         String at;
         byte code[] = new byte[4];
         int intCode;
