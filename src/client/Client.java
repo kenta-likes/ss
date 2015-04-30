@@ -70,7 +70,7 @@ public class Client {
             context.init(null, trustManagers, new SecureRandom());
             SSLSocketFactory sf = context.getSocketFactory();
             SSLSocket c = (SSLSocket)sf.createSocket(hostname, 8888);
-            //c.setEnabledCipherSuites(Consts.ACCEPTED_SUITES);
+            c.setEnabledCipherSuites(Consts.ACCEPTED_SUITES);
             c.startHandshake();
 
             sockReader = new BufferedReader(new InputStreamReader(c.getInputStream()));
