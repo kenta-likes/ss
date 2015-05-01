@@ -25,4 +25,4 @@ serverjar: json server
 loggingjar: json logging
 	jar cvfm LogServer.jar logging/server/MANIFEST.MF logging/LogServer.class logging/LogConnection.class util/*.class util/*.java org/json/*.class; jar cvfm LogClient.jar logging/client/MANIFEST.MF logging/LogClient.class util/*.class org/json/*.class
 
-all: server client json clientjar serverjar
+all: server client json clientjar serverjar loggingjar
