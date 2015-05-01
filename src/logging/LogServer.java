@@ -27,6 +27,7 @@ public class LogServer {
     protected static String HOSTNAME;
     protected static String ADMIN_PASSWORD = "systemsecurity";
     protected static boolean newKey;
+    protected static int lines;
 
     public static void main(String[] args) {
         String ksName = "5430_keystore.jks"; //server side keystore
@@ -57,23 +58,19 @@ public class LogServer {
 
             ExecutorService executor = Executors.newFixedThreadPool(8);
 
-            /* Read in key. */
-            File keyFile = new File("ls_logkey.conf");
-            File originalKeyFile = new File("original_logkey.conf");
+            newKey = true;
 
-            /* Make sure we have the original and the current key. */
-            if (keyFile.exists() && !keyFile.isDirectory() && originalKeyFile.exists() && !originalKeyFile.isDirectory()) {
-                BufferedReader f = new BufferedReader(new FileReader("ls_logkey.conf"));
-                keyBytes = DatatypeConverter.parseBase64Binary(f.readLine());
-                newKey = false;
-                
-                key = new SecretKeySpec(keyBytes, "AES/CBC/PKCS5Padding");
-            } else {
-                newKey = true;
-            }
+            /* Delete our old log :( */
+            java.nio.file.Path logPath =
+                java.nio.file.FileSystems.getDefault().getPath("log.txt");
+            
+            java.nio.file.Files.deleteIfExists(logPath);
+
+            lines = 0;
 
             while (true) {
                 SSLSocket c = (SSLSocket) s.accept();
+                System.out.println("Got a new connection.");
                 Runnable connection = new logging.LogConnection(c);
                 executor.execute(connection);
             }
@@ -84,7 +81,7 @@ public class LogServer {
     }
     
     public static Response log(String entry, String tag) {
-        
+
         /* Check signature is OK. */
         if (!authenticate(entry, tag))
             return Response.FAIL;
@@ -97,6 +94,8 @@ public class LogServer {
             writer.newLine();
             writer.flush();
             writer.close();
+
+            lines++;
         } catch (IOException e) {
             e.printStackTrace();
             return Response.FAIL;

@@ -35,6 +35,9 @@ public class LogConnection implements Runnable {
                 Response resp;
 
                 switch (command) {
+                case "CLOSE":
+                    return;
+                    
                 case "ADD":
                     /* Make sure we are contacted by the right person.
                      * If not, terminate connection. */
@@ -75,15 +78,30 @@ public class LogConnection implements Runnable {
 
                 case "GET":
                     String log;
-                    int lines = req.getInt("lines");
+                    String lines = req.getString("lines");
+
                     js = js.object();
-                            
+
                     if (!authenticated)
                         resp = Response.FAIL;
                     else {
-                        log = LogServer.getLog(lines);
-                        js = js.key("log").value(log);
-                        resp = Response.SUCCESS;
+                        if (lines.equals("all")) {
+                            
+                            log = LogServer.getLog(LogServer.lines);
+                            js = js.key("log").value(log);
+                            resp = Response.SUCCESS;
+                            
+                        } else {
+                            
+                            System.out.print(lines);
+                            try {
+                                log = LogServer.getLog(Integer.parseInt(lines));
+                                js = js.key("log").value(log);
+                                resp = Response.SUCCESS;
+                            } catch (NumberFormatException e) {
+                                resp = Response.FAIL;
+                            }
+                        }
                     }
 
                     js.key("response").value(resp.name())
@@ -92,12 +110,23 @@ public class LogConnection implements Runnable {
                     break;
 
                 case "KEY":
-                    if (LogServer.newKey == false)
+                    String base64Key;
+                    String base64IV;
+                    js = js.object();
+                    
+                    if (LogServer.newKey == false) {
                         resp = Response.FAIL;
-                    else {
+                        base64Key = DatatypeConverter.printBase64Binary(LogServer.keyBytes);
+                        base64IV = DatatypeConverter.printBase64Binary(LogServer.iv);
+                        
+                        js = js.key("key").value(base64Key)
+                            .key("iv").value(base64IV);
+                        
+                    } else {
                         resp = Response.SUCCESS;
-                        String base64Key = req.getString("key");
-                        String base64IV = req.getString("iv");
+                        base64Key = req.getString("key");
+                        base64IV = req.getString("iv");
+                        
                         LogServer.keyBytes = DatatypeConverter.parseBase64Binary(base64Key);
                         LogServer.key = new SecretKeySpec(LogServer.keyBytes, "AES/CBC/PKCS5PAdding");
                         LogServer.iv = DatatypeConverter.parseBase64Binary(base64IV);
@@ -116,9 +145,8 @@ public class LogConnection implements Runnable {
                             resp = Response.FAIL;
                         }
                     }
-
-                    js.object()
-                        .key("response").value(resp)
+                    
+                    js.key("response").value(resp)
                         .endObject();
                 }
 

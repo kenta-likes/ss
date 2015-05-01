@@ -16,13 +16,13 @@ default: server client logging
 clean:
 	rm server/*.class client/*.class org/json/*.class util/*.class logging/*.class
 
-clientjar: json client
+clientjar: client
 	jar cvfm Client.jar client/MANIFEST.MF client/*.class client/*.java util/*.class util/*.java org/json/*.class
 
-serverjar: json server
+serverjar: server
 	jar cvfm Server.jar server/MANIFEST.MF server/*.class server/*.java util/*.class util/*.java org/json/*.class javamail-1.4.7/mail.jar
 
-loggingjar: json logging
+loggingjar: logging
 	jar cvfm LogServer.jar logging/server/MANIFEST.MF logging/LogServer.class logging/LogConnection.class util/*.class util/*.java org/json/*.class; jar cvfm LogClient.jar logging/client/MANIFEST.MF logging/LogClient.class util/*.class org/json/*.class
 
-all: server client json clientjar serverjar loggingjar
+all: json clientjar serverjar loggingjar

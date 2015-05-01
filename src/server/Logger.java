@@ -44,31 +44,15 @@ public class Logger implements Runnable {
 
         try {
             File keyFile = new File("s_logkey.conf");
-            byte[] keyBytes;
 
-            /* Look for an existing authentication key. */
-            if (keyFile.exists() && !keyFile.isDirectory()) {
-                BufferedReader b = new BufferedReader(new FileReader(keyFile));
-                String base64Key = b.readLine();
-                String base64IV = b.readLine();
-
-                keyBytes = DatatypeConverter.parseBase64Binary(base64Key);
-                iv = DatatypeConverter.parseBase64Binary(base64IV);
-                newKey = false;
+            rand = SecureRandom.getInstance("SHA1PRNG");
+            keyBytes = new byte[32];
                     
-            } else {
-                /* No key file found.  Generate a new key. */
-                rand = SecureRandom.getInstance("SHA1PRNG");
-                keyBytes = new byte[32];
-                    
-                rand.nextBytes(keyBytes);
-                key = new SecretKeySpec(keyBytes, "AES");
+            rand.nextBytes(keyBytes);
+            key = new SecretKeySpec(keyBytes, "AES");
 
-                iv = new byte[16];
-                rand.nextBytes(iv);
-                
-                newKey = true;
-            }
+            iv = new byte[16];
+            rand.nextBytes(iv);
 
             /* Three different MessageDigest/MAC objects for different purposes.
              * keyGenerator is used to make encryption keys.
@@ -103,6 +87,19 @@ public class Logger implements Runnable {
             SSLSocket c = (SSLSocket) fact.createSocket(logHostname, Consts.LOGSERVER_PORT);
             c.setEnabledCipherSuites(Consts.ACCEPTED_SUITES);
             c.startHandshake();
+
+            /* Try to close the socket cleanly on CTRL-C. */
+            Runtime.getRuntime().addShutdownHook(new Thread(){public void run(){
+                try {
+                    new JSONWriter(sockWriter).object().key("command").value("CLOSE")
+                        .endObject();
+
+                    sockWriter.println();
+                    sockWriter.flush();
+                    
+                    c.close();
+                } catch (IOException e) { /* failed :( */ }
+            }});
             
             sockReader = new BufferedReader(new InputStreamReader(c.getInputStream()));
             sockWriter = new PrintWriter(c.getOutputStream(), true);
@@ -111,39 +108,33 @@ public class Logger implements Runnable {
             return;
         }
 
-        if (newKey == true) {
-            try {
-                SecureRandom keyRand = SecureRandom.getInstance("SHA1PRNG");
-                keyBytes = new byte[32];
-                keyRand.nextBytes(keyBytes);
+        try {
+            String k = DatatypeConverter.printBase64Binary(keyBytes);
+            String i = DatatypeConverter.printBase64Binary(iv);
 
-                String k = DatatypeConverter.printBase64Binary(keyBytes);
-                String i = DatatypeConverter.printBase64Binary(iv);
+            JSONWriter w = new JSONWriter(sockWriter);
+            w.object()
+                .key("command").value("KEY")
+                .key("key").value(k)
+                .key("iv").value(i)
+                .endObject();
 
-                JSONWriter w = new JSONWriter(sockWriter);
-                w.object()
-                    .key("command").value("KEY")
-                    .key("key").value(k)
-                    .key("iv").value(i)
-                    .endObject();
+            sockWriter.println();
+            sockWriter.flush();
 
-                sockWriter.println();
-                sockWriter.flush();
-
-                String resp = sockReader.readLine();
+            JSONObject resp = new JSONObject(sockReader.readLine());
                 
-                if (resp.equals("FAIL")) {
-                    System.out.println("Please reconfigure logserver & server keys!");
-                    return;
-                }
-
-                newKey = false;
-            } catch (Exception e) {
-                System.out.println("New key transmission failed.");
-                e.printStackTrace();
-                return;
+            if (resp.getString("response").equals("FAIL")) {
+                keyBytes = DatatypeConverter.parseBase64Binary(resp.getString("key"));
+                iv = DatatypeConverter.parseBase64Binary(resp.getString("iv"));
             }
+
+        } catch (Exception e) {
+            System.out.println("Error: failed to synchronize key with log server!");
+            e.printStackTrace();
+            return;
         }
+
 
         /* Logging loop.  Wait for new entries in the logLine list. When they arrive,
          * dequeue, encrypt, sign, and submit to log server.
@@ -162,6 +153,7 @@ public class Logger implements Runnable {
                 while (Server.logLines.isEmpty())
                     Server.logCondition.await();
 
+                /* Pop the first entry off the log list. */
                 line = Server.logLines.remove(0);
                     
             } catch (InterruptedException e) {
@@ -253,13 +245,6 @@ public class Logger implements Runnable {
             iv = java.util.Arrays.copyOf(digest, 16);
 
             key = new SecretKeySpec(keyBytes, "AES/CBC/PKCS5Padding");
-
-            String base64Key = DatatypeConverter.printBase64Binary(keyBytes);
-            BufferedWriter w = new BufferedWriter(new FileWriter("s_logkey.conf"));
-            w.write(base64Key);
-            w.newLine();
-            w.flush();
-            w.close();
             
         } catch (Exception e) {
             e.printStackTrace();
