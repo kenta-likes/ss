@@ -709,15 +709,16 @@ public class ServerConnection implements Runnable {
               authAccount(auth_usr, password, "0000");
             }
             /*End of Test purpose code*/
-
-            byte phone[] = new byte[PHONE_LEN]; // phone number
-            int carrier; // hold the carrier info
-            FileInputStream phone_reader = new FileInputStream(("users/" + auth_usr).concat("/master.txt"));
-            phone_reader.skip(PASS_LEN + SALT_LEN);
-            phone_reader.read(phone, 0, PHONE_LEN);
-            carrier = phone_reader.read() - '0'; // use this later
-            two_step_code = Integer.toString(sendSmsCode(new String(phone),
-                                                         Carrier.values()[carrier])); // TODO: change ATT to user's carrier
+            if (username == null){
+              byte phone[] = new byte[PHONE_LEN]; // phone number
+              int carrier; // hold the carrier info
+              FileInputStream phone_reader = new FileInputStream(("users/" + auth_usr).concat("/master.txt"));
+              phone_reader.skip(PASS_LEN + SALT_LEN);
+              phone_reader.read(phone, 0, PHONE_LEN);
+              carrier = phone_reader.read() - '0'; // use this later
+              two_step_code = Integer.toString(sendSmsCode(new String(phone),
+                                                           Carrier.values()[carrier])); // TODO: change ATT to user's carrier
+            }
         } catch (IOException e) {
             e.printStackTrace();
             return Response.FAIL;
