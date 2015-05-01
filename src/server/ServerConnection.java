@@ -61,10 +61,6 @@ public class ServerConnection implements Runnable {
     protected boolean verified_password = false;
     protected String two_step_code;
 
-    /* Authentication key for logging! */
-    protected SecretKey key;
-    protected byte[] keyBytes;
-
     public ServerConnection(SSLSocket s) {
         this.socket = s;
         messageDigest = null;
@@ -97,27 +93,27 @@ public class ServerConnection implements Runnable {
 
     public void run() {
         try {
-						//set up connection with audit server
-						/*
-						String ksName = "audit_ts.jks"; //server
-						char passphrase[] = "systemsecurity".toCharArray();
-						KeyStore keystore = KeyStore.getInstance("JKS");
-						keystore.load(new FileInputStream(ksName), passphrase);
-						TrustManagerFactory tmf = TrustManagerFactory.getInstance("SunX509");
-						tmf.init(keystore);
+            //set up connection with audit server
+            /*
+              String ksName = "audit_ts.jks"; //server
+              char passphrase[] = "systemsecurity".toCharArray();
+              KeyStore keystore = KeyStore.getInstance("JKS");
+              keystore.load(new FileInputStream(ksName), passphrase);
+              TrustManagerFactory tmf = TrustManagerFactory.getInstance("SunX509");
+              tmf.init(keystore);
 						
-						SSLContext context = SSLContext.getInstance("TLS");
-						TrustManager[] trustManagers = tmf.getTrustManagers();
-						context.init(null, trustManagers, new SecureRandom());
-						SSLSocketFactory sf = context.getSocketFactory();
-						SSLSocket audit_socket = (SSLSocket)sf.createSocket(HOSTNAME, 7777);
-						//changed from 8888
-						audit_socket.startHandshake();
+              SSLContext context = SSLContext.getInstance("TLS");
+              TrustManager[] trustManagers = tmf.getTrustManagers();
+              context.init(null, trustManagers, new SecureRandom());
+              SSLSocketFactory sf = context.getSocketFactory();
+              SSLSocket audit_socket = (SSLSocket)sf.createSocket(HOSTNAME, 7777);
+              //changed from 8888
+              audit_socket.startHandshake();
 						
-						//writer/reader for comm with audit server
-						audit_reader = new BufferedReader(new InputStreamReader(audit_socket.getInputStream()));
-						audit_writer = new PrintWriter(audit_socket.getOutputStream(), true);
-						*/
+              //writer/reader for comm with audit server
+              audit_reader = new BufferedReader(new InputStreamReader(audit_socket.getInputStream()));
+              audit_writer = new PrintWriter(audit_socket.getOutputStream(), true);
+            */
 
             // writer,reader for comm with client
             BufferedWriter w = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
@@ -131,187 +127,187 @@ public class ServerConnection implements Runnable {
                 while ((m = r.readLine()) != null) {
                     js = new JSONWriter(w);
                     req = new JSONObject(m);
-            try {
-                command = req.getString("command");
-                // check for authenticated user
-                // System.out.println("ServerConnection: command="
-                // +command);
-                if (username != null) {
-                    switch (command) {
-                    case "ATHN":
-                    case "RGST":
-                      js.object().key("response").value(Response.DUP_LOGIN).endObject();
-                    break;
-                    case "ADD":
-                        String service = req.getString("service");
-                        String sName = req.getString("username");
-                        String sPass = req.getString("password");
-                        js.object()
-                          .key("response")
-                            .value(addCredential(service, sName, sPass).name()).endObject();
+                    try {
+                        command = req.getString("command");
+                        // check for authenticated user
+                        // System.out.println("ServerConnection: command="
+                        // +command);
+                        if (username != null) {
+                            switch (command) {
+                            case "ATHN":
+                            case "RGST":
+                                js.object().key("response").value(Response.DUP_LOGIN).endObject();
+                            break;
+                            case "ADD":
+                                String service = req.getString("service");
+                                String sName = req.getString("username");
+                                String sPass = req.getString("password");
+                                js.object()
+                                    .key("response")
+                                    .value(addCredential(service, sName, sPass).name()).endObject();
                         
-                        break;
-                    case "GET1":
-                        ArrayList<String> creds;
-                        Pair<Response, ArrayList<String>> pair = retrieveCredentials();
-                        resp = pair.first();
-                        creds = pair.second();
-                        js.object().key("response").value(resp.name());
-                        if (resp == Response.SUCCESS) {
-                            js.key("data").object().key("credentials")
-                                .array();
+                                break;
+                            case "GET1":
+                                ArrayList<String> creds;
+                                Pair<Response, ArrayList<String>> pair = retrieveCredentials();
+                                resp = pair.first();
+                                creds = pair.second();
+                                js.object().key("response").value(resp.name());
+                                if (resp == Response.SUCCESS) {
+                                    js.key("data").object().key("credentials")
+                                        .array();
 
-                            for (String s : creds)
-                                js.value(s);
+                                    for (String s : creds)
+                                        js.value(s);
 
-                            js.endArray();
+                                    js.endArray();
 
-                            js.endObject();
-                        }
-                        js.endObject();
-                        break;
+                                    js.endObject();
+                                }
+                                js.endObject();
+                                break;
 
-                    case "GET2":
-                        Pair<Response, Pair<String, String>> cred;
-                        service = req.getString("service");
-                        cred = getPassword(service);
-                        resp = cred.first();
-                        if (resp == Response.SUCCESS) {
-                            js.object().key("response").value(resp.name())
-                                .key("username")
-                                .value(cred.second().first())
-                                .key("password")
-                                .value(cred.second().second())
-                                .endObject();
-                        } else {
-                            js.object().key("response").value(resp.name())
-                                .key("username").value("")
-                                .key("password").value("").endObject();
-                        }
-                        break;
+                            case "GET2":
+                                Pair<Response, Pair<String, String>> cred;
+                                service = req.getString("service");
+                                cred = getPassword(service);
+                                resp = cred.first();
+                                if (resp == Response.SUCCESS) {
+                                    js.object().key("response").value(resp.name())
+                                        .key("username")
+                                        .value(cred.second().first())
+                                        .key("password")
+                                        .value(cred.second().second())
+                                        .endObject();
+                                } else {
+                                    js.object().key("response").value(resp.name())
+                                        .key("username").value("")
+                                        .key("password").value("").endObject();
+                                }
+                                break;
 
-                    case "DEL":
-                        String password = req.getString("password");
-                        resp = deleteAccount(password);
+                            case "DEL":
+                                String password = req.getString("password");
+                                resp = deleteAccount(password);
 
-                        js.object().key("response").value(resp.name())
-                            .endObject();
+                                js.object().key("response").value(resp.name())
+                                    .endObject();
 
-                        break;
+                                break;
 
-                    case "CHNG":
-                        String oldPass = req.getString("oldPassword");
-                        String newPass = req.getString("newPassword");
-                        resp = changeAccountPassword(oldPass, newPass);
+                            case "CHNG":
+                                String oldPass = req.getString("oldPassword");
+                                String newPass = req.getString("newPassword");
+                                resp = changeAccountPassword(oldPass, newPass);
 
-                        js.object().key("response").value(resp.name())
-                            .endObject();
-                        break;
+                                js.object().key("response").value(resp.name())
+                                    .endObject();
+                                break;
 
-                    case "REMV":
-                        service = req.getString("service");
-                        resp = deleteCredential(service);
-                        js.object().key("response").value(resp.name())
-                            .endObject();
-                        break;
+                            case "REMV":
+                                service = req.getString("service");
+                                resp = deleteCredential(service);
+                                js.object().key("response").value(resp.name())
+                                    .endObject();
+                                break;
 
-                    case "EDIT":
-                        service = req.getString("service");
-                        sName = req.getString("username");
-                        sPass = req.getString("password");
-                        resp = updateCredential(service, sName, sPass);
+                            case "EDIT":
+                                service = req.getString("service");
+                                sName = req.getString("username");
+                                sPass = req.getString("password");
+                                resp = updateCredential(service, sName, sPass);
 
-                        js.object().key("response").value(resp.name())
-                            .endObject();
+                                js.object().key("response").value(resp.name())
+                                    .endObject();
 
-                        break;
+                                break;
 
-                    case "CLOSE":
-                        resp = logout();
-                        js.object().key("response").value(resp.name())
-                            .endObject();
+                            case "CLOSE":
+                                resp = logout();
+                                js.object().key("response").value(resp.name())
+                                    .endObject();
 
-                        if (resp == Response.SUCCESS) {
+                                if (resp == Response.SUCCESS) {
+                                    w.newLine();
+                                    w.flush();
+                                    socket.close();
+                                    return;
+                                }
+
+                            default:
+                                // System.out.println("username is not null: command is "+command);
+                                // TODO: this is a stub to prevent json from
+                                // breaking
+                                js.object().key("response").value("NAUTH")
+                                    .endObject();
+                            }
+
                             w.newLine();
                             w.flush();
-                            socket.close();
-                            return;
+
+                        } else { // only allow registration or authentication
+                            switch (command) {
+                            case "LGIN":
+                                authName = req.getString("username");
+                                authPass = req.getString("password");
+                                resp = verifyPassword(authName, authPass);
+
+                                js.object().key("response").value(resp.name())
+                                    .endObject();
+                                break;
+                            case "ATHN":
+                                authName = req.getString("username");
+                                authPass = req.getString("password");
+                                String code = req.getString("code");
+                                resp = authAccount(authName, authPass, code);
+                                js.object().key("response").value(resp.name())
+                                    .endObject();
+                                break;
+
+                            case "RGST":
+                                String regName = req.getString("username");
+                                String regPass = req.getString("password");
+                                String email = req.getString("email");
+                                String carrier = req.getString("carrier");
+                                String phone = req.getString("phone");
+                                resp = createAccount(regName, regPass, phone,
+                                                     carrier);
+
+                                js.object().key("response").value(resp.name())
+                                    .endObject();
+
+                                break;
+                            case "CLOSE":
+                                logout();
+                                js.object().key("response").value("SUCCESS")
+                                    .endObject();
+                                break;
+                            default:
+                                js.object().key("response").value("NAUTH")
+                                    .endObject();
+                            }
+                            w.newLine();
+                            w.flush();
                         }
-
-                    default:
-                        // System.out.println("username is not null: command is "+command);
-                        // TODO: this is a stub to prevent json from
-                        // breaking
-                        js.object().key("response").value("NAUTH")
-                            .endObject();
+                    } catch (JSONException je){
+                        je.printStackTrace(); //catch, then move on...
+                        js.object().key("response").value("BAD_FORMAT").endObject();//send fail to client
+                        w.newLine();
+                        w.flush();
                     }
-
-                    w.newLine();
-                    w.flush();
-
-                } else { // only allow registration or authentication
-                    switch (command) {
-                    case "LGIN":
-                        authName = req.getString("username");
-                        authPass = req.getString("password");
-                        resp = verifyPassword(authName, authPass);
-
-                        js.object().key("response").value(resp.name())
-                            .endObject();
-                        break;
-                    case "ATHN":
-                        authName = req.getString("username");
-                        authPass = req.getString("password");
-                        String code = req.getString("code");
-                        resp = authAccount(authName, authPass, code);
-                        js.object().key("response").value(resp.name())
-                            .endObject();
-                        break;
-
-                    case "RGST":
-                        String regName = req.getString("username");
-                        String regPass = req.getString("password");
-                        String email = req.getString("email");
-                        String carrier = req.getString("carrier");
-                        String phone = req.getString("phone");
-                        resp = createAccount(regName, regPass, phone,
-                                             carrier);
-
-                        js.object().key("response").value(resp.name())
-                            .endObject();
-
-                        break;
-                    case "CLOSE":
-                        logout();
-                        js.object().key("response").value("SUCCESS")
-                            .endObject();
-                        break;
-                    default:
-                        js.object().key("response").value("NAUTH")
-                            .endObject();
-                    }
-                    w.newLine();
-                    w.flush();
                 }
-            } catch (JSONException je){
-											je.printStackTrace(); //catch, then move on...
-											js.object().key("response").value("BAD_FORMAT").endObject();//send fail to client
-											w.newLine();
-											w.flush();
-										}
+                if (timed_out){
+                    break;
                 }
-								if (timed_out){
-									break;
-								}
             }
-						//exit loop for whatever reason (timeout break etc.)
+            //exit loop for whatever reason (timeout break etc.)
             // write back to file, then remove reference to the hash table etc.
             if (username != null && user_table != null){
-              logout();
-						}
+                logout();
+            }
             user_table = null;
-						username = null;
-            logCenter(username, "Logout", Response.SUCCESS);
+            username = null;
+            log(username, "Logout", Response.SUCCESS);
             r.close();
             socket.close();
         } catch (Exception e) {
@@ -372,45 +368,31 @@ public class ServerConnection implements Runnable {
      * Helper function for logging for a specific user Should be used for
      * everything associated with the user
      */
-    protected void logUserResult(String method_name, Response res) {
+    protected void log(String user, String method_name, Response res) {
         try {
-            Date date = new Date();
-            // PrintWriter logger = new PrintWriter(curr_dir.concat("/log.txt"),
-            // "UTF-8");
-            String ip_addr = socket == null
-                || socket.getRemoteSocketAddress() == null ? "N/A" : socket
-                .getRemoteSocketAddress().toString();
-            PrintWriter logger = new PrintWriter(new BufferedWriter(
-                                                                    new FileWriter(curr_dir.concat("/user_log.txt"), true)));
-            logger.println(date.toString() + "\t" + ip_addr + "\t"
-                           + method_name + "\t" + res.name());
-            logger.flush();
-            logger.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
+            String logLine;
 
-    /*
-     * Helper function for logging for the server
-     */
-
-    protected void logCenter(String user, String method_name, Response res) {
-        try (PrintWriter out = new PrintWriter(new BufferedWriter(
-                                                                  new FileWriter("centerlog.txt", true)))) {
-            Date date = new Date();
-            if (user == null) {
+            if (user == null)
                 user = "N/A";
-            }
+            
+            Date date = new Date();
+
             String ip_addr = socket == null
                 || socket.getRemoteSocketAddress() == null ? "N/A" : socket
                 .getRemoteSocketAddress().toString();
-            out.println(user + "\t" + date.toString() + "\t" + ip_addr + "\t"
-                        + method_name + "\t" + res.name());
-            out.flush();
-            out.close();
-        } catch (IOException e) {
+            
+            logLine = date.toString() + "\t" + user + "\t" + ip_addr + "\t"
+                + method_name + "\t" + res.name();
+            
+            Server.logLock.lock();
+            Server.logLines.add(logLine);
+
+            /* Notify that there is a new line to consume! */
+            Server.logCondition.signal();
+        } catch (Exception e) {
             e.printStackTrace();
+        } finally {
+            Server.logLock.unlock();
         }
     }
 
@@ -426,8 +408,8 @@ public class ServerConnection implements Runnable {
             return Response.WRONG_INPT;
         }
         if (!this.checkUsernameFormat(new_usr)
-              || !(phone.matches("[0-9]+") && phone.length() == 10)
-              || !(carrier.matches("[0-9]+") && Integer.parseInt(carrier) >= 0 && Integer.parseInt(carrier) <= 2) ) {
+            || !(phone.matches("[0-9]+") && phone.length() == 10)
+            || !(carrier.matches("[0-9]+") && Integer.parseInt(carrier) >= 0 && Integer.parseInt(carrier) <= 2) ) {
             return Response.BAD_FORMAT;
         }
         // Directory already exists
@@ -487,8 +469,7 @@ public class ServerConnection implements Runnable {
         // username = new_usr; //don't do this actually
 
         // Logging
-        logCenter(username, "Create Account", Response.SUCCESS);
-        logUserResult("Create Account", Response.SUCCESS); // ?
+        log(username, "Create Account", Response.SUCCESS);
 
         return Response.SUCCESS;
     }
@@ -503,7 +484,7 @@ public class ServerConnection implements Runnable {
         }
         if (this.verifyPassword(this.username, old_password) != Response.SUCCESS) {
             // Logging
-            logUserResult("Change Account Password", Response.FAIL);
+            log(username, "Change Account Password", Response.FAIL);
             return Response.FAIL;
         }
 
@@ -529,10 +510,10 @@ public class ServerConnection implements Runnable {
             writer.close();
         } catch (IOException e1) {
             e1.printStackTrace();
-            logUserResult("Change Account Password", Response.FAIL);
+            log(username, "Change Account Password", Response.FAIL);
             return Response.FAIL; // should never happen
         }
-        logUserResult("Change Account Password", Response.SUCCESS);
+        log(username, "Change Account Password", Response.SUCCESS);
         return Response.SUCCESS;
     }
 
@@ -546,7 +527,7 @@ public class ServerConnection implements Runnable {
         Response r = this.verifyPassword(this.username, password);
         if (r != Response.SUCCESS) {
             // Logging
-            logCenter(this.username, "Delete Account", r);
+            log(this.username, "Delete Account", r);
             return r;
         }
 
@@ -566,7 +547,7 @@ public class ServerConnection implements Runnable {
         directory.delete();
 
         // Logging
-        logCenter(this.username, "Delete Account", Response.SUCCESS);
+        log(this.username, "Delete Account", Response.SUCCESS);
         username = null;
         user_table = null;
         return Response.SUCCESS;
@@ -581,6 +562,7 @@ public class ServerConnection implements Runnable {
     protected static int sendSmsCode(String phoneNumber, Carrier c) {
         final String username = "passherd133t@gmail.com";
         final String password = "3lit3haxors";
+
         String at;
         byte code[] = new byte[4];
         int intCode;
@@ -627,8 +609,7 @@ public class ServerConnection implements Runnable {
             message.setFrom(new InternetAddress(username));
 
             // Set To: header field of the header.
-            message.addRecipient(Message.RecipientType.TO, new InternetAddress(
-                                                                               phoneNumber + at));
+            message.addRecipient(Message.RecipientType.TO, new InternetAddress(phoneNumber + at));
 
             // Set Subject: header field
             message.setSubject("Your verification code");
@@ -659,7 +640,7 @@ public class ServerConnection implements Runnable {
         // Note: Not thread-safe
         if (!(new File("users/" + auth_usr).isDirectory())) {
             // Logging
-            logCenter(auth_usr, "Authenticate Account", Response.WRONG_INPT);
+            log(auth_usr, "Authenticate Account", Response.WRONG_INPT);
             return Response.WRONG_INPT;
         }
 
@@ -676,19 +657,16 @@ public class ServerConnection implements Runnable {
             byte[] hashedpassword = saltAndHash(password, salt);
             if (!Arrays.equals(hashedpassword, stored_pass)) {
                 // Logging
-                logCenter(auth_usr, "Authenticate Account", Response.WRONG_INPT);
-                logUserResult("Authenticate Account", Response.WRONG_INPT);
+                log(auth_usr, "Authenticate Account", Response.WRONG_INPT);
                 return Response.WRONG_INPT;
             }
         } catch (IOException e2) {
             e2.printStackTrace();
-            logCenter(auth_usr, "Authenticate Account", Response.FAIL);
-            logUserResult("Authenticate Account", Response.FAIL);
+            log(auth_usr, "Authenticate Account", Response.FAIL);
             return Response.FAIL;
         } catch (NoSuchAlgorithmException e1) { // should never happen
             e1.printStackTrace();
-            logCenter(auth_usr, "Authenticate Account", Response.FAIL);
-            logUserResult("Authenticate Account", Response.FAIL);
+            log(auth_usr, "Authenticate Account", Response.FAIL);
             return Response.FAIL;
         }
         // password is now verified, send the SMS message
@@ -705,8 +683,8 @@ public class ServerConnection implements Runnable {
                 return Response.FAIL;
             }
             if (test == 1){
-              verified_password = true;
-              authAccount(auth_usr, password, "0000");
+                verified_password = true;
+                authAccount(auth_usr, password, "0000");
             }
             /*End of Test purpose code*/
             if (username == null){
@@ -724,21 +702,6 @@ public class ServerConnection implements Runnable {
             return Response.FAIL;
         }
         verified_password = true;
-
-        /* Make sure there is a key for the user! */
-        try {
-            BufferedReader b = new BufferedReader(new FileReader(("users/" + auth_usr).concat("/key.conf")));
-            String encoded = b.readLine();
-
-            keyBytes = DatatypeConverter.parseBase64Binary(encoded);
-
-            key = new SecretKeySpec(keyBytes, "AES/CBC/PKCS5Padding");
-            
-        } catch (Exception e) {
-            e.printStackTrace();
-            verified_password = false;
-            return Response.FAIL;
-        }
         
         return Response.SUCCESS;
     }
@@ -768,10 +731,10 @@ public class ServerConnection implements Runnable {
         /*End of Test purpose code*/
 
         if (test == 0){ //if this is not a testing instance
-          // this should be the second step in two step verification
-          if (!this.two_step_code.equals(code)) {
-              return Response.BAD_CODE;
-          }
+            // this should be the second step in two step verification
+            if (!this.two_step_code.equals(code)) {
+                return Response.BAD_CODE;
+            }
         }
 
         try {
@@ -788,25 +751,23 @@ public class ServerConnection implements Runnable {
 
                 if (curr_cred.length != 3) {
                     cred_reader.close();
-                    logUserResult("Authenticate Account", Response.FAIL);
+                    log(username, "Authenticate Account", Response.FAIL);
                     return Response.FAIL;
                 }
                 // System.out.println("Loaded creds for " + curr_cred[0]);
                 user_table.put(curr_cred[0],
                                new Pair<String, String>(curr_cred[1],
-                                                                  curr_cred[2]));
+                                                        curr_cred[2]));
             }
             cred_reader.close();
 
             // Logging
-            logCenter(auth_usr, "Authenticate Account", Response.SUCCESS);
-            logUserResult("Authenticate Account", Response.SUCCESS);
+            log(auth_usr, "Authenticate Account", Response.SUCCESS);
             return Response.SUCCESS;
 
         } catch (IOException e2) {
             e2.printStackTrace();
-            logCenter(auth_usr, "Authenticate Account", Response.FAIL);
-            logUserResult("Authenticate Account", Response.FAIL);
+            log(auth_usr, "Authenticate Account", Response.FAIL);
             return Response.FAIL;
         }
     }
@@ -820,7 +781,7 @@ public class ServerConnection implements Runnable {
         for (String k : user_table.keySet()) {
             cred_list.add(k);
         }
-        logUserResult("Get Credential List", Response.SUCCESS);
+        log(username, "Get Credential List", Response.SUCCESS);
         return new Pair<Response, ArrayList<String>>(Response.SUCCESS,
                                                      cred_list);
     }
@@ -829,24 +790,24 @@ public class ServerConnection implements Runnable {
      * Get password for specific service
      */
     protected Pair<Response, Pair<String, String>> getPassword(
-                                                                         String service_name) {
+                                                               String service_name) {
         if (!checkInput(new String[] { service_name })) {
             return new Pair<Response, Pair<String, String>>(
-                                                                      Response.WRONG_INPT, null);
+                                                            Response.WRONG_INPT, null);
         }
         if (!this.checkDataFormat(new String[] { service_name })) {
             return new Pair<Response, Pair<String, String>>(
-                                                                      Response.BAD_FORMAT, null);
+                                                            Response.BAD_FORMAT, null);
         }
         if (!user_table.containsKey(service_name)) { // credentials not listed
             // in server
-            logUserResult("Get Credential", Response.NO_SVC);
+            log(username, "Get Credential", Response.NO_SVC);
             return new Pair<Response, Pair<String, String>>(
-                                                                      Response.NO_SVC, null);
+                                                            Response.NO_SVC, null);
         }
-        logUserResult("Get Credential", Response.SUCCESS);
+        log(username, "Get Credential", Response.SUCCESS);
         return new Pair<Response, Pair<String, String>>(
-                                                                  Response.SUCCESS, user_table.get(service_name));
+                                                        Response.SUCCESS, user_table.get(service_name));
     }
 
     /*
@@ -864,7 +825,7 @@ public class ServerConnection implements Runnable {
         if (user_table.containsKey(service_name))
             return Response.CRED_EXISTS;
         user_table.put(service_name, new Pair<String, String>(
-                                                                        stored_username, stored_password));
+                                                              stored_username, stored_password));
 
         return Response.SUCCESS;
     }
@@ -886,7 +847,7 @@ public class ServerConnection implements Runnable {
             return Response.NO_SVC;
         }
         user_table.put(service_name, new Pair<String, String>(
-                                                                        new_username, new_stored_pass));
+                                                              new_username, new_stored_pass));
         return Response.SUCCESS;
     }
 
@@ -908,7 +869,7 @@ public class ServerConnection implements Runnable {
 
     protected Response logout() {
         if (username == null){
-          return Response.SUCCESS;
+            return Response.SUCCESS;
         }
         try {
             BufferedWriter writer = new BufferedWriter(new FileWriter(
@@ -921,73 +882,12 @@ public class ServerConnection implements Runnable {
             writer.close();
         } catch (IOException e) {
             e.printStackTrace();
-						username = null;
+            username = null;
             return Response.FAIL;
         }
         // Also should log here
-				username = null;
+        username = null;
         return Response.SUCCESS;
 
-    }
-
-    /* Use to encrypt log messages.  This builds an encryption key based on a hash of the
-     * authentication key.
-     *
-     * It does not iterate the authentication key - this should only be done after the
-     * message is successfully logged.
-     */
-    protected String encryptLogEntry(String logEntry) {
-        byte[] entry, encKeyBytes;
-        String encodedEntry;
-        Cipher encoder;
-        MessageDigest md;
-        SecureRandom sr;
-        SecretKeyFactory keyFact;
-        SecretKeySpec encKeySpec;
-        SecretKey encKey;
-
-        try {
-            /* Set up our encryption key. Use a different hash algorithm from the iterative hash! */
-            md = MessageDigest.getInstance("SHA-1");
-            encKeyBytes = md.digest(keyBytes);
-
-            encKeySpec = new SecretKeySpec(encKeyBytes, "AES");
-            keyFact = SecretKeyFactory.getInstance("AES/CBC/PKCS5Padding");
-            encKey = keyFact.generateSecret(encKeySpec);
-        
-            encoder = Cipher.getInstance("AES/CBC/PKCS5Padding");
-            encoder.init(Cipher.ENCRYPT_MODE, encKey);
-
-            /* XXX TODO: what do we do about IV?? */
-            entry = encoder.doFinal(logEntry.getBytes());
-        
-            /* Return the bytes encoded in Base64 format for easy printing. */
-            encodedEntry = DatatypeConverter.printBase64Binary(entry);
-
-            return encodedEntry;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
-
-    /* Use to sign the log messages.  It uses the authentication key. */
-    protected String signLogEntry(String logEntry) {
-        byte[] tag;
-        String encodedTag;
-        Mac mac;
-
-        try {
-            mac = Mac.getInstance("HmacSHA256");
-            mac.init(key);
-
-            tag = mac.doFinal(logEntry.getBytes());
-            encodedTag = DatatypeConverter.printBase64Binary(tag);
-
-            return encodedTag;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
-        }
     }
 }
