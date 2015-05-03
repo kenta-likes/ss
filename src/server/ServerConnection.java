@@ -267,7 +267,6 @@ public class ServerConnection implements Runnable {
                             case "RGST":
                                 String regName = req.getString("username");
                                 String regPass = req.getString("password");
-                                String email = req.getString("email");
                                 String carrier = req.getString("carrier");
                                 String phone = req.getString("phone");
                                 resp = createAccount(regName, regPass, phone,
