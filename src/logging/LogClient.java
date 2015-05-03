@@ -92,28 +92,46 @@ public class LogClient {
 
             sockJS = new JSONWriter(sockWriter);
 
-            if ("get".equals(splitCommand[0]) && splitCommand.length == 2) {
+            switch (splitCommand[0]) {
+            case "get":
+                if (splitCommand.length == 2) {
+                    try {
+                        sockJS.object()
+                            .key("command").value("GET")
+                            .key("lines").value(splitCommand[1])
+                            .endObject();
+
+                        sockWriter.println();
+                        sockWriter.flush();
+
+                        JSONObject resp = new JSONObject(sockReader.readLine());
+                        if (!resp.getString("response").equals("SUCCESS"))
+                            System.out.println("Error: unknown failure.");
+                        else {
+                            System.out.println(resp.getString("log"));
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        System.out.println("Error: unknown failure.");
+                    }
+                } else {
+                    System.out.println("Error: Invalid command.");
+                }
+            
+                break;
+            
+            case "exit":
                 try {
                     sockJS.object()
-                        .key("command").value("GET")
-                        .key("lines").value(splitCommand[1])
+                        .key("command").value("CLOSE")
                         .endObject();
-
                     sockWriter.println();
                     sockWriter.flush();
-
-                    JSONObject resp = new JSONObject(sockReader.readLine());
-                    if (!resp.getString("response").equals("SUCCESS"))
-                        System.out.println("Error: unknown failure.");
-                    else {
-                        System.out.println("Success...");
-                        System.out.println(resp.getString("log"));
-                    }
                 } catch (Exception e) {
-                    System.out.println("Error: unknown failure.");
+                    e.printStackTrace();
+                } finally {
+                    return;
                 }
-            } else {
-                System.out.println("Error: Invalid command.");
             }
         }
     }

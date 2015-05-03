@@ -5,3 +5,5 @@ bin/*
 .DS_Store
 *.*~
 *~
+*.jar
+src/*.jar
