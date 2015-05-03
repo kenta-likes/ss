@@ -54,6 +54,8 @@ public class ServerConnection implements Runnable {
     protected String username; // user associated with this account
     protected boolean timed_out = false; // TODO think about this later...
     protected Hashtable<String, Pair<String, String>> user_table;
+    protected Hashtable<String, ArrayList<String>> acl_table; //for the ACL table
+    protected Hashtable<String, Pair<String, String>> shared_table; //for shared credentials
     protected MessageDigest messageDigest;
     protected String curr_dir;
     protected PrintWriter audit_writer;
@@ -93,32 +95,12 @@ public class ServerConnection implements Runnable {
 
     public void run() {
         try {
-            //set up connection with audit server
-            /*
-              String ksName = "audit_ts.jks"; //server
-              char passphrase[] = "systemsecurity".toCharArray();
-              KeyStore keystore = KeyStore.getInstance("JKS");
-              keystore.load(new FileInputStream(ksName), passphrase);
-              TrustManagerFactory tmf = TrustManagerFactory.getInstance("SunX509");
-              tmf.init(keystore);
-						
-              SSLContext context = SSLContext.getInstance("TLS");
-              TrustManager[] trustManagers = tmf.getTrustManagers();
-              context.init(null, trustManagers, new SecureRandom());
-              SSLSocketFactory sf = context.getSocketFactory();
-              SSLSocket audit_socket = (SSLSocket)sf.createSocket(HOSTNAME, 7777);
-              //changed from 8888
-              audit_socket.startHandshake();
-						
-              //writer/reader for comm with audit server
-              audit_reader = new BufferedReader(new InputStreamReader(audit_socket.getInputStream()));
-              audit_writer = new PrintWriter(audit_socket.getOutputStream(), true);
-            */
-
             // writer,reader for comm with client
-            BufferedWriter w = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
+            BufferedWriter w = new BufferedWriter(
+                                  new OutputStreamWriter(socket.getOutputStream()));
             JSONWriter js;
-            BufferedReader r = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            BufferedReader r = new BufferedReader(
+                                  new InputStreamReader(socket.getInputStream()));
             String m, command;
             JSONObject req; String authName;
             String authPass;
@@ -305,6 +287,8 @@ public class ServerConnection implements Runnable {
                 logout();
             }
             user_table = null;
+            shared_table = null;
+            acl_table = null;
             username = null;
             log(username, "Logout", Response.SUCCESS);
             r.close();
@@ -399,7 +383,6 @@ public class ServerConnection implements Runnable {
      * Create new account on server Randomly generates a salt and stores a
      * hashed master password. Assumes: username and password are not null
      * Assumes: username and password are valid (we haven't defined valid yet)
-     * TODO: talk to audit server to create new log for this user upon success
      */
     protected Response createAccount(String new_usr, String password,
                                      String phone, String carrier) {
@@ -454,6 +437,16 @@ public class ServerConnection implements Runnable {
                                                        curr_dir.concat("/stored_credentials.txt"), "UTF-8");
             creds_writer.close();
 
+            /* create new file for shared creds*/
+            PrintWriter shared_creds_writer = new PrintWriter(
+                                                       curr_dir.concat("/shared_credentials.txt"), "UTF-8");
+            shared_creds_writer.close();
+
+            /* create new file for acl*/
+            PrintWriter acl_writer = new PrintWriter(
+                                                       curr_dir.concat("/acl.txt"), "UTF-8");
+            acl_writer.close();
+
             /* create new file for logs */
             PrintWriter logger = new PrintWriter(
                                                  curr_dir.concat("/user_log.txt"), "UTF-8");
@@ -462,8 +455,11 @@ public class ServerConnection implements Runnable {
             e.printStackTrace();
             return Response.FAIL;
         }
-
+        /*
         user_table = new Hashtable<String, Pair<String, String>>();
+        shared_table = new Hashtable<String, Triple<String, String, String>>();
+        */
+
         /* set the session to be logged in successfully */
         // username = new_usr; //don't do this actually
 
@@ -549,6 +545,8 @@ public class ServerConnection implements Runnable {
         log(this.username, "Delete Account", Response.SUCCESS);
         username = null;
         user_table = null;
+        shared_table = null;
+        acl_table = null;
         return Response.SUCCESS;
     }
 
@@ -625,8 +623,6 @@ public class ServerConnection implements Runnable {
 
         return intCode;
     }
-
-	
 
 
     protected Response verifyPassword(String auth_usr, String password) {
@@ -740,6 +736,8 @@ public class ServerConnection implements Runnable {
             // init hashtable
             username = auth_usr;
             user_table = new Hashtable<String, Pair<String, String>>();
+            shared_table = new Hashtable<String, Pair<String, String>>();
+            acl_table = new Hashtable<String, ArrayList<String>>();
             curr_dir = "users/" + auth_usr;
             // load hash table with user's credentials
             BufferedReader cred_reader = new BufferedReader(new FileReader(
@@ -759,6 +757,40 @@ public class ServerConnection implements Runnable {
                                                         curr_cred[2]));
             }
             cred_reader.close();
+
+            // load hash table with user's credentials
+            BufferedReader shared_cred_reader = new BufferedReader(new FileReader(
+                                                                           curr_dir.concat("/shared_credentials.txt")));
+            while ((line = shared_cred_reader.readLine()) != null) {
+                String[] curr_shared_cred = line.split("\t");
+
+                if (curr_shared_cred.length != 3) {
+                    shared_cred_reader.close();
+                    log(username, "Authenticate Account", Response.FAIL);
+                    return Response.FAIL;
+                }
+                // System.out.println("Loaded creds for " + curr_cred[0]);
+                shared_table.put(curr_shared_cred[0],
+                               new Pair<String, String>(curr_shared_cred[1],
+                                                        curr_shared_cred[2]));
+            }
+            shared_cred_reader.close();
+
+            /*load hashtable for acl*/
+            BufferedReader acl_reader = new BufferedReader(new FileReader(
+                                                                           curr_dir.concat("/acl.txt")));
+            while ((line = acl_reader.readLine()) != null) {
+                String[] curr_acl = line.split("\t");
+
+                //get all the service names that this user has access to
+                ArrayList<String> service_list = new ArrayList<String>();
+                for (int i = 1; i < curr_acl.length; i++){
+                  service_list.add(curr_acl[i]);
+                }
+                acl_table.put(curr_acl[0], service_list);
+            }
+            acl_reader.close();
+
 
             // Logging
             log(auth_usr, "Authenticate Account", Response.SUCCESS);
@@ -871,6 +903,7 @@ public class ServerConnection implements Runnable {
             return Response.SUCCESS;
         }
         try {
+            /*First write back the stored creds*/
             BufferedWriter writer = new BufferedWriter(new FileWriter(
                                                                       curr_dir.concat("/stored_credentials.txt")));
             for (String k : user_table.keySet()) {
@@ -879,6 +912,31 @@ public class ServerConnection implements Runnable {
             }
             writer.flush();
             writer.close();
+
+            /*Then write back the shared creds*/
+            BufferedWriter shared_writer = new BufferedWriter(new FileWriter(
+                                                                      curr_dir.concat("/shared_credentials.txt")));
+            for (String k : shared_table.keySet()) {
+                shared_writer.write(k + "\t" + shared_table.get(k).first() + "\t"
+                             + shared_table.get(k).second() + "\n");
+            }
+            shared_writer.flush();
+            shared_writer.close();
+
+            /*Finally write back the ACL TODO: add another method to get MAC for ACL*/
+            BufferedWriter acl_writer = new BufferedWriter(new FileWriter(
+                                                                      curr_dir.concat("/acl.txt")));
+            /*write all of the service names for each user*/
+            for (String k : acl_table.keySet()) {
+                acl_writer.write(k);
+                for (String service_name : acl_table.get(k)){
+                  acl_writer.write("\t" + service_name);
+                }
+                acl_writer.write("\n");
+            }
+            acl_writer.flush();
+            acl_writer.close();
+
         } catch (IOException e) {
             e.printStackTrace();
             username = null;
@@ -888,5 +946,51 @@ public class ServerConnection implements Runnable {
         username = null;
         return Response.SUCCESS;
 
+    }
+    
+    /*
+    Adds new entry in shared creds file
+    Adds entry in ACL for new shared user
+    Adds public key to the transaction list
+    */
+    protected Response shareNewCredentials(String usr, String service_name, String key){
+      Server.sharing_lock.lock();
+      try {
+        //check if the credential has been shared already
+        if (shared_table.containsKey(service_name) || !user_table.containsKey(service_name)){
+          return Response.FAIL; //TODO new response type?
+          /*
+          if (!user_table.containsKey(service_name)){
+            return Response.FAIL; //TODO new response type?
+          }
+          shared_table.put(service_name, user_table.get(service_name));
+          */
+        }
+        //add new stored to the shared credentials
+        shared_table.put(service_name, user_table.get(service_name));
+        //add to the transaction table
+        if (Server.transaction_table.containsKey(usr)){
+          Server.transaction_table.get(usr).add(new Triple(username, service_name, key));
+        } else { //this is a new entry in transaction table
+          ArrayList<Triple<String,String,String>> shared_keys = new ArrayList<Triple<String,String,String>>();
+          shared_keys.add(new Triple(username,service_name, key));
+          Server.transaction_table.put(usr, shared_keys);
+        }
+        //add new capability to the acl table
+        if (acl_table.containsKey(usr)){
+          acl_table.get(usr).add(service_name);
+        } else {
+          ArrayList<String> service_list = new ArrayList<String>();
+          service_list.add(service_name);
+          acl_table.put(usr, service_list);
+        }
+      } finally {
+        Server.sharing_lock.unlock();
+      }
+      return Response.SUCCESS;
+    }
+
+    protected Response revokeShared(){
+      return Response.SUCCESS;
     }
 }

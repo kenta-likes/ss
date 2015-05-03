@@ -6,3 +6,4 @@ bin/*
 *.*~
 *~
 *.jar
+src/*.jar
