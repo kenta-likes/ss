@@ -7,6 +7,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.*;
 
 import javax.xml.bind.DatatypeConverter;
 import javax.crypto.Mac;
@@ -32,6 +33,9 @@ public class Server {
     protected static List<String> logLines;
     protected static final Lock logLock = new ReentrantLock();
     protected static final Condition logCondition = logLock.newCondition();
+    protected static Hashtable<String, ArrayList<ServerConnection.Triple<String,String,String>>> transaction_table =
+                new Hashtable<String, ArrayList<ServerConnection.Triple<String,String,String>>>();
+    protected static final Lock sharing_lock = new ReentrantLock();
     
     public static void main(String[] args) {
         String ksName = "5430_keystore.jks"; //server side keystore
