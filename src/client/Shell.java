@@ -30,7 +30,7 @@ public class Shell {
                 switch (splitCommand[0]) {
                     case "login": handleLogin(); break;
                     case "register": handleRegister(); break;
-                    case "help": if (splitCommand.length == 1) help(); else help(splitCommand[1]);
+                    case "help": if (splitCommand.length == 1) help(); else help(splitCommand[1]);break;
                     case "exit":   handleExit(); return;
                     
                     default: System.out.println("  - Please type 'register' to create a new account.\n  - Please type 'login' if you already have an account.");
@@ -77,7 +77,7 @@ public class Shell {
             /* Clear the password from memory. */
             java.util.Arrays.fill(password, ' ');
 
-            if (err == Response.SUCCESS) usr = null;            
+            if (err == Response.SUCCESS) {usr = null;}            
             printErr(err);
         } else {
             System.out.println("Account not deleted.");
@@ -172,7 +172,7 @@ public class Shell {
 
         // USERNAME
         username = con.readLine("Username: ");
-        while (username.length() == 0 || username.contains("/") || username.contains("\\") || username.contains("..")){
+        while (username.length() == 0 || username.contains(" ") ||username.contains("*") || username.contains("/") || username.contains("\\") || username.contains("..")){
             if (username.length() == 0) System.out.println("Username cannot be empty.  Please try again.");
             else {
                 System.out.println("Username cannot contain the following characters: /, \\, ..\nPlease try again.");
@@ -436,7 +436,7 @@ public class Shell {
             return;
 
         case BAD_FORMAT:
-            System.out.println("Error: the <tab>, '..', '/', and ''\\'' characters are not allowed.");
+            System.out.println("Error: the <tab>, <space>, '*', '..', '/', and ''\\'' characters are not allowed.");
             return;
             
         case WRONG_INPT: /* fall through.  Generic error message in this case. */

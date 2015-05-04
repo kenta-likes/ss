@@ -188,6 +188,49 @@ public class ServerConnection implements Runnable {
                                 }
                                 break;
 
+                            case "GETSHARED1":
+                                ArrayList<Pair<String,String>> shared_creds;
+                                Pair<Response, ArrayList<Pair<String,String>>> temp=  retrieveSharedCredentials();
+                                resp = temp.first();
+                                shared_creds = temp.second();
+                                //TODO: json
+                                // js.object().key("response").value(resp.name());
+                                // if (resp == Response.SUCCESS) {
+                                //     js.key("data").object().key("credentials")
+                                //         .array();
+
+                                //     for (String s : creds)
+                                //         js.value(s);
+
+                                //     js.endArray();
+                                //     js.endObject();
+                                // }
+                                // js.endObject();
+                                break;
+ 
+                            case "GETSHARED2":
+                                Pair<Response, Triple<String, String, String>> temp2;
+                                String service2 = req.getString("service");
+                                String owner2   = req.getString("owner");
+                                temp2 = getSharedPassword(owner2, service2);
+                                resp = temp2.first();
+
+                                //json: TODO
+                                // if (resp == Response.SUCCESS) {
+                                //     js.object().key("response").value(resp.name())
+                                //         .key("username")
+                                //         .value(cred.second().first())
+                                //         .key("password")
+                                //         .value(cred.second().second())
+                                //         .endObject();
+                                // } else {
+                                //     js.object().key("response").value(resp.name())
+                                //         .key("username").value("")
+                                //         .key("password").value("").endObject();
+                                // }
+                                break;
+
+
                             case "DEL":
                                 String password = req.getString("password");
                                 resp = deleteAccount(password);
@@ -336,6 +379,17 @@ public class ServerConnection implements Runnable {
         }
         return true;
     }
+    
+    /*
+     * Returns true if a string is alphanumeric
+     */
+    public boolean isAlphaNumeric(String s){
+    String pattern= "^[a-zA-Z0-9]*$";
+        if(s.matches(pattern)){
+            return true;
+        }
+        return false;   
+}
 
     /*
      * Helper fxn for checking valid usernames
@@ -934,6 +988,54 @@ public class ServerConnection implements Runnable {
         log(username, "Get Credential", Response.SUCCESS);
         return new Pair<Response, Pair<String, String>>(
                                                         Response.SUCCESS, user_table.get(service_name));
+    }
+    
+    /*
+     * Get password for specific shared service
+     */
+    protected Pair<Response, Triple<String, String, String>> getSharedPassword(
+                                                     String owner, String service_name) {
+        // 0. Sanity check TODO
+        if (!checkInput(new String[] { service_name }) || !checkUsernameFormat(owner)) {
+            return new Pair<Response, Triple<String, String, String>>(
+                                                            Response.WRONG_INPT, null);
+        }
+        if (!this.checkDataFormat(new String[] { service_name })) {
+            return new Pair<Response, Triple<String, String, String>>(
+                                                            Response.BAD_FORMAT, null);
+        }
+
+        // 1. Update pubkey_table
+        receivePubKey(); 
+        // 2. Get the list of owners who shared credentials with me
+        //    Check if owner - service_name is in the pubkey_table.
+        if (pubkey_table.containsKey(owner)){ // owner
+            for (Pair<String, String> servicename_pubkey : pubkey_table.get(owner)){
+                String servicename_candidate = servicename_pubkey.first();
+                String pubkey                = servicename_pubkey.second();
+
+                if (service_name.equals(servicename_candidate)){ // service name
+
+                    // 3. Check ACL to see if access is allowed
+                    Pair<Hashtable<String,ArrayList<String>>, Hashtable<String, Pair<String,String>>> pair 
+                            = Server.shared_user_table.get(owner);
+                    Hashtable<String, ArrayList<String>> owners_acl_table = pair.first();
+
+                    if (owners_acl_table.containsKey(username) && owners_acl_table.get(username).contains(service_name)){ 
+
+                        // 4. Get (username, password) from owner's shared_table
+                        Hashtable<String, Pair<String, String>> owners_shared_table = pair.second();
+                        Pair<String, String> usr_pwd = owners_shared_table.get(service_name);
+
+                        // 5. Return Triple(username, password, pubkey) 
+                        Triple<String, String, String> result = new Triple<String, String, String>(usr_pwd.first(), usr_pwd.second(), pubkey);
+                        return new Pair<Response, Triple<String, String, String>>(Response.SUCCESS , result);
+                    }
+                }
+            }
+        }
+        // The user does not have access to this information.
+        return new Pair<Response, Triple<String, String, String>>(Response.NO_SVC, null);
     }
 
     /*
