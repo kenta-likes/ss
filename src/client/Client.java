@@ -469,69 +469,9 @@ public class Client {
             username = respPacket.getString("username");
             password = respPacket.getString("password");
 
-            System.out.println("Credentials for " + service);
-            System.out.println("Username: " + username);
-            System.out.println("Password: " + new String(decryptPassword(password)));
-            
-            /*            mac = DatatypeConverter.parseBase64Binary(respPacket.getString("mac"));
-                          byte code[];
-                          decPass = decryptPassword(password);
-                          justPass = new char[decPass.length - service.length()];
-
-                          SecretKey macKey = new SecretKeySpec(key.getEncoded(), "HmacSHA256");
-            */
-
-
-
-            /* Make sure we are retrieving the password for the correct service! See details in design document
-             * about the attack that would cause this.
-             *
-             * We are prepending the service name associated with a password before encrypting that password
-             * and storing it on the server.
-             */
-
-            /* Substring for char array and string comparison 
-               for (int i = 0; i < service.length(); i++) {
-               correctService &= (decPass[i] == service.charAt(i));
-               }
-
-               if (correctService) {
-                
-               for (int i = service.length(); i < decPass.length; i++)
-               justPass[i - service.length()] = decPass[i];
-
-               for (int i = 0; i < decPass.length; i++)
-               decPass[i] = (char) 0;
-                
-               try {
-               Mac mac_compute = Mac.getInstance("HmacSHA256");
-               mac_compute.init(macKey);
-
-               String s = new String(justPass);
-               String message = service + username + justPass;
-                    
-               code = mac_compute.doFinal("This is a very long string...hopefully it works.".getBytes());
-                    
-               computedMac = new String(code);
-               if (!java.util.Arrays.equals(mac, code)) //!computedMac.equals(new String(mac)))
-               {
-               System.out.println(computedMac + "   ,   " + new String(mac));
-               return new Pair<Response, Pair<String, char[]>>(Response.MAC, null);
-               }
-               } catch (Exception e1) {
-               e1.printStackTrace();
-               return new Pair<Response, Pair<String, char[]>>(Response.FAIL, null);
-               }
-                
-               return new Pair<Response, Pair<String, char[]>>(err, new Pair<String, char[]>(username, justPass));
-            
-               } else {
-               for (int i = 0; i < decPass.length; i++)
-               decPass[i] = (char) 0;
-
-               System.out.println("Error: detected password for incorrect service!  Please contact a system administrator.");
-               return new Pair<Response, Pair<String, char[]>>(Response.FAIL, null);
-               }*/
+            return new Pair<Response, Pair<String, char[]>>(err, new Pair<String, char[]>
+                                                            (username, decryptPassword(password)));
+                                                            
         }
 
         return new Pair<Response, Pair<String, char[]>>(err, null);
@@ -644,12 +584,32 @@ public class Client {
     protected static Response changeMaster(char[] oldPassword, char[] newPassword) {
         JSONObject respPacket = null;
         Response err;
+        MessageDigest digest;
         sockJS = new JSONWriter(sockWriter);
+        byte[] hashedOldPassword, oldPasswordBytes, hashedNewPassword, newPasswordBytes;
+
+        oldPasswordBytes = charToBytes(oldPassword);
+        newPasswordBytes = charToBytes(newPassword);
+
+        try {
+            digest = MessageDigest.getInstance("SHA-256");
+            digest.update(oldPasswordBytes);
+            hashedOldPassword = digest.digest();
+
+            digest.reset();
+
+            digest.update(newPasswordBytes);
+            hashedNewPassword = digest.digest();
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Response.FAIL;
+        }
 
         sockJS.object()
             .key("command").value("CHNG")
-            .key("oldPassword").value(new String(oldPassword))
-            .key("newPassword").value(new String(newPassword))
+            .key("oldPassword").value(new String(hashedOldPassword))
+            .key("newPassword").value(new String(hashedNewPassword))
             .endObject();
         sockWriter.println();
         sockWriter.flush();
@@ -665,6 +625,7 @@ public class Client {
         
         redoCredentialEncryption(newPassword);
         err = responseFromString(respPacket.getString("response"));
+        System.out.println(err);
         return err;
     }
 

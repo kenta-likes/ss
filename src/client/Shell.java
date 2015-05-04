@@ -28,11 +28,12 @@ public class Shell {
                 command = con.readLine("PassHerd$ ");
                 splitCommand = command.split(" ");
                 switch (splitCommand[0]) {
-                    case "login": handleLogin(); break;
-                    case "register": handleRegister(); break;
-                    case "help": if (splitCommand.length == 1) help(); else help(splitCommand[1]);
+                case "login": handleLogin(); break;
+                case "register": handleRegister(); break;
+                case "exit": handleExit(); return;
+                case "help": if (splitCommand.length == 1) help(); else help(splitCommand[1]);
                     break;
-                    default: System.out.println("  - Please type 'register' to create a new account.\n  - Please type 'login' if you already have an account.");
+                default: System.out.println("  - Please type 'register' to create a new account.\n  - Please type 'login' if you already have an account.");
                 }
             }else{
                 command = con.readLine("PassHerd-"+usr+"$ ");
@@ -41,19 +42,19 @@ public class Shell {
                 switch (splitCommand[0]) {
                     // case "login": handleLogin(); break;
                     // case "register": handleRegister(); break;
-                    case "login":
-                    case "register": System.out.println("Already logged in."); break;
-                    case "add": handleAdd(splitCommand); break;
-                    case "get":
-                    case "creds": handleReq(splitCommand); break;
-                    case "delete": handleDel(splitCommand); break;
-                    case "change": handleChange(splitCommand); break;
-                    case "exit":   handleExit(); return;
-                    case "logout": handleLogout(); break;
-                    case "unregister": handleUnregister(); break;
-                    case "chpass": handleMasterChange(); break;
-                    case "help": if (splitCommand.length == 1) help(); else help(splitCommand[1]);
-                        break;
+                case "login":
+                case "register": System.out.println("Already logged in."); break;
+                case "add": handleAdd(splitCommand); break;
+                case "get":
+                case "creds": handleReq(splitCommand); break;
+                case "delete": handleDel(splitCommand); break;
+                case "change": handleChange(splitCommand); break;
+                case "exit":   handleExit(); return;
+                case "logout": handleLogout(); break;
+                case "unregister": handleUnregister(); break;
+                case "chpass": handleMasterChange(); break;
+                case "help": if (splitCommand.length == 1) help(); else help(splitCommand[1]);
+                    break;
                 default: System.out.println("Command not recognized: " + splitCommand[0]);
 
                 }
@@ -96,6 +97,11 @@ public class Shell {
         password0 = con.readPassword("New password: ");
         password1 = con.readPassword("Retype new password: ");
 
+        if (password0.length != password1.length) {
+            System.out.println("Error: passwords do not match.");
+            return;
+        }
+
         for (int i = 0; i < password0.length; i++) {
             /* Make sure the user entered the password they intended - twice. */
             samePassword &= (password0[i] == password1[i]);
@@ -135,12 +141,12 @@ public class Shell {
 
         printErr(err);
         if (err == Response.SUCCESS)
-        	handleAuth(username, password);
+            handleAuth(username, password);
         else
-        {
+            {
         	/* Clear the password from memory. */
-            java.util.Arrays.fill(password, ' ');
-        }
+                java.util.Arrays.fill(password, ' ');
+            }
         return 0;
     }
     
@@ -202,15 +208,15 @@ public class Shell {
                 else {
                     samePassword = true;
                     for (int i = 0; i < password0.length; i++) {
-                    samePassword &= (password0[i] == password1[i]);
+                        samePassword &= (password0[i] == password1[i]);
                     }
                 }
                 
                 // passwords don't match
                 if (!samePassword){
-                System.out.println("Passwords do not match. Please try again.");
-                password0 = con.readPassword("Password: ");
-                strongPassword = passTest.isStrong(new String(password0));
+                    System.out.println("Passwords do not match. Please try again.");
+                    password0 = con.readPassword("Password: ");
+                    strongPassword = passTest.isStrong(new String(password0));
                 }
             }
             
@@ -218,13 +224,13 @@ public class Shell {
 
         // PHONE NUMBER
         phone = con.readLine("10 digit phone number (e.g. 4081234567): ");
-		while (!(phone.matches("[0-9]+") && phone.length() == 10)) {
+        while (!(phone.matches("[0-9]+") && phone.length() == 10)) {
             if (!(phone.matches("[0-9]+"))){
                 phone = con.readLine("Invalid characters. Please try again (e.g. 4081234567): ");
             }else{
                 phone = con.readLine("Invalid length. Please try again (e.g. 4081234567): ");
             }	
-		}
+        }
 
         // CARRIER
         carrier = con.readLine("Carrier (0 = Verizon, 1 = AT&T, 2 = Sprint): ");
@@ -389,7 +395,7 @@ public class Shell {
         
         switch (command) {
         case "login": helpMsg = "login: initiates a login prompt.  Enter your username and password to gain access to your stored credentials.";
-                break;
+            break;
             
         case "register": helpMsg = "register: initiates the creation of a new account.";
             break;
@@ -408,9 +414,9 @@ public class Shell {
             break;
                 
         case "exit": helpMsg = command + ": logs you out and exits PassHerd.";
-        break;
+            break;
         case "logout": helpMsg = command + ": logs you out.";
-        break;
+            break;
                 
         case "unregister": helpMsg = "unregister: deletes the logged-in account and all stored credentials.  Asks for confirmation before deleting.";
             break;
@@ -456,15 +462,15 @@ public class Shell {
             return;
             
         case DUP_LOGIN: /* duplicated login attempts */   
-        	System.out.println("Error: you are already logged in.");
-        	return;
+            System.out.println("Error: you are already logged in.");
+            return;
         
         case FAIL: /* Generic error */
             System.out.println("Error: the system encountered an unknown error.");
             return;
         case MAC:
-        	System.out.println("Error: Server data integrity appears to be compromised - MAC mismatch detected");
-        	return;
+            System.out.println("Error: Server data integrity appears to be compromised - MAC mismatch detected");
+            return;
         default: /* For recompilation purposes */
             System.out.println("Error: unrecognized error code.  Please recompile.");
         }
