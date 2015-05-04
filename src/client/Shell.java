@@ -9,6 +9,7 @@ import password.PasswordClassifier;
 
 public class Shell {
     private static Console con;
+    private static String  usr = null;
     
     public static void run() {
         String command;
@@ -20,24 +21,36 @@ public class Shell {
             return;
         
         while (true) {
-            command = con.readLine("PassHerd-0.3b$ ");
-            splitCommand = command.split(" ");
 
-            switch (splitCommand[0]) {
-            case "login": handleLogin(); break;
-            case "register": handleRegister(); break;
-            case "add": handleAdd(splitCommand); break;
-            case "get":
-            case "creds": handleReq(splitCommand); break;
-            case "delete": handleDel(splitCommand); break;
-            case "change": handleChange(splitCommand); break;
-            case "exit":
-            case "logout": handleLogout(); return;
-            case "unregister": handleUnregister(); return;
-            case "chpass": handleMasterChange(); break;
-            case "help": if (splitCommand.length == 1) help(); else help(splitCommand[1]);
-                break;
-            default: System.out.println("Command not recognized: " + splitCommand[0]);
+            if (usr == null){ // Not logged in
+                command = con.readLine("PassHerd$ ");
+                splitCommand = command.split(" ");
+                switch (splitCommand[0]) {
+                    case "login": handleLogin(); break;
+                    case "register": handleRegister(); break;
+                    default: System.out.println("Welcome to PassHerd!\n  - Please type 'register' to create a new account.\n  - Please type 'login' if you already have an account.");
+                }
+            }else{
+                command = con.readLine("PassHerd-"+usr+"$ ");
+                splitCommand = command.split(" ");
+
+                switch (splitCommand[0]) {
+                case "login": handleLogin(); break;
+                case "register": handleRegister(); break;
+                case "add": handleAdd(splitCommand); break;
+                case "get":
+                case "creds": handleReq(splitCommand); break;
+                case "delete": handleDel(splitCommand); break;
+                case "change": handleChange(splitCommand); break;
+                case "exit":
+                case "logout": handleLogout(); return;
+                case "unregister": handleUnregister(); return;
+                case "chpass": handleMasterChange(); break;
+                case "help": if (splitCommand.length == 1) help(); else help(splitCommand[1]);
+                    break;
+                default: System.out.println("Command not recognized: " + splitCommand[0]);
+
+                }
             }
         }
     }
@@ -56,7 +69,8 @@ public class Shell {
 
             /* Clear the password from memory. */
             java.util.Arrays.fill(password, ' ');
-            
+
+            if (err == Response.SUCCESS) usr = null;            
             printErr(err);
         } else {
             System.out.println("Account not deleted.");
@@ -121,6 +135,10 @@ public class Shell {
         String code = con.readLine("2-factor Authentication Code: ");
         
         err = Client.auth(username, password, code);
+
+        if (err == Response.SUCCESS) {
+            usr = username;
+        }
 
         /* Clear the password from memory. */
         java.util.Arrays.fill(password, ' ');
@@ -212,6 +230,7 @@ public class Shell {
         
         // REQUEST TO SERVER
         err = Client.register(username, password0, phone, carrier);
+        if (err == Response.SUCCESS)System.out.println("Account created. Please login.");
         printErr(err);
   
         // CLEAR PASSWORD FROM MEMORY
@@ -333,6 +352,7 @@ public class Shell {
 
     private static void handleLogout() {
         Response err = Client.logout();
+        if (err == Response.SUCCESS) usr = null;
         printErr(err);
     }
 

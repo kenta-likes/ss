@@ -796,6 +796,8 @@ public class ServerConnection implements Runnable {
             }
             pubkey_reader.close();
 
+            // update pubkey_table
+            receivePubKey();
 
             // Logging
             log(auth_usr, "Authenticate Account", Response.SUCCESS);
