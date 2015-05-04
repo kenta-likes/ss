@@ -1213,12 +1213,17 @@ public class ServerConnection implements Runnable {
                                             String shared_usr, String shared_pass){
       Server.transaction_lock.lock();
       try {
-        //check if the credential has been shared already
+        //check if the credential exists, and that the user also exists
         if (!user_table.containsKey(service_name)){
-          return Response.FAIL; //TODO new response type?
+          return Response.NO_SVC; //TODO FIX THISSS, check for whether user exists, if user is in the acl, etc.
         }
-        if (shared_table.containsKey(service_name) ){
-          return Response.SUCCESS;
+        if (!Server.shared_user_table.containsKey(usr)){
+          return Response.USER_DNE;//
+        }
+        if (acl_table.contains(usr)){
+          if (acl_table.get(usr).contains(service_name)){//it's already shared
+            return Response.SUCCESS;
+          }
         }
         //add to shared creds
         shared_table.put(service_name, new Pair<String,String>(shared_usr, shared_pass));
@@ -1241,6 +1246,7 @@ public class ServerConnection implements Runnable {
       } finally {
         Server.transaction_lock.unlock();
       }
+      System.out.println("YAY! I SHARED");
       return Response.SUCCESS;
     }
 
