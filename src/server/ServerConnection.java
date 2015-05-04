@@ -816,6 +816,20 @@ public class ServerConnection implements Runnable {
         return new Pair<Response, ArrayList<String>>(Response.SUCCESS,
                                                      cred_list);
     }
+    
+    // /*
+    //  * Returns a list of shared services for which credentials stored on server.
+    //  * Delimited by commas
+    //  */
+    // protected Pair<Response, ArrayList<String>> retrieveSharedCredentials() {
+    //     ArrayList<String> cred_list = new ArrayList<String>(); //TODO
+    //     for (String k : user_table.keySet()) {
+    //         cred_list.add(k);
+    //     }
+    //     log(username, "Get Credential List", Response.SUCCESS);
+    //     return new Pair<Response, ArrayList<String>>(Response.SUCCESS,
+    //                                                  cred_list);
+    // }
 
     /*
      * Get password for specific service
