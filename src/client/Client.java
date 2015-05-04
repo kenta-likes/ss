@@ -12,6 +12,8 @@ import java.util.List;
 import java.util.ArrayList;
 import java.nio.charset.Charset;
 import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
+import java.util.Arrays;
 
 import org.json.*;
 
@@ -21,6 +23,9 @@ import javax.xml.bind.DatatypeConverter;
 
 import java.security.SecureRandom;
 import java.security.spec.KeySpec;
+import java.security.KeyPairGenerator;
+import java.security.NoSuchProviderException;
+import java.security.KeyPair;
 
 import javax.crypto.KeyGenerator;
 import javax.crypto.Mac;
@@ -431,6 +436,69 @@ public class Client {
         err = responseFromString(respPacket.getString("response"));
 
         return err;
+    }
+
+    /*share creds with another user
+      assumes user is already authenticated*/
+    protected static Response shareNewCreds(String user_shared, String service,
+                                              String service_user, String service_pass,
+                                              char[] pass) {
+      Response err;
+      JSONObject respPacket = null;
+      Pair<Response, Pair<String, char[]>> creds = requestCreds(service);
+      if (creds.first() != Response.SUCCESS){
+        return creds.first(); //send failed response
+      }
+      try {
+        MessageDigest md = MessageDigest.getInstance("SHA-256");
+        char combined[] = new char[pass.length + service.toCharArray().length];
+        System.arraycopy(pass, 0, combined, 0, pass.length);
+        System.arraycopy(service.toCharArray(), 0, combined, pass.length, service.toCharArray().length);
+
+        CharBuffer charBuffer = CharBuffer.wrap(combined);
+        ByteBuffer byteBuffer = Charset.forName("UTF-8").encode(charBuffer);
+        byte[] bytes = Arrays.copyOfRange(byteBuffer.array(),
+                                            byteBuffer.position(), byteBuffer.limit());
+        md.update(bytes);
+        byte[] digest = md.digest();
+
+        KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
+        SecureRandom rng = SecureRandom.getInstance("SHA1PRNG", "SUN");
+        rng.setSeed(digest); //use the password/service name hashed as seed
+        keyGen.initialize(512, rng);
+        KeyPair shared_keypair = keyGen.genKeyPair();
+        byte[] publicKey = shared_keypair.getPublic().getEncoded();
+
+        final Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
+        cipher.init(Cipher.ENCRYPT_MODE, shared_keypair.getPrivate());
+        byte[] cipher_user = cipher.doFinal(service_user.getBytes());
+        byte[] cipher_pass = cipher.doFinal(service_pass.getBytes());
+        
+        sockJS = new JSONWriter(sockWriter);
+        sockJS.object()
+            .key("command").value("SHARE")
+            .key("service").value(service)
+            .key("service_user").value(new String(cipher_user))
+            .key("service_pass").value(new String(cipher_pass))
+            .key("public_key").value(shared_keypair.getPublic())
+            //            .key("mac").value(DatatypeConverter.printBase64Binary(code))
+            .endObject();
+        sockWriter.println();
+        sockWriter.flush();
+        respPacket = new JSONObject(sockReader.readLine());
+          
+      } catch (Exception e) {
+          e.printStackTrace();
+          return Response.FAIL; //failed
+      }
+
+      if (respPacket == null) {
+          return Response.FAIL;
+      }
+
+      err = responseFromString(respPacket.getString("response"));
+
+      return err;
     }
 
     /* Get credentials from the server.
