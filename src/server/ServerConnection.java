@@ -219,20 +219,26 @@ public class ServerConnection implements Runnable {
                                 String owner2   = req.getString("owner");
                                 temp2 = getSharedPassword(owner2, service2);
                                 resp = temp2.first();
+                                //Triple(username, password, pubkey) 
+                                Triple<String, String, String> result = temp2.second();
 
                                 //json: TODO
-                                // if (resp == Response.SUCCESS) {
-                                //     js.object().key("response").value(resp.name())
-                                //         .key("username")
-                                //         .value(cred.second().first())
-                                //         .key("password")
-                                //         .value(cred.second().second())
-                                //         .endObject();
-                                // } else {
-                                //     js.object().key("response").value(resp.name())
-                                //         .key("username").value("")
-                                //         .key("password").value("").endObject();
-                                // }
+                                if (resp == Response.SUCCESS) {
+                                    js.object().key("response").value(resp.name())
+                                        .key("username")
+                                        .value(result.first())
+                                        .key("password")
+                                        .value(result.second())
+                                        .key("public_key")
+                                        .value(result.third())
+                                        .endObject();
+                                } else {
+                                    js.object().key("response").value(resp.name())
+                                        .key("username").value("")
+                                        .key("password").value("")
+                                        .key("public_key").value("")
+                                        .endObject();
+                                }
                                 break;
 
 
