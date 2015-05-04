@@ -31,7 +31,8 @@ public class Shell {
                     case "login": handleLogin(); break;
                     case "register": handleRegister(); break;
                     case "help": if (splitCommand.length == 1) help(); else help(splitCommand[1]);
-                    break;
+                    case "exit":   handleExit(); return;
+                    
                     default: System.out.println("  - Please type 'register' to create a new account.\n  - Please type 'login' if you already have an account.");
                 }
             }else{
@@ -376,6 +377,7 @@ public class Shell {
     private static int handleExit(){
         handleLogout();
         Response err = Client.exit();
+        //System.out.println("aaaa");
         printErr(err);
         return 0;
     }
