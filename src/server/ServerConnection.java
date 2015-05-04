@@ -287,8 +287,6 @@ public class ServerConnection implements Runnable {
                 logout();
             }
             user_table = null;
-            shared_table = null;
-            acl_table = null;
             username = null;
             log(username, "Logout", Response.SUCCESS);
             r.close();
@@ -545,8 +543,6 @@ public class ServerConnection implements Runnable {
         log(this.username, "Delete Account", Response.SUCCESS);
         username = null;
         user_table = null;
-        shared_table = null;
-        acl_table = null;
         return Response.SUCCESS;
     }
 
@@ -738,6 +734,7 @@ public class ServerConnection implements Runnable {
             user_table = new Hashtable<String, Pair<String, String>>();
             shared_table = new Hashtable<String, Pair<String, String>>();
             acl_table = new Hashtable<String, ArrayList<String>>();
+            /*
             Server.shared_user_lock.lock();
             try {
               Server.shared_user_table.put(username, 
@@ -745,6 +742,7 @@ public class ServerConnection implements Runnable {
             } finally {
               Server.shared_user_lock.unlock();
             }
+            */
 
             curr_dir = "users/" + auth_usr;
             // load hash table with user's credentials
@@ -920,14 +918,6 @@ public class ServerConnection implements Runnable {
             }
             writer.flush();
             writer.close();
-
-            /*remove self from shared_user_table*/
-            Server.shared_user_lock.lock();
-            try{
-              Server.shared_user_table.remove(username);
-            } finally {
-              Server.shared_user_lock.unlock();
-            }
 
             /*Then write back the shared creds*/
             BufferedWriter shared_writer = new BufferedWriter(new FileWriter(
