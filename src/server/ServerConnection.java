@@ -289,8 +289,6 @@ public class ServerConnection implements Runnable {
                 logout();
             }
             user_table = null;
-            shared_table = null;
-            acl_table = null;
             pubkey_table = null;
             username = null;
             log(username, "Logout", Response.SUCCESS);
@@ -536,6 +534,18 @@ public class ServerConnection implements Runnable {
 
         // Note: guaranteed that this account exists
         // Delete the account
+
+        // Remove myself from the global table
+        Server.transaction_lock.lock();
+        try{
+            //remove myself from the global table
+            Server.transaction_table.remove(username);
+
+        }finally[
+            Server.transaction_lock.unlock();
+        ]
+
+
         File directory = new File(curr_dir);
         String[] entries = directory.list();
         if (entries != null) {
@@ -552,9 +562,10 @@ public class ServerConnection implements Runnable {
         // Logging
         log(this.username, "Delete Account", Response.SUCCESS);
         username = null;
-        user_table = null;
         shared_table = null;
         acl_table = null;
+        user_table = null;
+
         return Response.SUCCESS;
     }
 
@@ -747,13 +758,6 @@ public class ServerConnection implements Runnable {
             shared_table = new Hashtable<String, Pair<String, String>>();//own creds shared with others
             acl_table    = new Hashtable<String, ArrayList<String>>();   //ACL
             pubkey_table = new Hashtable<String, ArrayList<Pair<String, String>>>();//others' creds shared with me
-            Server.shared_user_lock.lock();
-            try {
-              Server.shared_user_table.put(username, 
-                          new Pair<Hashtable<String, ArrayList<String>>, Hashtable<String, Pair<String,String>>>(acl_table, shared_table)); //put into the shared table for access
-            } finally {
-              Server.shared_user_lock.unlock();
-            }
 
             curr_dir = "users/" + auth_usr;
             // load user_table with user's credentials
@@ -958,14 +962,6 @@ public class ServerConnection implements Runnable {
             }
             writer.flush();
             writer.close();
-
-            /*remove self from shared_user_table*/
-            Server.shared_user_lock.lock();
-            try{
-              Server.shared_user_table.remove(username);
-            } finally {
-              Server.shared_user_lock.unlock();
-            }
 
             /*Then write back the shared creds*/
             BufferedWriter shared_writer = new BufferedWriter(new FileWriter(

@@ -44,7 +44,6 @@ public class Server {
     // key = Passherd username; value = (acl_table, shared_table)
     protected static Hashtable<String, Pair<Hashtable<String,ArrayList<String>>, Hashtable<String, Pair<String,String>>>> shared_user_table =
                 new Hashtable<String, Pair<Hashtable<String, ArrayList<String>>, Hashtable<String, Pair<String,String>>>>();
-    protected static final Lock shared_user_lock = new ReentrantLock();
     
     public static void main(String[] args) {
         String ksName = "5430_keystore.jks"; //server side keystore
@@ -75,6 +74,10 @@ public class Server {
 
             Runnable logger = new Logger(args[0], "server/5430ts.jks", "security".toCharArray());
             executor.execute(logger);
+
+            /*load stuff onto the hash table*/
+            
+            System.out.println("Current directory: " + System.getProperty("user.dir"));
             
             while (true) {
                 SSLSocket c = (SSLSocket) s.accept();
