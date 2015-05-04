@@ -112,7 +112,7 @@ public class Server {
           String curr_dir = System.getProperty("user.dir") + "/users/" + username;
           File user_dir = new File(curr_dir);
           if (user_dir.isDirectory()){
-            System.out.println("Doing loading for user: " + username);
+            //System.out.println("Doing loading for user: " + username);
             Hashtable<String, ArrayList<String>> acl_table = new Hashtable<String, ArrayList<String>>();
             Hashtable<String, Pair<String,String>> shared_table = new Hashtable<String, Pair<String, String>>();
             shared_user_table.put(username, 
@@ -125,7 +125,6 @@ public class Server {
                 if (curr_shared_cred.length != 3) {
                     shared_cred_reader.close();
                 }
-                // System.out.println("Loaded creds for " + curr_cred[0]);
                 shared_table.put(curr_shared_cred[0],
                                new Pair<String, String>(curr_shared_cred[1],
                                                         curr_shared_cred[2]));

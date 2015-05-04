@@ -428,6 +428,9 @@ public class ServerConnection implements Runnable {
         new SecureRandom().nextBytes(salt); // get bytes for salt
         byte[] hashedpassword;
         try {
+            shared_table = new Hashtable<String, Pair<String,String>>();
+            acl_table = new Hashtable<String, ArrayList<String>>();
+            Server.shared_user_table.put(new_usr, new Pair (acl_table, shared_table));  //own creds shared with others
             hashedpassword = saltAndHash(password, salt);
 
             FileOutputStream writer = new FileOutputStream(curr_dir.concat("/master.txt"));
@@ -772,9 +775,9 @@ public class ServerConnection implements Runnable {
             // init hashtable
             username = auth_usr;
             user_table   = new Hashtable<String, Pair<String, String>>();    //own creds
+            pubkey_table = new Hashtable<String, ArrayList<Pair<String, String>>>();//others' creds shared with me
             shared_table = Server.shared_user_table.get(username).second();  //own creds shared with others
             acl_table    = Server.shared_user_table.get(username).first();   //ACL
-            pubkey_table = new Hashtable<String, ArrayList<Pair<String, String>>>();//others' creds shared with me
 
 
             curr_dir = "users/" + auth_usr;
