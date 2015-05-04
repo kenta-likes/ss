@@ -23,9 +23,8 @@ import java.security.spec.KeySpec;
 public class LogServer {
 
     protected static SecretKey key;
-    protected static byte[] keyBytes, iv;
+    protected static byte[] keyBytes, iv, stored_pass, salt;
     protected static String HOSTNAME;
-    protected static String ADMIN_PASSWORD = "systemsecurity";
     protected static boolean newKey;
     protected static int lines;
 
@@ -67,6 +66,14 @@ public class LogServer {
             java.nio.file.Files.deleteIfExists(logPath);
 
             lines = 0;
+
+            /* Read in the master password. */
+            salt = new byte[32];
+            stored_pass = new byte[32];
+            FileInputStream reader = new FileInputStream("logserver_master.conf");
+            reader.read(stored_pass, 0, 32);
+            reader.read(salt, 0, 32);
+            reader.close();
 
             while (true) {
                 SSLSocket c = (SSLSocket) s.accept();

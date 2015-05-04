@@ -352,7 +352,7 @@ public class Shell {
 
         service = command[2];
 
-        if (service == "all") {
+        if (service.equals("all")) {
             resp = Client.requestSharedCreds();
             err = resp.first();
 
@@ -367,12 +367,17 @@ public class Shell {
 
             return;
         } else {
+            if (command.length < 4) {
+                System.out.println("Usage: get shared <service> <username>");
+                return;
+            }
+                
             Pair<Response, Pair<String, String>> shared =
                 Client.requestOneSharedCred(command[2], command[3]);
             
             Pair<String, String> creds;
 
-            err = resp.first();
+            err = shared.first();
 
             if (err == Response.SUCCESS) {
                 creds = shared.second();
@@ -394,6 +399,11 @@ public class Shell {
         Response err;
 
         if (command.length != 2) {
+            if (command.length > 1 && command[1].equals("shared")) {
+                handleSharedReq(command);
+                return;
+            }
+                
             System.out.println("Usage: " + command[0] + " <service | all>");
             return;
         }

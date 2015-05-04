@@ -781,9 +781,9 @@ public class Client {
         sockJS = new JSONWriter(sockWriter);
 
         sockJS.object()
-            .key("command").value("UNSHARE")
-            .key("service").value(service)
-            .key("username").value(username)
+            .key("command").value("REVOKE")
+            .key("revoked_service").value(service)
+            .key("revoked_user").value(username)
             .endObject();
 
         try {

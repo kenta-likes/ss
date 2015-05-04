@@ -8,6 +8,8 @@ import util.Response;
 import org.json.*;
 import javax.xml.bind.DatatypeConverter;
 import javax.crypto.spec.SecretKeySpec;
+import java.security.MessageDigest;
+import java.util.Arrays;
 
 public class LogConnection implements Runnable {
 
@@ -63,12 +65,25 @@ public class LogConnection implements Runnable {
                     /* Admin is trying to log in. Check against admin PW. */
                 case "AUTH":
                     String password = req.getString("password");
-                        
-                    if (password.equals(LogServer.ADMIN_PASSWORD)) {
-                        resp = Response.SUCCESS;
-                        authenticated = true;
-                    } else
+                    byte[] toHash = new byte[32 + password.length()];
+
+                    System.arraycopy(password.getBytes(), 0, toHash, 0, password.length());
+                    System.arraycopy(LogServer.salt, 0, toHash, password.length(), 32);
+
+                    try {
+                        MessageDigest md = MessageDigest.getInstance("SHA-256");
+                        byte[] digest = md.digest(toHash);
+
+                        if (Arrays.equals(digest, LogServer.stored_pass)) {
+                            resp = Response.SUCCESS;
+                            authenticated = true;
+                        } else
+                            resp = Response.FAIL;
+
+                    } catch (Exception e) {
                         resp = Response.FAIL;
+                        e.printStackTrace();
+                    }
                         
                     js.object()
                         .key("response").value(resp.name())
