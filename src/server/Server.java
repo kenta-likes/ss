@@ -36,10 +36,13 @@ public class Server {
     protected static final Lock logLock = new ReentrantLock();
     protected static final Condition logCondition = logLock.newCondition();
     /*all the sharing transactions*/
+    // key = Passherd username; 
+    // value = ArrayList(Passherd username (owner of cred), service name, public key)
     protected static Hashtable<String, ArrayList<ServerConnection.Triple<String,String,String>>> transaction_table =
                 new Hashtable<String, ArrayList<ServerConnection.Triple<String,String,String>>>();
     protected static final Lock transaction_lock = new ReentrantLock();
     /*all acl and shared transactions*/
+    // key = Passherd username; value = (acl_table, shared_table)
     protected static Hashtable<String, Pair<Hashtable<String,ArrayList<String>>, Hashtable<String, Pair<String,String>>>> shared_user_table =
                 new Hashtable<String, Pair<Hashtable<String, ArrayList<String>>, Hashtable<String, Pair<String,String>>>>();
     
