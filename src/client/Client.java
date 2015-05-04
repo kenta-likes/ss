@@ -537,7 +537,7 @@ public class Client {
         sockJS = new JSONWriter(sockWriter);
         sockJS.object()
             .key("command").value("SHARE")
-            .key("user").value(username)
+            .key("user").value(user_shared)
             .key("service").value(service)
             .key("service_user").value(new String(encryptWithKeyPair(shared_keypair, creds.second().first().toCharArray())))
             .key("service_pass").value(new String(encryptWithKeyPair(shared_keypair, creds.second().second())))
