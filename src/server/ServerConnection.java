@@ -131,6 +131,23 @@ public class ServerConnection implements Runnable {
                                     .value(addCredential(service, sName, sPass).name()).endObject();
                         
                                 break;
+                            case "SHARE":
+                                String usr = req.getString("user");
+                                String service_name = req.getString("service");
+                                String key = req.getString("public_key");
+                                String shared_user = req.getString("shared_username");
+                                String shared_pass = req.getString("shared_password");
+                                js.object()
+                                    .key("response")
+                                    .value(shareNewCredentials(usr, service_name, key, shared_user, shared_pass).name()).endObject();
+                                break;
+                            case "REVOKE":
+                                String revoke_usr = req.getString("revoked_user");
+                                String revoke_service = req.getString("revoked_service");
+                                js.object()
+                                    .key("response")
+                                    .value(revokeShared(revoke_usr, revoke_service).name()).endObject();
+                                break;
                             case "GET1":
                                 ArrayList<String> creds;
                                 Pair<Response, ArrayList<String>> pair = retrieveCredentials();
@@ -411,6 +428,9 @@ public class ServerConnection implements Runnable {
         new SecureRandom().nextBytes(salt); // get bytes for salt
         byte[] hashedpassword;
         try {
+            shared_table = new Hashtable<String, Pair<String,String>>();
+            acl_table = new Hashtable<String, ArrayList<String>>();
+            Server.shared_user_table.put(new_usr, new Pair (acl_table, shared_table));  //own creds shared with others
             hashedpassword = saltAndHash(password, salt);
 
             FileOutputStream writer = new FileOutputStream(curr_dir.concat("/master.txt"));
@@ -755,9 +775,9 @@ public class ServerConnection implements Runnable {
             // init hashtable
             username = auth_usr;
             user_table   = new Hashtable<String, Pair<String, String>>();    //own creds
+            pubkey_table = new Hashtable<String, ArrayList<Pair<String, String>>>();//others' creds shared with me
             shared_table = Server.shared_user_table.get(username).second();  //own creds shared with others
             acl_table    = Server.shared_user_table.get(username).first();   //ACL
-            pubkey_table = new Hashtable<String, ArrayList<Pair<String, String>>>();//others' creds shared with me
 
 
             curr_dir = "users/" + auth_usr;
@@ -1067,7 +1087,19 @@ public class ServerConnection implements Runnable {
       return Response.SUCCESS;
     }
 
-    protected Response revokeShared(){
+    /*revokes access by updating the acl table*/
+    protected Response revokeShared(String usr, String service_name){
+      if (acl_table.contains(usr)){
+        ArrayList<String> acl_list = acl_table.get(usr);
+        int i = 0;
+        while (i < acl_list.size()){
+          if (acl_list.get(i).equals(service_name)){
+            acl_list.remove(i);
+          } else {
+            i++;
+          }
+        }
+      }
       return Response.SUCCESS;
     }
 }
