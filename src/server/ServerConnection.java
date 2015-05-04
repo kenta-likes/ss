@@ -131,6 +131,23 @@ public class ServerConnection implements Runnable {
                                     .value(addCredential(service, sName, sPass).name()).endObject();
                         
                                 break;
+                            case "SHARE":
+                                String usr = req.getString("user");
+                                String service_name = req.getString("service");
+                                String key = req.getString("public_key");
+                                String shared_user = req.getString("shared_username");
+                                String shared_pass = req.getString("shared_password");
+                                js.object()
+                                    .key("response")
+                                    .value(shareNewCredentials(usr, service_name, key, shared_user, shared_pass).name()).endObject();
+                                break;
+                            case "REVOKE":
+                                String revoke_usr = req.getString("revoked_user");
+                                String revoke_service = req.getString("revoked_service");
+                                js.object()
+                                    .key("response")
+                                    .value(revokeShared(revoke_usr, revoke_service).name()).endObject();
+                                break;
                             case "GET1":
                                 ArrayList<String> creds;
                                 Pair<Response, ArrayList<String>> pair = retrieveCredentials();
