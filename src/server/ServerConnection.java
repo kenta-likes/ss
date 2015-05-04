@@ -965,7 +965,19 @@ public class ServerConnection implements Runnable {
       return Response.SUCCESS;
     }
 
-    protected Response revokeShared(){
+    /*revokes access by updating the acl table*/
+    protected Response revokeShared(String usr, String service_name){
+      if (acl_table.contains(usr)){
+        ArrayList<String> acl_list = acl_table.get(usr);
+        int i = 0;
+        while (i < acl_list.size()){
+          if (acl_list.get(i).equals(service_name)){
+            acl_list.remove(i);
+          } else {
+            i++;
+          }
+        }
+      }
       return Response.SUCCESS;
     }
 }
