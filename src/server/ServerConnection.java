@@ -135,9 +135,9 @@ public class ServerConnection implements Runnable {
                             case "SHARE":
                                 String usr = req.getString("user");
                                 String service_name = req.getString("service");
+                                String shared_user = req.getString("service_user");
+                                String shared_pass = req.getString("service_pass");
                                 String key = req.getString("public_key");
-                                String shared_user = req.getString("shared_username");
-                                String shared_pass = req.getString("shared_password");
                                 js.object()
                                     .key("response")
                                     .value(shareNewCredentials(usr, service_name, key, shared_user, shared_pass).name()).endObject();
@@ -564,12 +564,28 @@ public class ServerConnection implements Runnable {
      */
     protected Response changeAccountPassword(String old_password,
                                              String new_password) {
+
+        byte[] phone;
+        char carrier;
+        
         if (!checkInput(new String[] { old_password, new_password })) {
+            log(username, "Change Account Password", Response.WRONG_INPT);
             return Response.WRONG_INPT;
         }
         if (this.verifyPassword(this.username, old_password) != Response.SUCCESS) {
             // Logging
+            System.out.println("Failed to verify password!");
             log(username, "Change Account Password", Response.FAIL);
+            return Response.FAIL;
+        }
+
+        try {
+            FileInputStream f = new FileInputStream(curr_dir.concat("/master.txt"));
+            phone = new byte[PHONE_LEN + 1];
+            f.skip(PASS_LEN + SALT_LEN);
+            f.read(phone, 0, PHONE_LEN + 1);
+        } catch (IOException e) {
+            e.printStackTrace();
             return Response.FAIL;
         }
 
@@ -580,6 +596,7 @@ public class ServerConnection implements Runnable {
         try {
             hashedpassword = saltAndHash(new_password, salt);
         } catch (NoSuchAlgorithmException e) {
+            log(username, "Change Account Password", Response.FAIL);
             return Response.FAIL; // should never happen
         }
 
@@ -591,6 +608,7 @@ public class ServerConnection implements Runnable {
             writer = new FileOutputStream(curr_dir.concat("/master.txt"));
             writer.write(hashedpassword);
             writer.write(salt);
+            writer.write(phone);
             writer.flush();
             writer.close();
         } catch (IOException e1) {

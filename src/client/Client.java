@@ -12,6 +12,8 @@ import java.util.List;
 import java.util.ArrayList;
 import java.nio.charset.Charset;
 import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
+import java.util.Arrays;
 
 import org.json.*;
 
@@ -21,6 +23,11 @@ import javax.xml.bind.DatatypeConverter;
 
 import java.security.SecureRandom;
 import java.security.spec.KeySpec;
+import java.security.KeyPairGenerator;
+import java.security.KeyFactory;
+import java.security.NoSuchProviderException;
+import java.security.KeyPair;
+import java.security.PublicKey;
 
 import javax.crypto.KeyGenerator;
 import javax.crypto.Mac;
@@ -31,6 +38,7 @@ import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.PBEParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
+import java.security.spec.X509EncodedKeySpec;
 
 public class Client {
 
@@ -433,6 +441,72 @@ public class Client {
         return err;
     }
 
+    /*share creds with another user
+      assumes user is already authenticated*/
+    protected static Response shareNewCreds(String service, String user_shared, char[] pass) {
+        Response err;
+        JSONObject respPacket = null;
+        Pair<Response, Pair<String, char[]>> creds = requestCreds(service);
+        if (creds.first() != Response.SUCCESS){
+            return creds.first(); //send failed response
+        }
+        try {
+            MessageDigest md = MessageDigest.getInstance("SHA-256");
+            char combined[] = new char[pass.length + service.toCharArray().length];
+            System.arraycopy(pass, 0, combined, 0, pass.length);
+            System.arraycopy(service.toCharArray(), 0, combined, pass.length, service.toCharArray().length);
+
+            CharBuffer charBuffer = CharBuffer.wrap(combined);
+            ByteBuffer byteBuffer = Charset.forName("UTF-8").encode(charBuffer);
+            byte[] bytes = Arrays.copyOfRange(byteBuffer.array(),
+                                              byteBuffer.position(), byteBuffer.limit());
+            md.update(bytes);
+            byte[] digest = md.digest();
+
+            KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
+            SecureRandom rng = SecureRandom.getInstance("SHA1PRNG", "SUN");
+            rng.setSeed(digest); //use the password/service name hashed as seed
+            keyGen.initialize(512, rng);
+            KeyPair shared_keypair = keyGen.genKeyPair();
+            byte[] publicKey = shared_keypair.getPublic().getEncoded();
+
+            final Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
+            cipher.init(Cipher.ENCRYPT_MODE, shared_keypair.getPrivate());
+            byte[] cipher_user = cipher.doFinal(creds.second().first().getBytes());
+            /*get the password from the creds retrieved*/
+            charBuffer = CharBuffer.wrap(creds.second().second());
+            byteBuffer = Charset.forName("UTF-8").encode(charBuffer);
+            bytes = Arrays.copyOfRange(byteBuffer.array(),
+                                       byteBuffer.position(), byteBuffer.limit());
+            byte[] cipher_pass = cipher.doFinal(bytes);
+        
+            sockJS = new JSONWriter(sockWriter);
+            sockJS.object()
+                .key("command").value("SHARE")
+                .key("service").value(service)
+                .key("service_user").value(new String(cipher_user))
+                .key("service_pass").value(new String(cipher_pass))
+                .key("public_key").value(shared_keypair.getPublic())
+                //            .key("mac").value(DatatypeConverter.printBase64Binary(code))
+                .endObject();
+            sockWriter.println();
+            sockWriter.flush();
+            respPacket = new JSONObject(sockReader.readLine());
+          
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Response.FAIL; //failed
+        }
+
+        if (respPacket == null) {
+            return Response.FAIL;
+        }
+
+        err = responseFromString(respPacket.getString("response"));
+
+        return err;
+    }
+
     /* Get credentials from the server.
      * pre: user is logged in
      * post: none
@@ -469,69 +543,9 @@ public class Client {
             username = respPacket.getString("username");
             password = respPacket.getString("password");
 
-            System.out.println("Credentials for " + service);
-            System.out.println("Username: " + username);
-            System.out.println("Password: " + new String(decryptPassword(password)));
-            
-            /*            mac = DatatypeConverter.parseBase64Binary(respPacket.getString("mac"));
-                          byte code[];
-                          decPass = decryptPassword(password);
-                          justPass = new char[decPass.length - service.length()];
-
-                          SecretKey macKey = new SecretKeySpec(key.getEncoded(), "HmacSHA256");
-            */
-
-
-
-            /* Make sure we are retrieving the password for the correct service! See details in design document
-             * about the attack that would cause this.
-             *
-             * We are prepending the service name associated with a password before encrypting that password
-             * and storing it on the server.
-             */
-
-            /* Substring for char array and string comparison 
-               for (int i = 0; i < service.length(); i++) {
-               correctService &= (decPass[i] == service.charAt(i));
-               }
-
-               if (correctService) {
-                
-               for (int i = service.length(); i < decPass.length; i++)
-               justPass[i - service.length()] = decPass[i];
-
-               for (int i = 0; i < decPass.length; i++)
-               decPass[i] = (char) 0;
-                
-               try {
-               Mac mac_compute = Mac.getInstance("HmacSHA256");
-               mac_compute.init(macKey);
-
-               String s = new String(justPass);
-               String message = service + username + justPass;
-                    
-               code = mac_compute.doFinal("This is a very long string...hopefully it works.".getBytes());
-                    
-               computedMac = new String(code);
-               if (!java.util.Arrays.equals(mac, code)) //!computedMac.equals(new String(mac)))
-               {
-               System.out.println(computedMac + "   ,   " + new String(mac));
-               return new Pair<Response, Pair<String, char[]>>(Response.MAC, null);
-               }
-               } catch (Exception e1) {
-               e1.printStackTrace();
-               return new Pair<Response, Pair<String, char[]>>(Response.FAIL, null);
-               }
-                
-               return new Pair<Response, Pair<String, char[]>>(err, new Pair<String, char[]>(username, justPass));
-            
-               } else {
-               for (int i = 0; i < decPass.length; i++)
-               decPass[i] = (char) 0;
-
-               System.out.println("Error: detected password for incorrect service!  Please contact a system administrator.");
-               return new Pair<Response, Pair<String, char[]>>(Response.FAIL, null);
-               }*/
+            return new Pair<Response, Pair<String, char[]>>(err, new Pair<String, char[]>
+                                                            (username, decryptPassword(password)));
+                                                            
         }
 
         return new Pair<Response, Pair<String, char[]>>(err, null);
@@ -579,6 +593,110 @@ public class Client {
         } else {
             return new Pair<Response, List<String>>(err, null);
         }
+    }
+
+    protected static Pair<Response, List<Pair<String, String>>> requestSharedCreds() {
+        JSONObject respPacket = null;
+        JSONArray jsCreds = null;
+        Response err;
+        List<Pair<String, String>> creds;
+        sockJS = new JSONWriter(sockWriter);
+
+        sockJS.object()
+            .key("command").value("GETSHARED1")
+            .endObject();
+        sockWriter.println();
+        sockWriter.flush();
+
+        try {
+            respPacket = new JSONObject(sockReader.readLine());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        if (respPacket == null)
+            return new Pair<Response, List<Pair<String, String>>>(Response.FAIL, null);
+
+        err = responseFromString(respPacket.getString("response"));
+
+        if (err == Response.SUCCESS) {
+            jsCreds = respPacket.getJSONObject("data").getJSONArray("credentials");
+            creds = new ArrayList<Pair<String, String>>();
+
+            try {
+                for (int i = 0; i < jsCreds.length(); i++) {
+                    Pair<String, String> sharedService;
+                    String owner, service;
+                    JSONObject o = new JSONObject(jsCreds.getString(i));
+
+                    owner = o.getString("owner");
+                    service = o.getString("service");
+
+                    sharedService = new Pair<String, String>(owner, service);
+
+                    creds.add(sharedService);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+                return new Pair<Response, List<Pair<String, String>>>(Response.FAIL, null);
+            }
+        }
+
+        return new Pair<Response, List<Pair<String, String>>>(Response.FAIL, null);
+    }
+
+    protected static Pair<Response, Pair<String, String>>
+        requestOneSharedCred(String owner, String service) {
+
+        JSONObject respPacket = null;
+        Response err;
+        String username, password, encPublicKey;
+        char[] decPass;
+        sockJS = new JSONWriter(sockWriter);
+
+        sockJS.object()
+            .key("command").value("GETSHARED2")
+            .key("service").value(service)
+            .key("owner").value(owner)
+            .endObject();
+        sockWriter.println();
+        sockWriter.flush();
+
+        try {
+            respPacket = new JSONObject(sockReader.readLine());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        if (respPacket == null)
+            return new Pair<Response, Pair<String, String>>(Response.FAIL, null);
+
+        err = responseFromString(respPacket.getString("response"));
+
+        if (err == Response.SUCCESS) {
+            encPublicKey = respPacket.getString("public_key");
+            username = respPacket.getString("username");
+            password = respPacket.getString("password");
+
+            try {
+                byte[] pubKeyBytes = DatatypeConverter.parseBase64Binary(encPublicKey);
+                X509EncodedKeySpec k = new X509EncodedKeySpec(pubKeyBytes);
+            
+                PublicKey publicKey = KeyFactory.getInstance("RSA").generatePublic(k);
+                Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
+                cipher.init(Cipher.DECRYPT_MODE, publicKey);
+            
+                username = new String(cipher.doFinal(DatatypeConverter.parseBase64Binary(username)));
+                password = new String(cipher.doFinal(DatatypeConverter.parseBase64Binary(password)));
+
+                return new Pair<Response, Pair<String, String>>(err, new Pair<String, String>(username, password));
+            } catch (Exception e) {
+                e.printStackTrace();
+                return new Pair<Response, Pair<String, String>>(Response.FAIL, null);
+            }
+        }
+
+        return new Pair<Response, Pair<String, String>>(err, null);
     }
 
     /* Deletes a set of credentials from the server.
@@ -644,12 +762,32 @@ public class Client {
     protected static Response changeMaster(char[] oldPassword, char[] newPassword) {
         JSONObject respPacket = null;
         Response err;
+        MessageDigest digest;
         sockJS = new JSONWriter(sockWriter);
+        byte[] hashedOldPassword, oldPasswordBytes, hashedNewPassword, newPasswordBytes;
+
+        oldPasswordBytes = charToBytes(oldPassword);
+        newPasswordBytes = charToBytes(newPassword);
+
+        try {
+            digest = MessageDigest.getInstance("SHA-256");
+            digest.update(oldPasswordBytes);
+            hashedOldPassword = digest.digest();
+
+            digest.reset();
+
+            digest.update(newPasswordBytes);
+            hashedNewPassword = digest.digest();
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Response.FAIL;
+        }
 
         sockJS.object()
             .key("command").value("CHNG")
-            .key("oldPassword").value(new String(oldPassword))
-            .key("newPassword").value(new String(newPassword))
+            .key("oldPassword").value(new String(hashedOldPassword))
+            .key("newPassword").value(new String(hashedNewPassword))
             .endObject();
         sockWriter.println();
         sockWriter.flush();
@@ -665,6 +803,7 @@ public class Client {
         
         redoCredentialEncryption(newPassword);
         err = responseFromString(respPacket.getString("response"));
+        System.out.println(err);
         return err;
     }
 
