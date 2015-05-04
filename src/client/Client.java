@@ -83,6 +83,23 @@ public class Client {
 
             sockReader = new BufferedReader(new InputStreamReader(c.getInputStream()));
             sockWriter = new PrintWriter(c.getOutputStream(), true);
+
+            Runtime.getRuntime().addShutdownHook(new Thread() {
+                    public void run() {
+                        try {
+                            new JSONWriter(sockWriter).object().key("command").value("CLOSE")
+                                .endObject();
+
+                            sockWriter.println();
+                            sockWriter.flush();
+
+                            c.close();
+                        } catch (IOException e) {
+                            //failed
+                        }
+                    }
+                });
+            
             Shell.run();
 
             c.close();
@@ -523,9 +540,9 @@ public class Client {
             .key("command").value("SHARE")
             .key("user").value(user_shared)
             .key("service").value(service)
-            .key("service_user").value(new String(encryptWithKeyPair(shared_keypair, creds.second().first().toCharArray())))
-            .key("service_pass").value(new String(encryptWithKeyPair(shared_keypair, creds.second().second())))
-            .key("public_key").value(new String(shared_keypair.getPublic().getEncoded()))
+            .key("service_user").value(DatatypeConverter.printBase64Binary(encryptWithKeyPair(shared_keypair, creds.second().first().toCharArray())))
+            .key("service_pass").value(DatatypeConverter.printBase64Binary(encryptWithKeyPair(shared_keypair, creds.second().second())))
+            .key("public_key").value(DatatypeConverter.printBase64Binary(publicKey))
             //            .key("mac").value(DatatypeConverter.printBase64Binary(code))
             .endObject();
         sockWriter.println();
@@ -709,8 +726,82 @@ public class Client {
         return new Pair<Response, List<Pair<String, String>>>(Response.FAIL, null);
     }
 
+    protected static Pair<Response, List<Pair<String, List<String>>>>
+        listShares() {
+
+        JSONObject respPacket = null;
+        Response err;
+        List<Pair<String, List<String>>> shares;
+
+        sockJS = new JSONWriter(sockWriter);
+
+        sockJS.object()
+            .key("command").value("ACL")
+            .endObject();
+
+        try {
+            respPacket = new JSONObject(sockReader.readLine());
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new Pair<Response, List<Pair<String, List<String>>>>(Response.FAIL, null);
+        }
+
+        if (respPacket == null)
+            return new Pair<Response, List<Pair<String, List<String>>>>(Response.FAIL, null);
+
+        err = responseFromString(respPacket.getString("response"));
+        
+        if (err == Response.SUCCESS) {
+            JSONArray jsShares = respPacket.getJSONObject("shares").getJSONArray("creds");
+            shares = new ArrayList<Pair<String, List<String>>>();
+
+            for (int i = 0; i < jsShares.length(); i++) {
+                JSONObject cred = new JSONObject(jsShares.get(i));
+                String service;
+                List<String> users = new ArrayList<String>();
+                JSONArray jsUsers = cred.getJSONArray("users");
+
+                service = cred.getString("service");
+
+                for (int j = 0; j < jsUsers.length(); j++) {
+                    users.add(jsUsers.getString(j));
+                }
+
+                shares.add(new Pair<String, List<String>>(service, users));
+            }
+
+            return new Pair<Response, List<Pair<String, List<String>>>>(err, shares);
+        }
+
+        return new Pair<Response, List<Pair<String, List<String>>>>(err, null);
+    }
+
+    protected static Response unshare(String service, String username) {
+        JSONObject respPacket = null;
+
+        sockJS = new JSONWriter(sockWriter);
+
+        sockJS.object()
+            .key("command").value("UNSHARE")
+            .key("service").value(service)
+            .key("username").value(username)
+            .endObject();
+
+        try {
+            respPacket = new JSONObject(sockReader.readLine());
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Response.FAIL;
+        }
+
+        if (respPacket == null)
+            return Response.FAIL;
+
+        return responseFromString(respPacket.getString("response"));
+    }
+
     protected static Pair<Response, Pair<String, String>>
-        requestOneSharedCred(String owner, String service) {
+        requestOneSharedCred(String service, String owner) {
 
         JSONObject respPacket = null;
         Response err;

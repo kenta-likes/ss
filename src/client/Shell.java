@@ -28,7 +28,6 @@ public class Shell {
                 command = con.readLine("PassHerd$ ");
                 splitCommand = command.split(" ");
                 switch (splitCommand[0]) {
-
                 case "login": handleLogin(); break;
                 case "register": handleRegister(); break;
                 case "exit": handleExit(); return;
@@ -55,6 +54,8 @@ public class Shell {
                 case "unregister": handleUnregister(); break;
                 case "chpass": handleMasterChange(); break;
                 case "share": handleShare(splitCommand); break;
+                case "unshare": handleUnshare(splitCommand); break;
+                case "lsshares": handleListShares(); break;
                 case "help": if (splitCommand.length == 1) help(); else help(splitCommand[1]);
                     break;
                 default: System.out.println("Command not recognized: " + splitCommand[0]);
@@ -62,6 +63,42 @@ public class Shell {
                 }
             }
         }
+    }
+
+    private static void handleListShares() {
+        Response err;
+        Pair<Response, List<Pair<String, List<String>>>> resp;
+        
+        resp = Client.listShares();
+        err = resp.first();
+        
+        if (err == Response.SUCCESS) {
+            List<Pair<String, List<String>>> shares = resp.second();
+
+            for (Pair<String, List<String>> p : shares) {
+                System.out.print(p.first() + ": shared with ");
+
+                for (String s : p.second())
+                    System.out.print(s + " ");
+
+                System.out.println();
+            }
+        } else {
+            printErr(err);
+        }
+    }
+
+    private static void handleUnshare(String[] command) {
+        Response err;
+
+        if (command.length != 3) {
+            System.out.println("Usage: unshare <service> <username>");
+            return;
+        }
+
+        err = Client.unshare(command[1], command[2]);
+
+        printErr(err);
     }
 
     private static void handleShare(String[] command) {
@@ -99,7 +136,7 @@ public class Shell {
             /* Clear the password from memory. */
             java.util.Arrays.fill(password, ' ');
 
-            if (err == Response.SUCCESS) {usr = null;}            
+            if (err == Response.SUCCESS) usr = null;            
             printErr(err);
         } else {
             System.out.println("Account not deleted.");
@@ -141,6 +178,10 @@ public class Shell {
         java.util.Arrays.fill(password0, ' ');
         java.util.Arrays.fill(password1, ' ');
     }
+    
+    private static boolean invalidUsername(String s){
+        return username.contains(" ") ||username.contains("*") || username.contains("/") || username.contains("\\") || username.contains("..")
+    }
 
     private static int handleLogin() {
         String username;
@@ -149,7 +190,7 @@ public class Shell {
         
         // USERNAME
         username = con.readLine("Username: ");
-        while (username.length() == 0 || username.contains("/") || username.contains("\\") || username.contains("..")){
+        while (username.length() == 0 || invalidUsername(s)){
             if (username.length() == 0) System.out.println("Username cannot be empty.  Please try again.");
             else {
                 System.out.println("Username cannot contain the following characters: /, \\, ..\nPlease try again.");
@@ -199,7 +240,8 @@ public class Shell {
 
         // USERNAME
         username = con.readLine("Username: ");
-        while (username.length() == 0 || username.contains(" ") ||username.contains("*") || username.contains("/") || username.contains("\\") || username.contains("..")){
+        while (username.length() == 0 || invalidUsername(username)){
+
             if (username.length() == 0) System.out.println("Username cannot be empty.  Please try again.");
             else {
                 System.out.println("Username cannot contain the following characters: /, \\, ..\nPlease try again.");
@@ -296,6 +338,55 @@ public class Shell {
 
         err = Client.addCreds(service, username, password);
         printErr(err);
+    }
+
+    private static void handleSharedReq(String[] command) {
+        String service;
+        Response err;
+        Pair<Response, List<Pair<String, String>>> resp = null;
+        
+        if (command.length < 3 && command.length > 4) {
+            System.out.println("Usage: " + command[0] + " shared {<service> <username>} | all");
+            return;
+        }
+
+        service = command[2];
+
+        if (service == "all") {
+            resp = Client.requestSharedCreds();
+            err = resp.first();
+
+            List<Pair<String, String>> creds = resp.second();
+
+            if (err == Response.SUCCESS) {
+                for (Pair<String, String> p : creds)
+                    System.out.println(p.first() + ": " + p.second());
+            } else {
+                printErr(err);
+            }
+
+            return;
+        } else {
+            Pair<Response, Pair<String, String>> shared =
+                Client.requestOneSharedCred(command[2], command[3]);
+            
+            Pair<String, String> creds;
+
+            err = resp.first();
+
+            if (err == Response.SUCCESS) {
+                creds = shared.second();
+                
+                System.out.println("Credentials for " +
+                                   service + " shared from " + command[3] + ":");
+                System.out.println("Username: " + creds.first());
+                System.out.println("Password: " + creds.second());
+
+                return;
+            } else {
+                printErr(err);
+            }
+        }
     }
 
     private static void handleReq(String[] command) {
@@ -404,13 +495,12 @@ public class Shell {
     private static int handleExit(){
         handleLogout();
         Response err = Client.exit();
-        //System.out.println("aaaa");
         printErr(err);
         return 0;
     }
 
     private static void help() {
-        System.out.println("All commands: login register add get creds delete change exit logout unregister chpass help.\nType help <command> for more information.");
+        System.out.println("All commands: login register add get creds delete change exit logout unregister chpass share unshare lsshare help.\nType help <command> for more information.");
     }
 
     private static void help(String command) {
@@ -418,6 +508,15 @@ public class Shell {
         
         switch (command) {
         case "login": helpMsg = "login: initiates a login prompt.  Enter your username and password to gain access to your stored credentials.";
+            break;
+
+        case "share": helpMsg = "share <service> <username>: share credentials for a service with another user.";
+            break;
+
+        case "unshare": helpMsg = "unshare <service> <username>: stop sharing credentials for a service with another user.";
+            break;
+
+        case "lsshares": helpMsg = "lsshares: show all shared credentials and with whom they are shared.";
             break;
             
         case "register": helpMsg = "register: initiates the creation of a new account.";
@@ -463,7 +562,7 @@ public class Shell {
             return;
 
         case BAD_FORMAT:
-            System.out.println("Error: the <tab>, <space>, '*', '..', '/', and ''\\'' characters are not allowed.");
+            System.out.println("Error: the <tab>, '..', '/', and ''\\'' characters are not allowed.");
             return;
             
         case WRONG_INPT: /* fall through.  Generic error message in this case. */

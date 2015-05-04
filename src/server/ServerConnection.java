@@ -193,19 +193,24 @@ public class ServerConnection implements Runnable {
                                 Pair<Response, ArrayList<Pair<String,String>>> temp=  retrieveSharedCredentials();
                                 resp = temp.first();
                                 shared_creds = temp.second();
+
                                 //TODO: json
-                                // js.object().key("response").value(resp.name());
-                                // if (resp == Response.SUCCESS) {
-                                //     js.key("data").object().key("credentials")
-                                //         .array();
+                                js.object().key("response").value(resp.name());
+                                if (resp == Response.SUCCESS) {
+                                    js.key("data").object().key("credentials")
+                                       .array();
 
-                                //     for (String s : creds)
-                                //         js.value(s);
+                                    for (Pair<String, String> s : shared_creds){
+                                        JSONObject sub_js = new JSONObject();
+                                        sub_js.accumulate("owner", s.first());
+                                        sub_js.accumulate("service", s.second());
+                                        js.value(sub_js);
+                                    }
 
-                                //     js.endArray();
-                                //     js.endObject();
-                                // }
-                                // js.endObject();
+                                    js.endArray();
+                                    js.endObject();
+                                }
+                                js.endObject();
                                 break;
  
                             case "GETSHARED2":
@@ -214,20 +219,26 @@ public class ServerConnection implements Runnable {
                                 String owner2   = req.getString("owner");
                                 temp2 = getSharedPassword(owner2, service2);
                                 resp = temp2.first();
+                                //Triple(username, password, pubkey) 
+                                Triple<String, String, String> result = temp2.second();
 
                                 //json: TODO
-                                // if (resp == Response.SUCCESS) {
-                                //     js.object().key("response").value(resp.name())
-                                //         .key("username")
-                                //         .value(cred.second().first())
-                                //         .key("password")
-                                //         .value(cred.second().second())
-                                //         .endObject();
-                                // } else {
-                                //     js.object().key("response").value(resp.name())
-                                //         .key("username").value("")
-                                //         .key("password").value("").endObject();
-                                // }
+                                if (resp == Response.SUCCESS) {
+                                    js.object().key("response").value(resp.name())
+                                        .key("username")
+                                        .value(result.first())
+                                        .key("password")
+                                        .value(result.second())
+                                        .key("public_key")
+                                        .value(result.third())
+                                        .endObject();
+                                } else {
+                                    js.object().key("response").value(resp.name())
+                                        .key("username").value("")
+                                        .key("password").value("")
+                                        .key("public_key").value("")
+                                        .endObject();
+                                }
                                 break;
 
 
@@ -389,7 +400,7 @@ public class ServerConnection implements Runnable {
             return true;
         }
         return false;   
-}
+    }
 
     /*
      * Helper fxn for checking valid usernames
