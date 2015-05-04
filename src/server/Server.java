@@ -26,6 +26,7 @@ import org.json.*;
 import javax.net.ssl.*;
 
 import util.Consts;
+import util.Pair;
 
 public class Server {
 
@@ -33,9 +34,14 @@ public class Server {
     protected static List<String> logLines;
     protected static final Lock logLock = new ReentrantLock();
     protected static final Condition logCondition = logLock.newCondition();
+    /*all the sharing transactions*/
     protected static Hashtable<String, ArrayList<ServerConnection.Triple<String,String,String>>> transaction_table =
                 new Hashtable<String, ArrayList<ServerConnection.Triple<String,String,String>>>();
-    protected static final Lock sharing_lock = new ReentrantLock();
+    protected static final Lock transaction_lock = new ReentrantLock();
+    /*all acl and shared transactions*/
+    protected static Hashtable<String, Pair<Hashtable<String,ArrayList<String>>, Hashtable<String, Pair<String,String>>>> shared_user_table =
+                new Hashtable<String, Pair<Hashtable<String, ArrayList<String>>, Hashtable<String, Pair<String,String>>>>();
+    protected static final Lock shared_user_lock = new ReentrantLock();
     
     public static void main(String[] args) {
         String ksName = "5430_keystore.jks"; //server side keystore

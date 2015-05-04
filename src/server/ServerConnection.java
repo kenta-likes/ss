@@ -739,6 +739,14 @@ public class ServerConnection implements Runnable {
             user_table = new Hashtable<String, Pair<String, String>>();
             shared_table = new Hashtable<String, Pair<String, String>>();
             acl_table = new Hashtable<String, ArrayList<String>>();
+            Server.shared_user_lock.lock();
+            try {
+              Server.shared_user_table.put(username, 
+                          new Pair<Hashtable<String, ArrayList<String>>, Hashtable<String, Pair<String,String>>>(acl_table, shared_table)); //put into the shared table for access
+            } finally {
+              Server.shared_user_lock.unlock();
+            }
+
             curr_dir = "users/" + auth_usr;
             // load hash table with user's credentials
             BufferedReader cred_reader = new BufferedReader(new FileReader(
@@ -914,6 +922,14 @@ public class ServerConnection implements Runnable {
             writer.flush();
             writer.close();
 
+            /*remove self from shared_user_table*/
+            Server.shared_user_lock.lock();
+            try{
+              Server.shared_user_table.remove(username);
+            } finally {
+              Server.shared_user_lock.unlock();
+            }
+
             /*Then write back the shared creds*/
             BufferedWriter shared_writer = new BufferedWriter(new FileWriter(
                                                                       curr_dir.concat("/shared_credentials.txt")));
@@ -954,22 +970,20 @@ public class ServerConnection implements Runnable {
     Adds entry in ACL for new shared user
     Adds public key to the transaction list
     */
-    protected Response shareNewCredentials(String usr, String service_name, String key){
-      Server.sharing_lock.lock();
+    protected Response shareNewCredentials(String usr, String service_name, String key,
+                                            String shared_usr, String shared_pass){
+      Server.transaction_lock.lock();
       try {
         //check if the credential has been shared already
-        if (shared_table.containsKey(service_name) || !user_table.containsKey(service_name)){
+        if (!user_table.containsKey(service_name)){
           return Response.FAIL; //TODO new response type?
-          /*
-          if (!user_table.containsKey(service_name)){
-            return Response.FAIL; //TODO new response type?
-          }
-          shared_table.put(service_name, user_table.get(service_name));
-          */
         }
-        //add new stored to the shared credentials
-        shared_table.put(service_name, user_table.get(service_name));
-        //add to the transaction table
+        if (shared_table.containsKey(service_name) ){
+          return Response.SUCCESS;
+        }
+        //add to shared creds
+        shared_table.put(service_name, new Pair<String,String>(shared_usr, shared_pass));
+        //add to transaction table
         if (Server.transaction_table.containsKey(usr)){
           Server.transaction_table.get(usr).add(new Triple(username, service_name, key));
         } else { //this is a new entry in transaction table
@@ -986,7 +1000,7 @@ public class ServerConnection implements Runnable {
           acl_table.put(usr, service_list);
         }
       } finally {
-        Server.sharing_lock.unlock();
+        Server.transaction_lock.unlock();
       }
       return Response.SUCCESS;
     }
