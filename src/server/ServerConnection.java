@@ -732,17 +732,8 @@ public class ServerConnection implements Runnable {
             // init hashtable
             username = auth_usr;
             user_table = new Hashtable<String, Pair<String, String>>();
-            shared_table = new Hashtable<String, Pair<String, String>>();
-            acl_table = new Hashtable<String, ArrayList<String>>();
-            /*
-            Server.shared_user_lock.lock();
-            try {
-              Server.shared_user_table.put(username, 
-                          new Pair<Hashtable<String, ArrayList<String>>, Hashtable<String, Pair<String,String>>>(acl_table, shared_table)); //put into the shared table for access
-            } finally {
-              Server.shared_user_lock.unlock();
-            }
-            */
+            acl_table = Server.shared_user_table.get(username).first();
+            shared_table = Server.shared_user_table.get(username).second();
 
             curr_dir = "users/" + auth_usr;
             // load hash table with user's credentials
@@ -763,40 +754,6 @@ public class ServerConnection implements Runnable {
                                                         curr_cred[2]));
             }
             cred_reader.close();
-
-            // load hash table with user's credentials
-            BufferedReader shared_cred_reader = new BufferedReader(new FileReader(
-                                                                           curr_dir.concat("/shared_credentials.txt")));
-            while ((line = shared_cred_reader.readLine()) != null) {
-                String[] curr_shared_cred = line.split("\t");
-
-                if (curr_shared_cred.length != 3) {
-                    shared_cred_reader.close();
-                    log(username, "Authenticate Account", Response.FAIL);
-                    return Response.FAIL;
-                }
-                // System.out.println("Loaded creds for " + curr_cred[0]);
-                shared_table.put(curr_shared_cred[0],
-                               new Pair<String, String>(curr_shared_cred[1],
-                                                        curr_shared_cred[2]));
-            }
-            shared_cred_reader.close();
-
-            /*load hashtable for acl*/
-            BufferedReader acl_reader = new BufferedReader(new FileReader(
-                                                                           curr_dir.concat("/acl.txt")));
-            while ((line = acl_reader.readLine()) != null) {
-                String[] curr_acl = line.split("\t");
-
-                //get all the service names that this user has access to
-                ArrayList<String> service_list = new ArrayList<String>();
-                for (int i = 1; i < curr_acl.length; i++){
-                  service_list.add(curr_acl[i]);
-                }
-                acl_table.put(curr_acl[0], service_list);
-            }
-            acl_reader.close();
-
 
             // Logging
             log(auth_usr, "Authenticate Account", Response.SUCCESS);
