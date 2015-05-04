@@ -441,70 +441,129 @@ public class Client {
         return err;
     }
 
+    /*Used for generating key pair using PBE and the service name*/
+    protected static KeyPair getKeyPair(String service, char[] pass){
+        try {
+          MessageDigest md = MessageDigest.getInstance("SHA-256");
+          char combined[] = new char[pass.length + service.toCharArray().length];
+          System.arraycopy(pass, 0, combined, 0, pass.length);
+          System.arraycopy(service.toCharArray(), 0, combined, pass.length, service.toCharArray().length);
+
+          CharBuffer charBuffer = CharBuffer.wrap(combined);
+          ByteBuffer byteBuffer = Charset.forName("UTF-8").encode(charBuffer);
+          byte[] bytes = Arrays.copyOfRange(byteBuffer.array(),
+                                              byteBuffer.position(), byteBuffer.limit());
+          md.update(bytes);
+          byte[] digest = md.digest();
+
+          KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
+          SecureRandom rng = SecureRandom.getInstance("SHA1PRNG", "SUN");
+          rng.setSeed(digest); //use the password/service name hashed as seed
+          keyGen.initialize(512, rng);
+          return keyGen.genKeyPair();
+        } catch (Exception e) {
+          e.printStackTrace();
+          return null;
+        }
+    }
+
+    /*generates cipher text from plaintext using a keypair*/
+    protected static byte[] encryptWithKeyPair(KeyPair shared_keypair, char[] msg){
+        try {
+        final Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
+        cipher.init(Cipher.ENCRYPT_MODE, shared_keypair.getPrivate());
+        /*get the password from the creds retrieved*/
+        CharBuffer charBuffer = CharBuffer.wrap(msg);
+        ByteBuffer byteBuffer = Charset.forName("UTF-8").encode(charBuffer);
+        byte[] bytes = Arrays.copyOfRange(byteBuffer.array(),
+                                            byteBuffer.position(), byteBuffer.limit());
+        return cipher.doFinal(bytes);
+        } catch (Exception e){
+          e.printStackTrace();
+          return null;
+        }
+    }
+
+    /*generates plaintext from ciphertext using a keypair*/
+    protected static char[] decryptWithKeyPair(KeyPair shared_keypair, byte[] c_msg){
+        try {
+        final Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
+        cipher.init(Cipher.DECRYPT_MODE, shared_keypair.getPublic());
+        byte[] bytes = cipher.doFinal(c_msg);
+        char[] msg = new char[bytes.length];
+        for (int i = 0; i < bytes.length; i++) {
+            msg[i] = (char) (bytes[i] & 0xff);
+        }
+        return msg;
+        } catch (Exception e){
+          e.printStackTrace();
+          return null;
+        }
+    }
+
     /*share creds with another user
       assumes user is already authenticated*/
     protected static Response shareNewCreds(String service, String user_shared, char[] pass) {
-        Response err;
-        JSONObject respPacket = null;
-        Pair<Response, Pair<String, char[]>> creds = requestCreds(service);
-        if (creds.first() != Response.SUCCESS){
-            return creds.first(); //send failed response
+      Response err;
+      JSONObject respPacket = null;
+      Pair<Response, Pair<String, char[]>> creds = requestCreds(service);
+      if (creds.first() != Response.SUCCESS){
+        return creds.first(); //send failed response
+      }
+      try {
+        KeyPair shared_keypair = getKeyPair(service,pass);
+        if (shared_keypair == null){
+          return Response.FAIL;
         }
-        try {
-            MessageDigest md = MessageDigest.getInstance("SHA-256");
-            char combined[] = new char[pass.length + service.toCharArray().length];
-            System.arraycopy(pass, 0, combined, 0, pass.length);
-            System.arraycopy(service.toCharArray(), 0, combined, pass.length, service.toCharArray().length);
+        byte[] publicKey = shared_keypair.getPublic().getEncoded();
 
-            CharBuffer charBuffer = CharBuffer.wrap(combined);
-            ByteBuffer byteBuffer = Charset.forName("UTF-8").encode(charBuffer);
-            byte[] bytes = Arrays.copyOfRange(byteBuffer.array(),
-                                              byteBuffer.position(), byteBuffer.limit());
-            md.update(bytes);
-            byte[] digest = md.digest();
+        sockJS = new JSONWriter(sockWriter);
+        sockJS.object()
+            .key("command").value("SHARE")
+            .key("service").value(service)
+            .key("service_user").value(new String(encryptWithKeyPair(shared_keypair, creds.second().first().toCharArray())))
+            .key("service_pass").value(new String(encryptWithKeyPair(shared_keypair, creds.second().second())))
+            .key("public_key").value(shared_keypair.getPublic().getEncoded())
+            //            .key("mac").value(DatatypeConverter.printBase64Binary(code))
+            .endObject();
+        sockWriter.println();
+        sockWriter.flush();
+        respPacket = new JSONObject(sockReader.readLine());
+      } catch (Exception e) {
+          e.printStackTrace();
+          return Response.FAIL; //failed
+      }
+      if (respPacket == null) {
+        return Response.FAIL;
+      }
+      err = responseFromString(respPacket.getString("response"));
+      return err;
+    }
 
-            KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
-            SecureRandom rng = SecureRandom.getInstance("SHA1PRNG", "SUN");
-            rng.setSeed(digest); //use the password/service name hashed as seed
-            keyGen.initialize(512, rng);
-            KeyPair shared_keypair = keyGen.genKeyPair();
-            byte[] publicKey = shared_keypair.getPublic().getEncoded();
-
-            final Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
-            cipher.init(Cipher.ENCRYPT_MODE, shared_keypair.getPrivate());
-            byte[] cipher_user = cipher.doFinal(creds.second().first().getBytes());
-            /*get the password from the creds retrieved*/
-            charBuffer = CharBuffer.wrap(creds.second().second());
-            byteBuffer = Charset.forName("UTF-8").encode(charBuffer);
-            bytes = Arrays.copyOfRange(byteBuffer.array(),
-                                       byteBuffer.position(), byteBuffer.limit());
-            byte[] cipher_pass = cipher.doFinal(bytes);
-        
-            sockJS = new JSONWriter(sockWriter);
-            sockJS.object()
-                .key("command").value("SHARE")
-                .key("service").value(service)
-                .key("service_user").value(new String(cipher_user))
-                .key("service_pass").value(new String(cipher_pass))
-                .key("public_key").value(shared_keypair.getPublic())
-                //            .key("mac").value(DatatypeConverter.printBase64Binary(code))
-                .endObject();
-            sockWriter.println();
-            sockWriter.flush();
-            respPacket = new JSONObject(sockReader.readLine());
-          
-        } catch (Exception e) {
-            e.printStackTrace();
-            return Response.FAIL; //failed
-        }
-
-        if (respPacket == null) {
-            return Response.FAIL;
-        }
-
-        err = responseFromString(respPacket.getString("response"));
-
-        return err;
+    /*Sends command to revoke access for a user who had been shared a credential*/
+    protected static Response unshareCreds(String revoked_user, String service){
+      JSONObject respPacket = null;
+      Response err;
+      try {
+        sockJS = new JSONWriter(sockWriter);
+        sockJS.object()
+            .key("command").value("REVOKE")
+            .key("revoked_user").value(revoked_user)
+            .key("revoked_service").value(service)
+            //            .key("mac").value(DatatypeConverter.printBase64Binary(code))
+            .endObject();
+        sockWriter.println();
+        sockWriter.flush();
+        respPacket = new JSONObject(sockReader.readLine());
+      } catch (Exception e) {
+          e.printStackTrace();
+          return Response.FAIL; //failed
+      }
+      if (respPacket == null) {
+        return Response.FAIL;
+      }
+      err = responseFromString(respPacket.getString("response"));
+      return err;
     }
 
     /* Get credentials from the server.
