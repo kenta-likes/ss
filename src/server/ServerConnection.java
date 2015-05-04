@@ -400,7 +400,7 @@ public class ServerConnection implements Runnable {
             return true;
         }
         return false;   
-}
+    }
 
     /*
      * Helper fxn for checking valid usernames
