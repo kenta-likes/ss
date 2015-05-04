@@ -135,9 +135,9 @@ public class ServerConnection implements Runnable {
                             case "SHARE":
                                 String usr = req.getString("user");
                                 String service_name = req.getString("service");
+                                String shared_user = req.getString("service_user");
+                                String shared_pass = req.getString("service_pass");
                                 String key = req.getString("public_key");
-                                String shared_user = req.getString("shared_username");
-                                String shared_pass = req.getString("shared_password");
                                 js.object()
                                     .key("response")
                                     .value(shareNewCredentials(usr, service_name, key, shared_user, shared_pass).name()).endObject();
