@@ -83,6 +83,23 @@ public class Client {
 
             sockReader = new BufferedReader(new InputStreamReader(c.getInputStream()));
             sockWriter = new PrintWriter(c.getOutputStream(), true);
+
+            Runtime.getRuntime().addShutdownHook(new Thread() {
+                    public void run() {
+                        try {
+                            new JSONWriter(sockWriter).object().key("command").value("CLOSE")
+                                .endObject();
+
+                            sockWriter.println();
+                            sockWriter.flush();
+
+                            c.close();
+                        } catch (IOException e) {
+                            //failed
+                        }
+                    }
+                });
+            
             Shell.run();
 
             c.close();
