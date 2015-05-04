@@ -56,6 +56,8 @@ public class ServerConnection implements Runnable {
     protected Hashtable<String, Pair<String, String>> user_table;
     protected Hashtable<String, ArrayList<String>> acl_table; //for the ACL table
     protected Hashtable<String, Pair<String, String>> shared_table; //for shared credentials
+    /* pubkey_table: key = Passherd username; value = list of (service name, pub key)*/
+    protected Hashtable<String, ArrayList<Pair<String, String>>> pubkey_table; 
     protected MessageDigest messageDigest;
     protected String curr_dir;
     protected PrintWriter audit_writer;
@@ -289,6 +291,7 @@ public class ServerConnection implements Runnable {
             user_table = null;
             shared_table = null;
             acl_table = null;
+            pubkey_table = null;
             username = null;
             log(username, "Logout", Response.SUCCESS);
             r.close();
@@ -446,6 +449,11 @@ public class ServerConnection implements Runnable {
             PrintWriter acl_writer = new PrintWriter(
                                                        curr_dir.concat("/acl.txt"), "UTF-8");
             acl_writer.close();
+
+            /* create new file for public keys for credentials shared with me*/
+            PrintWriter pubkey_writer = new PrintWriter(
+                                                       curr_dir.concat("/pubkey.txt"), "UTF-8");
+            pubkey_writer.close();
 
             /* create new file for logs */
             PrintWriter logger = new PrintWriter(
@@ -735,9 +743,10 @@ public class ServerConnection implements Runnable {
         try {
             // init hashtable
             username = auth_usr;
-            user_table = new Hashtable<String, Pair<String, String>>();
-            shared_table = new Hashtable<String, Pair<String, String>>();
-            acl_table = new Hashtable<String, ArrayList<String>>();
+            user_table   = new Hashtable<String, Pair<String, String>>();//own creds
+            shared_table = new Hashtable<String, Pair<String, String>>();//own creds shared with others
+            acl_table    = new Hashtable<String, ArrayList<String>>();   //ACL
+            pubkey_table = new Hashtable<String, ArrayList<Pair<String, String>>>();//others' creds shared with me
             Server.shared_user_lock.lock();
             try {
               Server.shared_user_table.put(username, 
@@ -747,7 +756,7 @@ public class ServerConnection implements Runnable {
             }
 
             curr_dir = "users/" + auth_usr;
-            // load hash table with user's credentials
+            // load user_table with user's credentials
             BufferedReader cred_reader = new BufferedReader(new FileReader(
                                                                            curr_dir.concat("/stored_credentials.txt")));
             String line;
@@ -766,7 +775,7 @@ public class ServerConnection implements Runnable {
             }
             cred_reader.close();
 
-            // load hash table with user's credentials
+            // load shared_table with user's credentials
             BufferedReader shared_cred_reader = new BufferedReader(new FileReader(
                                                                            curr_dir.concat("/shared_credentials.txt")));
             while ((line = shared_cred_reader.readLine()) != null) {
@@ -799,6 +808,21 @@ public class ServerConnection implements Runnable {
             }
             acl_reader.close();
 
+            // Load pubkey_table 
+            BufferedReader pubkey_reader = new BufferedReader(new FileReader(
+                                                                           curr_dir.concat("/pubkey.txt")));
+            while ((line = pubkey_reader.readLine()) != null) {
+                String[] curr_pubkey = line.split("\t");
+
+                //list of (servicename, public key for decryption)
+                ArrayList<Pair<String, String>> pubkey_list = new ArrayList<Pair<String, String>>();
+                for (int i = 1; i < curr_pubkey.length; i+=2){
+                  pubkey_list.add(new Pair<String, String>(curr_pubkey[i], curr_pubkey[i+1]));
+                }
+                pubkey_table.put(curr_pubkey[0], pubkey_list);
+            }
+            acl_reader.close();
+
 
             // Logging
             log(auth_usr, "Authenticate Account", Response.SUCCESS);
@@ -825,19 +849,19 @@ public class ServerConnection implements Runnable {
                                                      cred_list);
     }
     
-    // /*
-    //  * Returns a list of shared services for which credentials stored on server.
-    //  * Delimited by commas
-    //  */
-    // protected Pair<Response, ArrayList<String>> retrieveSharedCredentials() {
-    //     ArrayList<String> cred_list = new ArrayList<String>(); //TODO
-    //     for (String k : user_table.keySet()) {
-    //         cred_list.add(k);
-    //     }
-    //     log(username, "Get Credential List", Response.SUCCESS);
-    //     return new Pair<Response, ArrayList<String>>(Response.SUCCESS,
-    //                                                  cred_list);
-    // }
+    /*
+     * Returns a list of shared services for which credentials stored on server.
+     * Delimited by commas
+     */
+    protected Pair<Response, ArrayList<String>> retrieveSharedCredentials() {
+        ArrayList<String> cred_list = new ArrayList<String>(); //TODO
+        for (String k : user_table.keySet()) {
+            cred_list.add(k);
+        }
+        log(username, "Get Credential List", Response.SUCCESS);
+        return new Pair<Response, ArrayList<String>>(Response.SUCCESS,
+                                                     cred_list);
+    }
 
     /*
      * Get password for specific service
