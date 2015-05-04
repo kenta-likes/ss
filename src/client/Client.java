@@ -160,6 +160,7 @@ public class Client {
         case "USER_EXISTS": return Response.USER_EXISTS;
         case "DUP_LOGIN": return Response.DUP_LOGIN;
         case "BAD_FORMAT": return Response.BAD_FORMAT;
+        case "USER_DNE": return Response.USER_DNE;
         case "FAIL":
         default: return Response.FAIL;
         }
@@ -520,10 +521,11 @@ public class Client {
         sockJS = new JSONWriter(sockWriter);
         sockJS.object()
             .key("command").value("SHARE")
+            .key("user").value(user_shared)
             .key("service").value(service)
             .key("service_user").value(new String(encryptWithKeyPair(shared_keypair, creds.second().first().toCharArray())))
             .key("service_pass").value(new String(encryptWithKeyPair(shared_keypair, creds.second().second())))
-            .key("public_key").value(shared_keypair.getPublic().getEncoded())
+            .key("public_key").value(new String(shared_keypair.getPublic().getEncoded()))
             //            .key("mac").value(DatatypeConverter.printBase64Binary(code))
             .endObject();
         sockWriter.println();
@@ -531,12 +533,15 @@ public class Client {
         respPacket = new JSONObject(sockReader.readLine());
       } catch (Exception e) {
           e.printStackTrace();
+          Arrays.fill(pass, '\0');
           return Response.FAIL; //failed
       }
       if (respPacket == null) {
+        Arrays.fill(pass, '\0');
         return Response.FAIL;
       }
       err = responseFromString(respPacket.getString("response"));
+      Arrays.fill(pass, '\0');
       return err;
     }
 

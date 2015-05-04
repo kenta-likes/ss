@@ -494,6 +494,9 @@ public class Shell {
         case MAC:
             System.out.println("Error: Server data integrity appears to be compromised - MAC mismatch detected");
             return;
+        case USER_DNE:
+            System.out.println("Error: Username not found");
+            return;
         default: /* For recompilation purposes */
             System.out.println("Error: unrecognized error code.  Please recompile.");
         }
