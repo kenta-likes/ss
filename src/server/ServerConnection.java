@@ -114,11 +114,12 @@ public class ServerConnection implements Runnable {
                     try {
                         command = req.getString("command");
                         // check for authenticated user
-                        // System.out.println("ServerConnection: command="
-                        // +command);
+                        System.out.println("ServerConnection: command="
+                        +command);
                         if (username != null) {
                             switch (command) {
                             case "ATHN":
+                            case "LGIN":
                             case "RGST":
                                 js.object().key("response").value(Response.DUP_LOGIN).endObject();
                             break;
@@ -223,17 +224,26 @@ public class ServerConnection implements Runnable {
 
                                 break;
 
-                            case "CLOSE":
+                            case "LOGOUT":
                                 resp = logout();
                                 js.object().key("response").value(resp.name())
                                     .endObject();
+                                break;
 
-                                if (resp == Response.SUCCESS) {
+                            case "CLOSE":
+                                // resp = logout();
+                                // js.object().key("response").value(resp.name())
+                                //     .endObject();
+
+                                js.object().key("response").value("SUCCESS")
+                                    .endObject();
+
+                                //if (resp == Response.SUCCESS) {
                                     w.newLine();
                                     w.flush();
                                     socket.close();
                                     return;
-                                }
+                                //}
 
                             default:
                                 // System.out.println("username is not null: command is "+command);

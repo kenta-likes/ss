@@ -732,6 +732,35 @@ public class Client {
         sockJS = new JSONWriter(sockWriter);
 
         sockJS.object()
+            .key("command").value("LOGOUT")
+            .endObject();
+
+        sockWriter.println();
+        sockWriter.flush();
+
+        try {
+            respPacket = new JSONObject(sockReader.readLine());
+        } catch (IOException e) {
+            e.printStackTrace();
+            return responseFromString("IO Error getting response from server");
+        }
+
+        err = responseFromString(respPacket.getString("response"));
+        username = null;
+        
+        return err;
+    }
+
+
+    // Precondition: already logged out. 
+    // Postcondition: Close connection.
+    protected static Response exit(){
+        Response err;
+        JSONObject respPacket = null;
+        
+        sockJS = new JSONWriter(sockWriter);
+
+        sockJS.object()
             .key("command").value("CLOSE")
             .endObject();
 
@@ -749,6 +778,7 @@ public class Client {
         username = null;
         
         return err;
+
     }
 
     protected static Response unregister(char[] password) {

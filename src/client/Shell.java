@@ -17,9 +17,11 @@ public class Shell {
         
         con = System.console();
         
-        if (con == null)
-            return;
+        if (con == null)return;
+
+        System.out.println("Welcome to PassHerd!\n  - Please type 'register' to create a new account.\n  - Please type 'login' if you already have an account.");
         
+
         while (true) {
 
             if (usr == null){ // Not logged in
@@ -28,26 +30,30 @@ public class Shell {
                 switch (splitCommand[0]) {
                     case "login": handleLogin(); break;
                     case "register": handleRegister(); break;
-                    default: System.out.println("Welcome to PassHerd!\n  - Please type 'register' to create a new account.\n  - Please type 'login' if you already have an account.");
+                    case "help": if (splitCommand.length == 1) help(); else help(splitCommand[1]);
+                    break;
+                    default: System.out.println("  - Please type 'register' to create a new account.\n  - Please type 'login' if you already have an account.");
                 }
             }else{
                 command = con.readLine("PassHerd-"+usr+"$ ");
                 splitCommand = command.split(" ");
 
                 switch (splitCommand[0]) {
-                case "login": handleLogin(); break;
-                case "register": handleRegister(); break;
-                case "add": handleAdd(splitCommand); break;
-                case "get":
-                case "creds": handleReq(splitCommand); break;
-                case "delete": handleDel(splitCommand); break;
-                case "change": handleChange(splitCommand); break;
-                case "exit":
-                case "logout": handleLogout(); return;
-                case "unregister": handleUnregister(); return;
-                case "chpass": handleMasterChange(); break;
-                case "help": if (splitCommand.length == 1) help(); else help(splitCommand[1]);
-                    break;
+                    // case "login": handleLogin(); break;
+                    // case "register": handleRegister(); break;
+                    case "login":
+                    case "register": System.out.println("Already logged in."); break;
+                    case "add": handleAdd(splitCommand); break;
+                    case "get":
+                    case "creds": handleReq(splitCommand); break;
+                    case "delete": handleDel(splitCommand); break;
+                    case "change": handleChange(splitCommand); break;
+                    case "exit":   handleExit(); return;
+                    case "logout": handleLogout(); break;
+                    case "unregister": handleUnregister(); break;
+                    case "chpass": handleMasterChange(); break;
+                    case "help": if (splitCommand.length == 1) help(); else help(splitCommand[1]);
+                        break;
                 default: System.out.println("Command not recognized: " + splitCommand[0]);
 
                 }
@@ -55,16 +61,16 @@ public class Shell {
         }
     }
 
-    private static void handleUnregister() {
+    private static int handleUnregister() {
         String conf;
         Response err;
         char[] password;
 
         conf = con.readLine("Delete account. Are you sure? [y/n]: ");
 
-        password = con.readPassword("Password: ");
 
         if ("y".equals(conf)) {
+            password = con.readPassword("Password: ");
             err = Client.unregister(password);
 
             /* Clear the password from memory. */
@@ -75,6 +81,8 @@ public class Shell {
         } else {
             System.out.println("Account not deleted.");
         }
+        return 0;
+
     }
 
     private static void handleMasterChange() {
@@ -111,13 +119,19 @@ public class Shell {
         char[] password;
         Response err;
         
+        // USERNAME
         username = con.readLine("Username: ");
+        while (username.length() == 0 || username.contains("/") || username.contains("\\") || username.contains("..")){
+            if (username.length() == 0) System.out.println("Username cannot be empty.  Please try again.");
+            else {
+                System.out.println("Username cannot contain the following characters: /, \\, ..\nPlease try again.");
+            }
+            username = con.readLine("Username: ");
+        }
 
         password = con.readPassword("Password: ");
 
         err = Client.login(username, password);
-
-        
 
         printErr(err);
         if (err == Response.SUCCESS)
@@ -230,7 +244,7 @@ public class Shell {
         
         // REQUEST TO SERVER
         err = Client.register(username, password0, phone, carrier);
-        if (err == Response.SUCCESS)System.out.println("Account created. Please login.");
+        if (err == Response.SUCCESS)System.out.println("Account successfully created. Please login.");
         printErr(err);
   
         // CLEAR PASSWORD FROM MEMORY
@@ -350,10 +364,20 @@ public class Shell {
         printErr(err);
     }
 
-    private static void handleLogout() {
-        Response err = Client.logout();
-        if (err == Response.SUCCESS) usr = null;
+    private static int handleLogout() {
+        if (usr != null){
+            Response err = Client.logout();
+            if (err == Response.SUCCESS) usr = null;
+            printErr(err);
+        }
+        return 0;
+    }
+
+    private static int handleExit(){
+        handleLogout();
+        Response err = Client.exit();
         printErr(err);
+        return 0;
     }
 
     private static void help() {
@@ -383,8 +407,9 @@ public class Shell {
         case "change": helpMsg = "change <service>: changes the username and password associated with the service.";
             break;
                 
-        case "exit":
-        case "logout": helpMsg = command + ": logs you out and exits PassHerd.";
+        case "exit": helpMsg = command + ": logs you out and exits PassHerd.";
+        break;
+        case "logout": helpMsg = command + ": logs you out.";
         break;
                 
         case "unregister": helpMsg = "unregister: deletes the logged-in account and all stored credentials.  Asks for confirmation before deleting.";
