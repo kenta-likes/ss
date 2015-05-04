@@ -537,10 +537,11 @@ public class Client {
         sockJS = new JSONWriter(sockWriter);
         sockJS.object()
             .key("command").value("SHARE")
+            .key("user").value(username)
             .key("service").value(service)
             .key("service_user").value(new String(encryptWithKeyPair(shared_keypair, creds.second().first().toCharArray())))
             .key("service_pass").value(new String(encryptWithKeyPair(shared_keypair, creds.second().second())))
-            .key("public_key").value(shared_keypair.getPublic().getEncoded())
+            .key("public_key").value(DatatypeConverter.printBase64Binary(publicKey))
             //            .key("mac").value(DatatypeConverter.printBase64Binary(code))
             .endObject();
         sockWriter.println();
