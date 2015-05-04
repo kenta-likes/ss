@@ -55,6 +55,8 @@ public class Shell {
                 case "unregister": handleUnregister(); break;
                 case "chpass": handleMasterChange(); break;
                 case "share": handleShare(splitCommand); break;
+                case "unshare": handleUnshare(splitCommand); break;
+                case "lsshares": handleListShares(); break;
                 case "help": if (splitCommand.length == 1) help(); else help(splitCommand[1]);
                     break;
                 default: System.out.println("Command not recognized: " + splitCommand[0]);
@@ -62,6 +64,42 @@ public class Shell {
                 }
             }
         }
+    }
+
+    private static void handleListShares() {
+        Response err;
+        Pair<Response, List<Pair<String, List<String>>>> resp;
+        
+        resp = Client.listShares();
+        err = resp.first();
+        
+        if (err == Response.SUCCESS) {
+            List<Pair<String, List<String>>> shares = resp.second();
+
+            for (Pair<String, List<String>> p : shares) {
+                System.out.print(p.first() + ": shared with ");
+
+                for (String s : p.second())
+                    System.out.print(s + " ");
+
+                System.out.println();
+            }
+        } else {
+            printErr(err);
+        }
+    }
+
+    private static void handleUnshare(String[] command) {
+        Response err;
+
+        if (command.length != 3) {
+            System.out.println("Usage: unshare <service> <username>");
+            return;
+        }
+
+        err = Client.unshare(command[1], command[2]);
+
+        printErr(err);
     }
 
     private static void handleShare(String[] command) {
@@ -298,6 +336,55 @@ public class Shell {
         printErr(err);
     }
 
+    private static void handleSharedReq(String[] command) {
+        String service;
+        Response err;
+        Pair<Response, List<Pair<String, String>>> resp = null;
+        
+        if (command.length < 3 && command.length > 4) {
+            System.out.println("Usage: " + command[0] + " shared {<service> <username>} | all");
+            return;
+        }
+
+        service = command[2];
+
+        if (service == "all") {
+            resp = Client.requestSharedCreds();
+            err = resp.first();
+
+            List<Pair<String, String>> creds = resp.second();
+
+            if (err == Response.SUCCESS) {
+                for (Pair<String, String> p : creds)
+                    System.out.println(p.first() + ": " + p.second());
+            } else {
+                printErr(err);
+            }
+
+            return;
+        } else {
+            Pair<Response, Pair<String, String>> shared =
+                Client.requestOneSharedCred(command[2], command[3]);
+            
+            Pair<String, String> creds;
+
+            err = resp.first();
+
+            if (err == Response.SUCCESS) {
+                creds = shared.second();
+                
+                System.out.println("Credentials for " +
+                                   service + " shared from " + command[3] + ":");
+                System.out.println("Username: " + creds.first());
+                System.out.println("Password: " + creds.second());
+
+                return;
+            } else {
+                printErr(err);
+            }
+        }
+    }
+
     private static void handleReq(String[] command) {
         String service;
         Response err;
@@ -418,6 +505,15 @@ public class Shell {
         
         switch (command) {
         case "login": helpMsg = "login: initiates a login prompt.  Enter your username and password to gain access to your stored credentials.";
+            break;
+
+        case "share": helpMsg = "share <service> <username>: share credentials for a service with another user.";
+            break;
+
+        case "unshare": helpMsg = "unshare <service> <username>: stop sharing credentials for a service with another user.";
+            break;
+
+        case "lsshares": helpMsg = "lsshares: show all shared credentials and with whom they are shared.";
             break;
             
         case "register": helpMsg = "register: initiates the creation of a new account.";
