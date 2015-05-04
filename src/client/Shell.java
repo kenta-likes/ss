@@ -53,6 +53,7 @@ public class Shell {
                 case "logout": handleLogout(); break;
                 case "unregister": handleUnregister(); break;
                 case "chpass": handleMasterChange(); break;
+                case "share": handleShare(splitCommand); break;
                 case "help": if (splitCommand.length == 1) help(); else help(splitCommand[1]);
                     break;
                 default: System.out.println("Command not recognized: " + splitCommand[0]);
@@ -60,6 +61,26 @@ public class Shell {
                 }
             }
         }
+    }
+
+    private static void handleShare(String[] command) {
+        char[] password;
+        Response err;
+        
+        if (command.length != 3) {
+            System.out.println("Usage: share <service> <username>");
+            return;
+        }
+
+        password = con.readPassword("Password: ");
+        err = Client.shareNewCreds(command[1], command[2], password);
+
+        java.util.Arrays.fill(password, ' ');
+
+        if (err != Response.SUCCESS)
+            printErr(err);
+
+        return;
     }
 
     private static int handleUnregister() {

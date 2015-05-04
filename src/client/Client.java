@@ -443,7 +443,7 @@ public class Client {
 
     /*share creds with another user
       assumes user is already authenticated*/
-    protected static Response shareNewCreds(String user_shared, String service, char[] pass) {
+    protected static Response shareNewCreds(String service, String user_shared, char[] pass) {
         Response err;
         JSONObject respPacket = null;
         Pair<Response, Pair<String, char[]>> creds = requestCreds(service);
