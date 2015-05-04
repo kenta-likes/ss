@@ -24,8 +24,10 @@ import javax.xml.bind.DatatypeConverter;
 import java.security.SecureRandom;
 import java.security.spec.KeySpec;
 import java.security.KeyPairGenerator;
+import java.security.KeyFactory;
 import java.security.NoSuchProviderException;
 import java.security.KeyPair;
+import java.security.PublicKey;
 
 import javax.crypto.KeyGenerator;
 import javax.crypto.Mac;
@@ -36,6 +38,7 @@ import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.PBEParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
+import java.security.spec.X509EncodedKeySpec;
 
 public class Client {
 
@@ -482,7 +485,7 @@ public class Client {
 
     /*share creds with another user
       assumes user is already authenticated*/
-    protected static Response shareNewCreds(String user_shared, String service, char[] pass) {
+    protected static Response shareNewCreds(String service, String user_shared, char[] pass) {
       Response err;
       JSONObject respPacket = null;
       Pair<Response, Pair<String, char[]>> creds = requestCreds(service);
@@ -508,19 +511,18 @@ public class Client {
         sockWriter.println();
         sockWriter.flush();
         respPacket = new JSONObject(sockReader.readLine());
-          
-      } catch (Exception e) {
-          e.printStackTrace();
-          return Response.FAIL; //failed
-      }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Response.FAIL; //failed
+        }
 
-      if (respPacket == null) {
-          return Response.FAIL;
-      }
+        if (respPacket == null) {
+            return Response.FAIL;
+        }
 
-      err = responseFromString(respPacket.getString("response"));
+        err = responseFromString(respPacket.getString("response"));
 
-      return err;
+        return err;
     }
 
     /* Get credentials from the server.
@@ -609,6 +611,110 @@ public class Client {
         } else {
             return new Pair<Response, List<String>>(err, null);
         }
+    }
+
+    protected static Pair<Response, List<Pair<String, String>>> requestSharedCreds() {
+        JSONObject respPacket = null;
+        JSONArray jsCreds = null;
+        Response err;
+        List<Pair<String, String>> creds;
+        sockJS = new JSONWriter(sockWriter);
+
+        sockJS.object()
+            .key("command").value("GETSHARED1")
+            .endObject();
+        sockWriter.println();
+        sockWriter.flush();
+
+        try {
+            respPacket = new JSONObject(sockReader.readLine());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        if (respPacket == null)
+            return new Pair<Response, List<Pair<String, String>>>(Response.FAIL, null);
+
+        err = responseFromString(respPacket.getString("response"));
+
+        if (err == Response.SUCCESS) {
+            jsCreds = respPacket.getJSONObject("data").getJSONArray("credentials");
+            creds = new ArrayList<Pair<String, String>>();
+
+            try {
+                for (int i = 0; i < jsCreds.length(); i++) {
+                    Pair<String, String> sharedService;
+                    String owner, service;
+                    JSONObject o = new JSONObject(jsCreds.getString(i));
+
+                    owner = o.getString("owner");
+                    service = o.getString("service");
+
+                    sharedService = new Pair<String, String>(owner, service);
+
+                    creds.add(sharedService);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+                return new Pair<Response, List<Pair<String, String>>>(Response.FAIL, null);
+            }
+        }
+
+        return new Pair<Response, List<Pair<String, String>>>(Response.FAIL, null);
+    }
+
+    protected static Pair<Response, Pair<String, String>>
+        requestOneSharedCred(String owner, String service) {
+
+        JSONObject respPacket = null;
+        Response err;
+        String username, password, encPublicKey;
+        char[] decPass;
+        sockJS = new JSONWriter(sockWriter);
+
+        sockJS.object()
+            .key("command").value("GETSHARED2")
+            .key("service").value(service)
+            .key("owner").value(owner)
+            .endObject();
+        sockWriter.println();
+        sockWriter.flush();
+
+        try {
+            respPacket = new JSONObject(sockReader.readLine());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        if (respPacket == null)
+            return new Pair<Response, Pair<String, String>>(Response.FAIL, null);
+
+        err = responseFromString(respPacket.getString("response"));
+
+        if (err == Response.SUCCESS) {
+            encPublicKey = respPacket.getString("public_key");
+            username = respPacket.getString("username");
+            password = respPacket.getString("password");
+
+            try {
+                byte[] pubKeyBytes = DatatypeConverter.parseBase64Binary(encPublicKey);
+                X509EncodedKeySpec k = new X509EncodedKeySpec(pubKeyBytes);
+            
+                PublicKey publicKey = KeyFactory.getInstance("RSA").generatePublic(k);
+                Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
+                cipher.init(Cipher.DECRYPT_MODE, publicKey);
+            
+                username = new String(cipher.doFinal(DatatypeConverter.parseBase64Binary(username)));
+                password = new String(cipher.doFinal(DatatypeConverter.parseBase64Binary(password)));
+
+                return new Pair<Response, Pair<String, String>>(err, new Pair<String, String>(username, password));
+            } catch (Exception e) {
+                e.printStackTrace();
+                return new Pair<Response, Pair<String, String>>(Response.FAIL, null);
+            }
+        }
+
+        return new Pair<Response, Pair<String, String>>(err, null);
     }
 
     /* Deletes a set of credentials from the server.
