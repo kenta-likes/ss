@@ -541,9 +541,9 @@ public class ServerConnection implements Runnable {
             //remove myself from the global table
             Server.transaction_table.remove(username);
 
-        }finally[
+        }finally{
             Server.transaction_lock.unlock();
-        ]
+        }
 
 
         File directory = new File(curr_dir);
@@ -794,7 +794,7 @@ public class ServerConnection implements Runnable {
                 }
                 pubkey_table.put(curr_pubkey[0], pubkey_list);
             }
-            acl_reader.close();
+            pubkey_reader.close();
 
 
             // Logging
@@ -808,11 +808,49 @@ public class ServerConnection implements Runnable {
         }
     }
 
+    /* 
+     * Receive public key for shared credentials and update pubkey_table.
+     * Called when user authenticates and attempts to retrieve credentials 
+     */
+    protected void receivePubKey(){
+        // ArrayList of (Passherd username (owner of cred), service name, public key)
+        ArrayList<Triple<String,String,String>> transactions;
+
+        //1. look up transaction table by username
+        if (Server.transaction_table.contains(username)){
+
+            Server.transaction_lock.lock();
+            try{
+                // 2. Get the list of pending transactions
+                transactions = Server.transaction_table.get(username);
+
+                // 3. Process each transaction, update the pubkey_table
+                for (Triple<String,String,String> tr : transactions) {
+                    String owner      = tr.first();
+                    String servicename = tr.second();
+                    String pubkey      = tr.third();
+
+                    if (!pubkey_table.contains(owner)){
+                        pubkey_table.put(owner, new ArrayList<Pair<String, String>>());
+                    }
+                    
+                    // note: doesn't check for duplicates but shouldn't matter since pubkey is deterministic
+                    pubkey_table.get(owner).add(new Pair(servicename, pubkey)); 
+                }
+                // 4. Delete the entry from transaction_table
+                Server.transaction_table.remove(username);
+            
+            }finally {
+                Server.transaction_lock.unlock();
+            }
+        }
+    }
+
     /*
      * Returns a list of services for which credentials stored on server.
-     * Delimited by commas
      */
     protected Pair<Response, ArrayList<String>> retrieveCredentials() {
+        
         ArrayList<String> cred_list = new ArrayList<String>();
         for (String k : user_table.keySet()) {
             cred_list.add(k);
@@ -823,16 +861,21 @@ public class ServerConnection implements Runnable {
     }
     
     /*
-     * Returns a list of shared services for which credentials stored on server.
-     * Delimited by commas
+     * Returns a list of (username, shared services) for which credentials stored on server.
      */
-    protected Pair<Response, ArrayList<String>> retrieveSharedCredentials() {
-        ArrayList<String> cred_list = new ArrayList<String>(); //TODO
-        for (String k : user_table.keySet()) {
-            cred_list.add(k);
+    protected Pair<Response, ArrayList<Pair<String,String>>> retrieveSharedCredentials() {
+
+        receivePubKey(); // update the pubkey_table
+
+        ArrayList<Pair<String,String>> cred_list = new ArrayList<Pair<String,String>>(); 
+        for (String owner : pubkey_table.keySet()) {
+            for (Pair<String, String> shared_info : pubkey_table.get(owner)){
+                cred_list.add(new Pair(owner, shared_info.first()));
+            }
+            
         }
         log(username, "Get Credential List", Response.SUCCESS);
-        return new Pair<Response, ArrayList<String>>(Response.SUCCESS,
+        return new Pair<Response, ArrayList<Pair<String,String>>>(Response.SUCCESS,
                                                      cred_list);
     }
 
@@ -941,6 +984,21 @@ public class ServerConnection implements Runnable {
             }
             shared_writer.flush();
             shared_writer.close();
+
+            /*Then write back the pubkeys*/
+            BufferedWriter pubkey_writer = new BufferedWriter(new FileWriter(
+                                                                      curr_dir.concat("/pubkey.txt")));
+            for (String owner : pubkey_table.keySet()) {
+                String shared_info = ""; 
+                // flattened list of [owner's username, list(servicename, pubkey) ]
+                for (Pair<String, String> servicename_pubkey : pubkey_table.get(owner)){
+                    shared_info 
+                        = shared_info + '\t' + servicename_pubkey.first() + '\t' + servicename_pubkey.second();
+                }
+                pubkey_writer.write(owner + shared_info + "\n");
+            }
+            pubkey_writer.flush();
+            pubkey_writer.close();
 
             /*Finally write back the ACL TODO: add another method to get MAC for ACL*/
             BufferedWriter acl_writer = new BufferedWriter(new FileWriter(
