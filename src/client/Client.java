@@ -735,6 +735,9 @@ public class Client {
             .key("command").value("ACL")
             .endObject();
 
+        sockWriter.println();
+        sockWriter.flush();
+
         try {
             respPacket = new JSONObject(sockReader.readLine());
         } catch (Exception e) {
