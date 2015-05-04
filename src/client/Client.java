@@ -467,6 +467,7 @@ public class Client {
         }
     }
 
+    /*generates cipher text from plaintext using a keypair*/
     protected static byte[] encryptWithKeyPair(KeyPair shared_keypair, char[] msg){
         try {
         final Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
@@ -477,6 +478,23 @@ public class Client {
         byte[] bytes = Arrays.copyOfRange(byteBuffer.array(),
                                             byteBuffer.position(), byteBuffer.limit());
         return cipher.doFinal(bytes);
+        } catch (Exception e){
+          e.printStackTrace();
+          return null;
+        }
+    }
+
+    /*generates plaintext from ciphertext using a keypair*/
+    protected static char[] decryptWithKeyPair(KeyPair shared_keypair, byte[] c_msg){
+        try {
+        final Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
+        cipher.init(Cipher.DECRYPT_MODE, shared_keypair.getPublic());
+        byte[] bytes = cipher.doFinal(c_msg);
+        char[] msg = new char[bytes.length];
+        for (int i = 0; i < bytes.length; i++) {
+            msg[i] = (char) (bytes[i] & 0xff);
+        }
+        return msg;
         } catch (Exception e){
           e.printStackTrace();
           return null;
@@ -511,18 +529,41 @@ public class Client {
         sockWriter.println();
         sockWriter.flush();
         respPacket = new JSONObject(sockReader.readLine());
-        } catch (Exception e) {
-            e.printStackTrace();
-            return Response.FAIL; //failed
-        }
+      } catch (Exception e) {
+          e.printStackTrace();
+          return Response.FAIL; //failed
+      }
+      if (respPacket == null) {
+        return Response.FAIL;
+      }
+      err = responseFromString(respPacket.getString("response"));
+      return err;
+    }
 
-        if (respPacket == null) {
-            return Response.FAIL;
-        }
-
-        err = responseFromString(respPacket.getString("response"));
-
-        return err;
+    /*Sends command to revoke access for a user who had been shared a credential*/
+    protected static Response unshareCreds(String revoked_user, String service){
+      JSONObject respPacket = null;
+      Response err;
+      try {
+        sockJS = new JSONWriter(sockWriter);
+        sockJS.object()
+            .key("command").value("REVOKE")
+            .key("revoked_user").value(revoked_user)
+            .key("revoked_service").value(service)
+            //            .key("mac").value(DatatypeConverter.printBase64Binary(code))
+            .endObject();
+        sockWriter.println();
+        sockWriter.flush();
+        respPacket = new JSONObject(sockReader.readLine());
+      } catch (Exception e) {
+          e.printStackTrace();
+          return Response.FAIL; //failed
+      }
+      if (respPacket == null) {
+        return Response.FAIL;
+      }
+      err = responseFromString(respPacket.getString("response"));
+      return err;
     }
 
     /* Get credentials from the server.
