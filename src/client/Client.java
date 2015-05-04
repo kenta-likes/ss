@@ -438,6 +438,48 @@ public class Client {
         return err;
     }
 
+    /*Used for generating key pair using PBE and the service name*/
+    protected static KeyPair getKeyPair(String service, char[] pass){
+        try {
+          MessageDigest md = MessageDigest.getInstance("SHA-256");
+          char combined[] = new char[pass.length + service.toCharArray().length];
+          System.arraycopy(pass, 0, combined, 0, pass.length);
+          System.arraycopy(service.toCharArray(), 0, combined, pass.length, service.toCharArray().length);
+
+          CharBuffer charBuffer = CharBuffer.wrap(combined);
+          ByteBuffer byteBuffer = Charset.forName("UTF-8").encode(charBuffer);
+          byte[] bytes = Arrays.copyOfRange(byteBuffer.array(),
+                                              byteBuffer.position(), byteBuffer.limit());
+          md.update(bytes);
+          byte[] digest = md.digest();
+
+          KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
+          SecureRandom rng = SecureRandom.getInstance("SHA1PRNG", "SUN");
+          rng.setSeed(digest); //use the password/service name hashed as seed
+          keyGen.initialize(512, rng);
+          return keyGen.genKeyPair();
+        } catch (Exception e) {
+          e.printStackTrace();
+          return null;
+        }
+    }
+
+    protected static byte[] encryptWithKeyPair(KeyPair shared_keypair, char[] msg){
+        try {
+        final Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
+        cipher.init(Cipher.ENCRYPT_MODE, shared_keypair.getPrivate());
+        /*get the password from the creds retrieved*/
+        CharBuffer charBuffer = CharBuffer.wrap(msg);
+        ByteBuffer byteBuffer = Charset.forName("UTF-8").encode(charBuffer);
+        byte[] bytes = Arrays.copyOfRange(byteBuffer.array(),
+                                            byteBuffer.position(), byteBuffer.limit());
+        return cipher.doFinal(bytes);
+        } catch (Exception e){
+          e.printStackTrace();
+          return null;
+        }
+    }
+
     /*share creds with another user
       assumes user is already authenticated*/
     protected static Response shareNewCreds(String user_shared, String service, char[] pass) {
@@ -448,42 +490,19 @@ public class Client {
         return creds.first(); //send failed response
       }
       try {
-        MessageDigest md = MessageDigest.getInstance("SHA-256");
-        char combined[] = new char[pass.length + service.toCharArray().length];
-        System.arraycopy(pass, 0, combined, 0, pass.length);
-        System.arraycopy(service.toCharArray(), 0, combined, pass.length, service.toCharArray().length);
-
-        CharBuffer charBuffer = CharBuffer.wrap(combined);
-        ByteBuffer byteBuffer = Charset.forName("UTF-8").encode(charBuffer);
-        byte[] bytes = Arrays.copyOfRange(byteBuffer.array(),
-                                            byteBuffer.position(), byteBuffer.limit());
-        md.update(bytes);
-        byte[] digest = md.digest();
-
-        KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
-        SecureRandom rng = SecureRandom.getInstance("SHA1PRNG", "SUN");
-        rng.setSeed(digest); //use the password/service name hashed as seed
-        keyGen.initialize(512, rng);
-        KeyPair shared_keypair = keyGen.genKeyPair();
+        KeyPair shared_keypair = getKeyPair(service,pass);
+        if (shared_keypair == null){
+          return Response.FAIL;
+        }
         byte[] publicKey = shared_keypair.getPublic().getEncoded();
 
-        final Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
-        cipher.init(Cipher.ENCRYPT_MODE, shared_keypair.getPrivate());
-        byte[] cipher_user = cipher.doFinal(creds.second().first().getBytes());
-        /*get the password from the creds retrieved*/
-        charBuffer = CharBuffer.wrap(creds.second().second());
-        byteBuffer = Charset.forName("UTF-8").encode(charBuffer);
-        bytes = Arrays.copyOfRange(byteBuffer.array(),
-                                            byteBuffer.position(), byteBuffer.limit());
-        byte[] cipher_pass = cipher.doFinal(bytes);
-        
         sockJS = new JSONWriter(sockWriter);
         sockJS.object()
             .key("command").value("SHARE")
             .key("service").value(service)
-            .key("service_user").value(new String(cipher_user))
-            .key("service_pass").value(new String(cipher_pass))
-            .key("public_key").value(shared_keypair.getPublic())
+            .key("service_user").value(new String(encryptWithKeyPair(shared_keypair, creds.second().first().toCharArray())))
+            .key("service_pass").value(new String(encryptWithKeyPair(shared_keypair, creds.second().second())))
+            .key("public_key").value(shared_keypair.getPublic().getEncoded())
             //            .key("mac").value(DatatypeConverter.printBase64Binary(code))
             .endObject();
         sockWriter.println();
