@@ -443,9 +443,7 @@ public class Client {
 
     /*share creds with another user
       assumes user is already authenticated*/
-    protected static Response shareNewCreds(String user_shared, String service,
-                                            String service_user, String service_pass,
-                                            char[] pass) {
+    protected static Response shareNewCreds(String user_shared, String service, char[] pass) {
         Response err;
         JSONObject respPacket = null;
         Pair<Response, Pair<String, char[]>> creds = requestCreds(service);
@@ -474,8 +472,13 @@ public class Client {
 
             final Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
             cipher.init(Cipher.ENCRYPT_MODE, shared_keypair.getPrivate());
-            byte[] cipher_user = cipher.doFinal(service_user.getBytes());
-            byte[] cipher_pass = cipher.doFinal(service_pass.getBytes());
+            byte[] cipher_user = cipher.doFinal(creds.second().first().getBytes());
+            /*get the password from the creds retrieved*/
+            charBuffer = CharBuffer.wrap(creds.second().second());
+            byteBuffer = Charset.forName("UTF-8").encode(charBuffer);
+            bytes = Arrays.copyOfRange(byteBuffer.array(),
+                                       byteBuffer.position(), byteBuffer.limit());
+            byte[] cipher_pass = cipher.doFinal(bytes);
         
             sockJS = new JSONWriter(sockWriter);
             sockJS.object()
