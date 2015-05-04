@@ -521,6 +521,105 @@ public class Client {
         }
     }
 
+    protected static Pair<Response, List<Pair<String, String>> requestSharedCreds() {
+        JSONObject respPacket = null;
+        JSONArray jsCreds = null;
+        Response err;
+        List<Pair<String, String>> creds;
+        sockJS = new JSONWriter(sockWriter);
+
+        sockJS.object()
+            .key("command").value("GETSHARED1")
+            .endObject();
+        sockWriter.println();
+        sockWriter.flush();
+
+        try {
+            respPacket = new JSONObject(sockReader.readLine());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        if (respPacket == null)
+            return new Pair<Response, List<Pair<String, String>>(Response.FAIL, null);
+
+        err = responseFromString(respPacket.getString("response"));
+
+        if (err == Response.SUCCESS) {
+            jsCreds = respPacket.getJSONObject("data").getJSONArray("credentials");
+            creds = new ArrayList<Pair<String, String>>();
+
+            try {
+                for (int i = 0; i < jsCreds.length(); i++) {
+                    Pair<String, String> sharedService;
+                    String owner, service;
+                    JSONObject o = new JSONObject(jsCreds.getString(i));
+
+                    owner = o.getString("owner");
+                    service = o.getString("service");
+
+                    sharedService = new Pair<String, String>(owner, service);
+
+                    creds.add(sharedService);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+                return new Pair<Response, List<Pair<String, String>>(Response.FAIL, null);
+            }
+        }
+
+        return new Pair<Response, List<Pair<String, String>>(Response.FAIL, null);
+    }
+
+    protected static Pair<Response, Pair<String, char[]>>
+        requestOneSharedCred(String owner, String service) {
+
+        JSONObject respPacket = null;
+        Response err;
+        String username, password, publicKey;
+        char[] decPass;
+        sockJS = new JSONWriter(sockWriter);
+
+        sockJS.object()
+            .key("command").value("GETSHARED2")
+            .key("service").value(service)
+            .key("owner").value(owner)
+            .endObject();
+        sockWriter.println();
+        sockWriter.flush();
+
+        try {
+            respPacket = new JSONObject(sockReader.readLine());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        if (respPacket == null)
+            return new Pair<Response, Pair<String, char[]>>(Response.FAIL, null);
+
+        err = responseFromString(respPacket.getString("response"));
+
+        if (err == Response.SUCCESS) {
+            publicKey = respPacket.getString("public_key");
+            username = respPacket.getString("username");
+            password = respPacket.getString("password");
+
+            byte[] pubKeyBytes = DatatypeConverter.parseBase64Binary(publicKey);
+            X509EncodedKeySpec k = new X509EncodedKeySpec(pubKeyBytes);
+            
+            PublicKey publicKey = KeyFactory.getInstance("RSA").generatePublic(k);
+            Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
+            cipher.init(Cipher.DECRYPT_MODE, publicKey);
+            
+            username = cipher.doFinal(DatatypeConverter.parseBase64Binary(username));
+            password = cipher.doFinal(DatatypeConverter.parseBase64Binary(password));
+
+            return new Pair<Response, Pair<String, String>>(err, new Pair<String, String>(username, password));
+        }
+
+        return new Pair<Response, Pair<String, String>>(err, null);
+    }
+
     /* Deletes a set of credentials from the server.
      * pre: user is logged in, credentials exist on the server
      * post: that set of credentials no longer exists on the server
