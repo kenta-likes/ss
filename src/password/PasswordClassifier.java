@@ -38,6 +38,7 @@ public class PasswordClassifier {
 	}
 
 	public boolean isStrong(String line) {
+		if (line.length() ==0) return false;
 		// strength = variance * length * distance from lowest to highest char
 		int i;
 		double avg = 0.0;

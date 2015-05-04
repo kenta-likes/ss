@@ -301,7 +301,7 @@ public class Client {
      * post: creates an account on the server with the associated account data.
      * It also authenticates that account immediately (user is logged in).
      */
-    protected static Response register(String username, char[] password, String email, String phone, String carrier) {
+    protected static Response register(String username, char[] password, String phone, String carrier) {
         JSONObject respPacket = null;
         Response err;
         sockJS = new JSONWriter(sockWriter);
@@ -321,7 +321,6 @@ public class Client {
             .key("password").value(new String(hashedPassword))
             .key("phone").value(phone)
             .key("carrier").value(carrier)
-            .key("email").value(email)
             .endObject();
 
         sockWriter.println();

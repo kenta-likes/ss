@@ -130,74 +130,91 @@ public class Shell {
     }
 
     private static void handleRegister() {
-        String username, email, phone, carrier;
-        char[] password0, password1;
+        String username, phone, carrier;
+        char[] password0 = null, password1 = null;
         Response err;
-        boolean samePassword = true, containsComma = false, validCarrier = true;
+        boolean strongPassword = false, samePassword = false, validCarrier = false;
         int c, p;
         PasswordClassifier passTest = new PasswordClassifier();
+
+        // USERNAME
         username = con.readLine("Username: ");
-        password0 = con.readPassword("Password: ");
-        password1 = con.readPassword("Verify password: ");
-
-        while (username.length() == 0 || password0.length == 0 || password1.length == 0) {
-            System.out.println("Usernames and passwords cannot be empty.  Please try again.");
-
-            username = con.readLine("Username: ");
-            password0 = con.readPassword("Password: ");
-            password1 = con.readPassword("Verify password: ");
-        }
-        
-        while (!(passTest.isStrong(new String(password0))))
-        {
-        	password0 = con.readPassword("That password is too weak. Please use a more complex password: ");
-        	password1 = con.readPassword("Verify password: ");
-        }
-
-               if (password0.length != password1.length)
-            samePassword = false;
-        else {
-            for (int i = 0; i < password0.length; i++) {
-                /* Make sure the user entered the password they intended - twice. */
-                samePassword &= (password0[i] == password1[i]);
-
-                if (password0[i] == ',')
-                    containsComma = true;
+        while (username.length() == 0 || username.contains("/") || username.contains("\\") || username.contains("..")){
+            if (username.length() == 0) System.out.println("Username cannot be empty.  Please try again.");
+            else {
+                System.out.println("Username cannot contain the following characters: /, \\, ..\nPlease try again.");
             }
+            username = con.readLine("Username: ");
         }
 
-        email = con.readLine("Email: ");
+        // PASSWORD
+        password0 = con.readPassword("Password: ");
+        strongPassword = passTest.isStrong(new String(password0));
+        while (password0.length == 0 || !strongPassword || !samePassword){
+            if (password0.length == 0){
+                System.out.println("Password cannot be empty.  Please try again.");
+                password0 = con.readPassword("Password: ");
+                strongPassword = false;
+            } else if (!strongPassword){
+                System.out.println("That password is too weak! Please use a stronger password.");
+                System.out.println("Hint:\n - Make it longer\n - Include numbers and special characters \n - Avoid common English words");
+                password0 = con.readPassword("Password: ");
+                strongPassword = passTest.isStrong(new String(password0));
+            } 
+
+            // VERIFY PASSWORD
+            if (password0.length > 0 && strongPassword){
+                password1 = con.readPassword("Verify password: ");
+                // compare password
+                if (password0.length != password1.length) samePassword = false;
+                else {
+                    samePassword = true;
+                    for (int i = 0; i < password0.length; i++) {
+                    samePassword &= (password0[i] == password1[i]);
+                    }
+                }
+                
+                // passwords don't match
+                if (!samePassword){
+                System.out.println("Passwords do not match. Please try again.");
+                password0 = con.readPassword("Password: ");
+                strongPassword = passTest.isStrong(new String(password0));
+                }
+            }
+            
+        }        
+
+        // PHONE NUMBER
         phone = con.readLine("10 digit phone number (e.g. 4081234567): ");
 		while (!(phone.matches("[0-9]+") && phone.length() == 10)) {
-        	phone = con.readLine("Bad format. Please try again: ");
-					}
+            if (!(phone.matches("[0-9]+"))){
+                phone = con.readLine("Invalid characters. Please try again (e.g. 4081234567): ");
+            }else{
+                phone = con.readLine("Invalid length. Please try again (e.g. 4081234567): ");
+            }	
+		}
+
+        // CARRIER
         carrier = con.readLine("Carrier (0 = Verizon, 1 = AT&T, 2 = Sprint): ");
-
-        try {
-        	c = Integer.parseInt(carrier);
-        } catch (NumberFormatException e)
-        {
-        	validCarrier = false;
+        while (!validCarrier){
+            try {
+                c = Integer.parseInt(carrier);
+                validCarrier = !(c != 0 && c != 1 && c != 2);
+            } catch (NumberFormatException e){
+                validCarrier = false;
+            }
+            if (!validCarrier){
+                System.out.println("Invalid carrier");
+                carrier = con.readLine("Please select again (0 = Verizon, 1 = AT&T, 2 = Sprint): ");
+            }         
         }
-        c = Integer.parseInt(carrier);
-        if (c != 0 && c != 1 && c != 2)
-        {
-        	validCarrier = false;
-        }
-
-        if (samePassword && validCarrier) {
-
-            
-            err = Client.register(username, password0, email, phone, carrier);
-            printErr(err);
-        } else {
-        	if (!samePassword)
-        		System.out.println("Error: passwords do not match.");
-        	if (!validCarrier)
-        		System.out.println("Error: carrier invalid.");
-        }
-
-        /* Clear the password from memory. */
+        
+        
+        // REQUEST TO SERVER
+        err = Client.register(username, password0, phone, carrier);
+        printErr(err);
+  
+        // CLEAR PASSWORD FROM MEMORY
         java.util.Arrays.fill(password0, ' ');
         java.util.Arrays.fill(password1, ' ');
 
