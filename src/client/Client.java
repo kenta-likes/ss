@@ -393,19 +393,19 @@ public class Client {
         String encPass = encryptPassword(password);
         sockJS = new JSONWriter(sockWriter);
         /*        SecretKey macKey = new SecretKeySpec(key.getEncoded(), "HmacSHA256");
-        String message = service + username + password;
+                  String message = service + username + password;
         
-        byte code[];
+                  byte code[];
         
-        try {
-            Mac mac = Mac.getInstance("HmacSHA256");
-            mac.init(macKey);
+                  try {
+                  Mac mac = Mac.getInstance("HmacSHA256");
+                  mac.init(macKey);
             
-            code = mac.doFinal("This is a very long string...hopefully it works.".getBytes());
-        } catch (Exception e1) {
-            e1.printStackTrace();
-            return Response.FAIL;
-            }*/
+                  code = mac.doFinal("This is a very long string...hopefully it works.".getBytes());
+                  } catch (Exception e1) {
+                  e1.printStackTrace();
+                  return Response.FAIL;
+                  }*/
         
         sockJS.object()
             .key("command").value("ADD")
@@ -474,11 +474,11 @@ public class Client {
             System.out.println("Password: " + new String(decryptPassword(password)));
             
             /*            mac = DatatypeConverter.parseBase64Binary(respPacket.getString("mac"));
-            byte code[];
-            decPass = decryptPassword(password);
-            justPass = new char[decPass.length - service.length()];
+                          byte code[];
+                          decPass = decryptPassword(password);
+                          justPass = new char[decPass.length - service.length()];
 
-            SecretKey macKey = new SecretKeySpec(key.getEncoded(), "HmacSHA256");
+                          SecretKey macKey = new SecretKeySpec(key.getEncoded(), "HmacSHA256");
             */
 
 
@@ -491,47 +491,47 @@ public class Client {
              */
 
             /* Substring for char array and string comparison 
-            for (int i = 0; i < service.length(); i++) {
-                correctService &= (decPass[i] == service.charAt(i));
-            }
+               for (int i = 0; i < service.length(); i++) {
+               correctService &= (decPass[i] == service.charAt(i));
+               }
 
-            if (correctService) {
+               if (correctService) {
                 
-                for (int i = service.length(); i < decPass.length; i++)
-                    justPass[i - service.length()] = decPass[i];
+               for (int i = service.length(); i < decPass.length; i++)
+               justPass[i - service.length()] = decPass[i];
 
-                for (int i = 0; i < decPass.length; i++)
-                    decPass[i] = (char) 0;
+               for (int i = 0; i < decPass.length; i++)
+               decPass[i] = (char) 0;
                 
-                try {
-                    Mac mac_compute = Mac.getInstance("HmacSHA256");
-                    mac_compute.init(macKey);
+               try {
+               Mac mac_compute = Mac.getInstance("HmacSHA256");
+               mac_compute.init(macKey);
 
-                    String s = new String(justPass);
-                    String message = service + username + justPass;
+               String s = new String(justPass);
+               String message = service + username + justPass;
                     
-                    code = mac_compute.doFinal("This is a very long string...hopefully it works.".getBytes());
+               code = mac_compute.doFinal("This is a very long string...hopefully it works.".getBytes());
                     
-                    computedMac = new String(code);
-                    if (!java.util.Arrays.equals(mac, code)) //!computedMac.equals(new String(mac)))
-                        {
-                            System.out.println(computedMac + "   ,   " + new String(mac));
-                            return new Pair<Response, Pair<String, char[]>>(Response.MAC, null);
-                        }
-                } catch (Exception e1) {
-                    e1.printStackTrace();
-                    return new Pair<Response, Pair<String, char[]>>(Response.FAIL, null);
-                }
+               computedMac = new String(code);
+               if (!java.util.Arrays.equals(mac, code)) //!computedMac.equals(new String(mac)))
+               {
+               System.out.println(computedMac + "   ,   " + new String(mac));
+               return new Pair<Response, Pair<String, char[]>>(Response.MAC, null);
+               }
+               } catch (Exception e1) {
+               e1.printStackTrace();
+               return new Pair<Response, Pair<String, char[]>>(Response.FAIL, null);
+               }
                 
-                return new Pair<Response, Pair<String, char[]>>(err, new Pair<String, char[]>(username, justPass));
+               return new Pair<Response, Pair<String, char[]>>(err, new Pair<String, char[]>(username, justPass));
             
-            } else {
-                for (int i = 0; i < decPass.length; i++)
-                    decPass[i] = (char) 0;
+               } else {
+               for (int i = 0; i < decPass.length; i++)
+               decPass[i] = (char) 0;
 
-                System.out.println("Error: detected password for incorrect service!  Please contact a system administrator.");
-                return new Pair<Response, Pair<String, char[]>>(Response.FAIL, null);
-                }*/
+               System.out.println("Error: detected password for incorrect service!  Please contact a system administrator.");
+               return new Pair<Response, Pair<String, char[]>>(Response.FAIL, null);
+               }*/
         }
 
         return new Pair<Response, Pair<String, char[]>>(err, null);
@@ -673,55 +673,56 @@ public class Client {
      * decrypt them, re-encrypt with the new password, and re-store them on the server
      */
     private static void redoCredentialEncryption(char[] newPassword) {
-		// TODO Auto-generated method stub
-		Pair<Response, List<String>> credNames = requestAllCreds();
-		List<Pair<String,char[]>> creds = new LinkedList<Pair<String,char[]>>();
-		Pair<Response, Pair<String, char[]>> response;
-		int i;
-		for (i = 0; i < credNames.second().size(); i++)
-		{
-			response = requestCreds(credNames.second().get(i));
-			creds.add(new Pair<String, char[]>(response.second().first(), response.second().second()));
-		}
+        // TODO Auto-generated method stub
+        Pair<Response, List<String>> credNames = requestAllCreds();
+        List<Pair<String,char[]>> creds = new LinkedList<Pair<String,char[]>>();
+        Pair<Response, Pair<String, char[]>> response;
+        int i;
+        for (i = 0; i < credNames.second().size(); i++)
+            {
+                response = requestCreds(credNames.second().get(i));
+                creds.add(new Pair<String, char[]>(response.second().first(), response.second().second()));
+            }
         byte[] salt, iv;
         IvParameterSpec ivSpec;
         FileInputStream fin;
 
         try {
-        	fin = new FileInputStream(System.getProperty("user.home") +
-                    "/" + username + ".conf");
-	        salt = new byte[16];
-	        fin.read(salt);
+            fin = new FileInputStream(System.getProperty("user.home") +
+                                      "/" + username + ".conf");
+            salt = new byte[16];
+            fin.read(salt);
 	
-	        /* Skip the newline character. */
-	        fin.skip(1);
+            /* Skip the newline character. */
+            fin.skip(1);
 	        
-	        iv = new byte[16];
-	        fin.read(iv);
-	        fin.close();
-	        ivSpec = new IvParameterSpec(iv);
+            iv = new byte[16];
+            fin.read(iv);
+            fin.close();
+            ivSpec = new IvParameterSpec(iv);
 	        
-	        SecretKeyFactory keyFact=SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
-	        KeySpec spec = new PBEKeySpec(newPassword, salt, 65536, 256);
-	        SecretKey tmp = keyFact.generateSecret(spec);
-	        key = new SecretKeySpec(tmp.getEncoded(), "AES");
-	        encoder = Cipher.getInstance("AES/CBC/PKCS5Padding");
-	        encoder.init(Cipher.ENCRYPT_MODE, key, ivSpec);
+            SecretKeyFactory keyFact=SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
+            KeySpec spec = new PBEKeySpec(newPassword, salt, 65536, 256);
+            SecretKey tmp = keyFact.generateSecret(spec);
+            key = new SecretKeySpec(tmp.getEncoded(), "AES");
+            encoder = Cipher.getInstance("AES/CBC/PKCS5Padding");
+            encoder.init(Cipher.ENCRYPT_MODE, key, ivSpec);
 	
-	        decoder = Cipher.getInstance("AES/CBC/PKCS5Padding");
-	        decoder.init(Cipher.DECRYPT_MODE, key, ivSpec);
+            decoder = Cipher.getInstance("AES/CBC/PKCS5Padding");
+            decoder.init(Cipher.DECRYPT_MODE, key, ivSpec);
 	        
-	        for (i = 0; i < creds.size(); i++)
+            for (i = 0; i < creds.size(); i++)
 	        {
-	        	changeCreds(credNames.second().get(i), creds.get(i).first(), new String(creds.get(i).second()));
+                    changeCreds(credNames.second().get(i), creds.get(i).first(), new String(creds.get(i).second()));
 	        }
 	
-	    } catch (Exception e) {
-	        System.out.println("Issues re-encrypting using new password!");
-	        e.printStackTrace();
-		}
-	}
-	/* Logs out the user.
+        } catch (Exception e) {
+            System.out.println("Issues re-encrypting using new password!");
+            e.printStackTrace();
+        }
+    }
+    
+    /* Logs out the user.
      * pre: user is logged in
      * post: user is no longer logged in
      */
@@ -816,10 +817,7 @@ public class Client {
         err = responseFromString(respPacket.getString("response"));
 
         if (err == Response.SUCCESS) {
-            File keyFile = new File(System.getProperty("user.home") + username + ".conf");
-            keyFile.delete();
             username = null;
-            err = logout();
         }
 
         return err;

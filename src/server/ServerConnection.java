@@ -743,6 +743,7 @@ public class ServerConnection implements Runnable {
             }
         } catch (IOException e) {
             e.printStackTrace();
+            log(auth_usr, "Authenticate Account", Response.FAIL);
             return Response.FAIL;
         }
         verified_password = true;
@@ -941,17 +942,22 @@ public class ServerConnection implements Runnable {
     protected Response addCredential(String service_name,
                                      String stored_username, String stored_password) {
         if (!checkInput(new String[] { stored_username, stored_password })) {
+            log(username, "Add Credential", Response.WRONG_INPT);
             return Response.WRONG_INPT;
         }
         if (!this.checkDataFormat(new String[] { service_name, stored_username,
                                                  stored_password })) {
+            log(username, "Add Credential", Response.BAD_FORMAT);
             return Response.BAD_FORMAT;
         }
-        if (user_table.containsKey(service_name))
+        if (user_table.containsKey(service_name)) {
+            log(username, "Add Credential", Response.CRED_EXISTS);
             return Response.CRED_EXISTS;
+        }
         user_table.put(service_name, new Pair<String, String>(
                                                               stored_username, stored_password));
 
+        log(username, "Add Credential", Response.SUCCESS);
         return Response.SUCCESS;
     }
 
@@ -961,18 +967,22 @@ public class ServerConnection implements Runnable {
     protected Response updateCredential(String service_name,
                                         String new_username, String new_stored_pass) {
         if (!checkInput(new String[] { new_username, new_stored_pass })) {
+
             return Response.WRONG_INPT;
         }
         if (!this.checkDataFormat(new String[] { service_name, new_username,
                                                  new_stored_pass })) {
+            log(username, "Update Credential", Response.BAD_FORMAT);
             return Response.BAD_FORMAT;
         }
         if (!user_table.containsKey(service_name)) {
             // System.out.println("Service " + service_name + " not in table.");
+            log(username, "Update Credential", Response.NO_SVC);
             return Response.NO_SVC;
         }
         user_table.put(service_name, new Pair<String, String>(
                                                               new_username, new_stored_pass));
+        log(username, "Update Credential", Response.SUCCESS);
         return Response.SUCCESS;
     }
 
@@ -981,14 +991,19 @@ public class ServerConnection implements Runnable {
      */
     protected Response deleteCredential(String service_name) {
         if (!checkInput(new String[] { service_name })) {
+            log(username, "Delete Credential", Response.WRONG_INPT);
             return Response.WRONG_INPT;
         }
         if (!this.checkDataFormat(new String[] { service_name })) {
+            log(username, "Delete Credential", Response.BAD_FORMAT);
             return Response.BAD_FORMAT;
         }
-        if (!user_table.containsKey(service_name))
+        if (!user_table.containsKey(service_name)) {
+            log(username, "Delete Credential", Response.NO_SVC);
             return Response.NO_SVC;
+        }
         user_table.remove(service_name);
+        log(username, "Delete Credential", Response.SUCCESS);
         return Response.SUCCESS;
     }
 
@@ -1052,6 +1067,7 @@ public class ServerConnection implements Runnable {
             return Response.FAIL;
         }
         // Also should log here
+        log(username, "Logout", Response.SUCCESS);
         username = null;
         return Response.SUCCESS;
 
