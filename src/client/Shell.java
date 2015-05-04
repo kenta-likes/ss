@@ -28,7 +28,6 @@ public class Shell {
                 command = con.readLine("PassHerd$ ");
                 splitCommand = command.split(" ");
                 switch (splitCommand[0]) {
-
                 case "login": handleLogin(); break;
                 case "register": handleRegister(); break;
                 case "exit": handleExit(); return;
@@ -137,7 +136,7 @@ public class Shell {
             /* Clear the password from memory. */
             java.util.Arrays.fill(password, ' ');
 
-            if (err == Response.SUCCESS) {usr = null;}            
+            if (err == Response.SUCCESS) usr = null;            
             printErr(err);
         } else {
             System.out.println("Account not deleted.");
@@ -242,6 +241,7 @@ public class Shell {
         // USERNAME
         username = con.readLine("Username: ");
         while (username.length() == 0 || invalidUsername(username)){
+
             if (username.length() == 0) System.out.println("Username cannot be empty.  Please try again.");
             else {
                 System.out.println("Username cannot contain the following characters: /, \\, ..\nPlease try again.");
@@ -495,13 +495,12 @@ public class Shell {
     private static int handleExit(){
         handleLogout();
         Response err = Client.exit();
-        //System.out.println("aaaa");
         printErr(err);
         return 0;
     }
 
     private static void help() {
-        System.out.println("All commands: login register add get creds delete change exit logout unregister chpass help.\nType help <command> for more information.");
+        System.out.println("All commands: login register add get creds delete change exit logout unregister chpass share unshare lsshare help.\nType help <command> for more information.");
     }
 
     private static void help(String command) {
@@ -563,7 +562,7 @@ public class Shell {
             return;
 
         case BAD_FORMAT:
-            System.out.println("Error: the <tab>, <space>, '*', '..', '/', and ''\\'' characters are not allowed.");
+            System.out.println("Error: the <tab>, '..', '/', and ''\\'' characters are not allowed.");
             return;
             
         case WRONG_INPT: /* fall through.  Generic error message in this case. */
