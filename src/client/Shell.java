@@ -179,6 +179,10 @@ public class Shell {
         java.util.Arrays.fill(password0, ' ');
         java.util.Arrays.fill(password1, ' ');
     }
+    
+    private static boolean invalidUsername(String s){
+        return username.contains(" ") ||username.contains("*") || username.contains("/") || username.contains("\\") || username.contains("..")
+    }
 
     private static int handleLogin() {
         String username;
@@ -187,7 +191,7 @@ public class Shell {
         
         // USERNAME
         username = con.readLine("Username: ");
-        while (username.length() == 0 || username.contains("/") || username.contains("\\") || username.contains("..")){
+        while (username.length() == 0 || invalidUsername(s)){
             if (username.length() == 0) System.out.println("Username cannot be empty.  Please try again.");
             else {
                 System.out.println("Username cannot contain the following characters: /, \\, ..\nPlease try again.");
@@ -237,7 +241,7 @@ public class Shell {
 
         // USERNAME
         username = con.readLine("Username: ");
-        while (username.length() == 0 || username.contains(" ") ||username.contains("*") || username.contains("/") || username.contains("\\") || username.contains("..")){
+        while (username.length() == 0 || invalidUsername(username)){
             if (username.length() == 0) System.out.println("Username cannot be empty.  Please try again.");
             else {
                 System.out.println("Username cannot contain the following characters: /, \\, ..\nPlease try again.");
