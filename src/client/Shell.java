@@ -180,7 +180,7 @@ public class Shell {
     }
     
     private static boolean invalidUsername(String username){
-        return username.contains(" ") ||username.contains("*") || username.contains("/") || username.contains("\\") || username.contains("..");
+        return username.contains(" ") || username.contains("*") || username.contains("/") || username.contains("\\") || username.contains("..");
     }
 
     private static int handleLogin() {
@@ -356,8 +356,7 @@ public class Shell {
         err = Client.consumeTransactions(usr); // CONSUME TRANSACTIONS
         printErr(err);
             
-
-        if (service == "all") {
+        if (service.equals("all")) {
             resp = Client.requestSharedCreds();
             err = resp.first();
 
@@ -372,12 +371,17 @@ public class Shell {
 
             return;
         } else {
+            if (command.length < 4) {
+                System.out.println("Usage: get shared <service> <username>");
+                return;
+            }
+                
             Pair<Response, Pair<String, String>> shared =
                 Client.requestOneSharedCred(command[2], command[3]);
             
             Pair<String, String> creds;
 
-            err = resp.first();
+            err = shared.first();
 
             if (err == Response.SUCCESS) {
                 creds = shared.second();
@@ -399,6 +403,11 @@ public class Shell {
         Response err;
 
         if (command.length != 2) {
+            if (command.length > 1 && command[1].equals("shared")) {
+                handleSharedReq(command);
+                return;
+            }
+                
             System.out.println("Usage: " + command[0] + " <service | all>");
             return;
         }
@@ -597,6 +606,9 @@ public class Shell {
             return;
         case MAC:
             System.out.println("Error: Server data integrity appears to be compromised - MAC mismatch detected");
+            return;
+        case USER_DNE:
+            System.out.println("Error: Username not found");
             return;
         default: /* For recompilation purposes */
             System.out.println("Error: unrecognized error code.  Please recompile.");

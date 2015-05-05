@@ -12,5 +12,6 @@ public enum Response {
     DUP_LOGIN, /*when user is trying to login again after logging in successfully */
     BAD_FORMAT, /* when user entered ill formatted password, username, or otherwise */
 		MAC,
-		BAD_CODE /*when user entered wrong code for two step code verification*/
+		BAD_CODE, /*when user entered wrong code for two step code verification*/
+		USER_DNE /*when user doesn't exist*/
 }
