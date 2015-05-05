@@ -56,7 +56,7 @@ public class Shell {
                 case "share": handleShare(splitCommand); break;
                 case "update": handleGetTransactions(splitCommand); break;
                 case "unshare": handleUnshare(splitCommand); break;
-                case "lsshares": handleListShares(); break;
+                case "lsshared": handleListShares(); break;
                 case "help": if (splitCommand.length == 1) help(); else help(splitCommand[1]);
                     break;
                 default: System.out.println("Command not recognized: " + splitCommand[0]);
@@ -90,7 +90,7 @@ public class Shell {
             List<Pair<String, List<String>>> shares = resp.second();
 
             for (Pair<String, List<String>> p : shares) {
-                System.out.print(p.first() + ": shared with ");
+                System.out.print(p.first() + ": can view ");
 
                 for (String s : p.second())
                     System.out.print(s + " ");
