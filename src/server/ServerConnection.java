@@ -65,7 +65,6 @@ public class ServerConnection implements Runnable {
     protected BufferedReader audit_reader;
     protected Pair<String, Long> two_step_code;
     protected boolean verified_password = false;
-    protected JSONWriter js;
     protected BufferedReader r = null;
     protected BufferedWriter w = null;
     protected JSONWriter js;
