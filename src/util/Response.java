@@ -9,9 +9,11 @@ public enum Response {
 		LOGGED_IN, /*used when user tries to login when they are already logged in*/
     USER_EXISTS, /*when username is already taken at registration*/
     CRED_EXISTS, /*when adding, the credentials already exist for that service*/
-    DUP_LOGIN, /*when user is trying to login again after logging in successfully */
-    BAD_FORMAT, /* when user entered ill formatted password, username, or otherwise */
-		MAC,
-		BAD_CODE, /*when user entered wrong code for two step code verification*/
-		USER_DNE /*when user doesn't exist*/
+    DUP_LOGIN, /* when user is trying to login again after logging in successfully */
+    MASTER_EMPTY,
+    MASTER_BAD_FORMAT,
+    CRED_BAD_FORMAT,
+	MAC,
+	BAD_CODE, /*when user entered wrong code for two step code verification*/
+	USER_DNE /*when user doesn't exist*/
 }

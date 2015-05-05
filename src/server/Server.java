@@ -106,8 +106,10 @@ public class Server {
     /*Initializes the acl table and shared table for all the users*/
     private static void initSharedUserTable(){
       try {
+        File f = new File(System.getProperty("user.dir") + "/users");
+        f.mkdirs(); // create the directory if doesn't exist
         /*load ACL/shared credentials into a hashtable for all users*/
-        String[] dirs = (new File(System.getProperty("user.dir") + "/users")).list();
+        String[] dirs = f.list();
         for (String username : dirs){
           String curr_dir = System.getProperty("user.dir") + "/users/" + username;
           File user_dir = new File(curr_dir);

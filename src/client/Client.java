@@ -171,13 +171,17 @@ public class Client {
     protected static Response responseFromString(String resp) {
         switch (resp) {
         case "SUCCESS": return Response.SUCCESS;
+        case "NAUTH": return Response.NAUTH;
+        case "MASTER_EMPTY": return Response.MASTER_EMPTY;
+        case "MASTER_BAD_FORMAT": return Response.MASTER_BAD_FORMAT;
+        case "CRED_BAD_FORMAT": return Response.CRED_BAD_FORMAT;        
         case "WRONG_INPT": return Response.WRONG_INPT;
         case "NO_SVC": return Response.NO_SVC;
-        case "NAUTH": return Response.NAUTH;
+        case "BAD_CODE": return Response.BAD_CODE;        
         case "CRED_EXISTS": return Response.CRED_EXISTS;
         case "USER_EXISTS": return Response.USER_EXISTS;
         case "DUP_LOGIN": return Response.DUP_LOGIN;
-        case "BAD_FORMAT": return Response.BAD_FORMAT;
+        case "MAC": return Response.MAC;
         case "USER_DNE": return Response.USER_DNE;
         case "FAIL":
         default: return Response.FAIL;
