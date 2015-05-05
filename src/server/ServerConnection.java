@@ -49,6 +49,7 @@ public class ServerConnection implements Runnable {
     static final int PASS_LEN = 32; // use # of bytes of SHA-256 output
     static final int PHONE_LEN = 10; // use # of bytes of SHA-256 output
     static final String HOSTNAME = "localhost";
+    static final long TWO_FACTOR_TIMEOUT = 100000000000L; // nano second
 
     protected SSLSocket socket;
     protected String username; // user associated with this account
@@ -62,8 +63,8 @@ public class ServerConnection implements Runnable {
     protected String curr_dir;
     protected PrintWriter audit_writer;
     protected BufferedReader audit_reader;
+    protected Pair<String, Long> two_step_code;
     protected boolean verified_password = false;
-    protected String two_step_code;
 
     public ServerConnection(SSLSocket s) {
         this.socket = s;
@@ -877,8 +878,13 @@ public class ServerConnection implements Runnable {
               phone_reader.skip(PASS_LEN + SALT_LEN);
               phone_reader.read(phone, 0, PHONE_LEN);
               carrier = phone_reader.read() - '0'; // use this later
-              two_step_code = Integer.toString(sendSmsCode(new String(phone),
-                                                           Carrier.values()[carrier])); // TODO: change ATT to user's carrier
+              two_step_code = new Pair<String, Long>(Integer.toString(sendSmsCode(new String(phone),
+                                            Carrier.values()[carrier])), new Long(System.nanoTime())); 
+                                                           // TODO: change ATT to user's carrier
+              //System.out.println(two_step_code.first());
+              //System.out.println(two_step_code.second());
+
+
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -894,6 +900,8 @@ public class ServerConnection implements Runnable {
      * Authenticate user to system
      */
     protected Response authAccount(String auth_usr, String password, String code) {
+        Long elapsed_time = System.nanoTime() - two_step_code.second();
+        System.out.println(elapsed_time);
         if (username != null) {// already logged in
             return Response.LOGGED_IN;
         }
@@ -916,7 +924,7 @@ public class ServerConnection implements Runnable {
 
         if (test == 0){ //if this is not a testing instance
             // this should be the second step in two step verification
-            if (!this.two_step_code.equals(code)) {
+            if (!this.two_step_code.first().equals(code) || elapsed_time > TWO_FACTOR_TIMEOUT) {
                 return Response.BAD_CODE;
             }
         }

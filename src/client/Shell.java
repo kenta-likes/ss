@@ -19,7 +19,11 @@ public class Shell {
         
         if (con == null)return;
 
-        System.out.println("Welcome to PassHerd!\n  - Please type 'register' to create a new account.\n  - Please type 'login' if you already have an account.");
+        System.out.println("Welcome to ...");
+        passHerdLogo();
+        System.out.println("  - Please type 'register' to create a new account.");
+        System.out.println("  - Please type 'login' if you already have an account.");
+        System.out.println("  - Please type 'help <command>' for more information");
         
 
         while (true) {
@@ -45,8 +49,7 @@ public class Shell {
                 case "login":
                 case "register": System.out.println("Already logged in."); break;
                 case "add": handleAdd(splitCommand); break;
-                case "get":
-                case "creds": handleReq(splitCommand); break;
+                case "get": handleReq(splitCommand); break;
                 case "delete": handleDel(splitCommand); break;
                 case "change": handleChange(splitCommand); break;
                 case "exit":   handleExit(); return;
@@ -65,6 +68,19 @@ public class Shell {
             }
         }
     }
+
+    private static void passHerdLogo(){
+        System.out.println("\n $$$$$$$\\                               $$\\   $$\\                           $$\\ ");
+        System.out.println(" $$  __$$\\                              $$ |  $$ |                          $$ |");
+        System.out.println(" $$ |  $$ |$$$$$$\\   $$$$$$$\\  $$$$$$$\\ $$ |  $$ | $$$$$$\\   $$$$$$\\   $$$$$$$ |");
+        System.out.println(" $$$$$$$  |\\____$$\\ $$  _____|$$  _____|$$$$$$$$ |$$  __$$\\ $$  __$$\\ $$  __$$ |");
+        System.out.println(" $$  ____/ $$$$$$$ |\\$$$$$$\\  \\$$$$$$\\  $$  __$$ |$$$$$$$$ |$$ |  \\__|$$ /  $$ |");
+        System.out.println(" $$ |     $$  __$$ | \\____$$\\  \\____$$\\ $$ |  $$ |$$   ____|$$ |      $$ |  $$ |");
+        System.out.println(" $$ |     \\$$$$$$$ |$$$$$$$  |$$$$$$$  |$$ |  $$ |\\$$$$$$$\\ $$ |      \\$$$$$$$ |");
+        System.out.println(" \\__|      \\_______|\\_______/ \\_______/ \\__|  \\__| \\_______|\\__|       \\_______|\n");
+    }
+
+
     private static void handleGetTransactions(String[] command) {
         Response err;
         if (command.length != 1) {
@@ -526,57 +542,81 @@ public class Shell {
     }
 
     private static void help() {
-        System.out.println("All commands: login register add get creds delete change exit logout unregister chpass share unshare lsshared update help.\nType help <command> for more information.");
+        if (usr == null){
+            System.out.println("  - Please type 'register' to create a new account.");
+            System.out.println("  - Please type 'login' if you already have an account.");
+            System.out.println("  - Please type 'help <command>' for more information");
+        }else{
+            System.out.println("=============================================================================");
+            System.out.println("All commands: Type help <command> for more information.");
+            System.out.println("=============================================================================");
+            System.out.println(" * Manage your credentials *");
+            System.out.println("-----------------------------------------------------------------------------");
+            System.out.println("    - add\n    - get\n    - delete\n    - change");
+            System.out.println("-----------------------------------------------------------------------------");
+            System.out.println(" * Share your credentials *");
+            System.out.println("-----------------------------------------------------------------------------");
+            System.out.println("    - share\n    - unshare\n    - lsshared\n    - update");
+            System.out.println("-----------------------------------------------------------------------------");
+            System.out.println(" * Manage your PassHerd account *");
+            System.out.println("-----------------------------------------------------------------------------");
+            System.out.println("    - chpass\n    - logout\n    - exit\n    - unregister");
+            System.out.println("-----------------------------------------------------------------------------");
+        }       
     }
+
+    
 
     private static void help(String command) {
         String helpMsg;
-        
-        switch (command) {
-        case "login": helpMsg = "login: initiates a login prompt.  Enter your username and password to gain access to your stored credentials.";
-            break;
+        if (usr == null){
+            switch (command) {
+            case "login": helpMsg = "login: initiates a login prompt.  Enter your username and password to gain access to your stored credentials.";
+                break;
+            case "register": helpMsg = "register: initiates the creation of a new account.";
+                break;
+            case "help": helpMsg = "help <command>: display help about a certain command."; break;
+            default: helpMsg = "Error: command not recognized.";
+            }
+        }else{
+            switch (command) {
+            case "share": helpMsg = "share <service> <username>: share credentials for a service with another user.";
+                break;
 
-        case "share": helpMsg = "share <service> <username>: share credentials for a service with another user.";
-            break;
+            case "unshare": helpMsg = "unshare <service> <username>: stop sharing credentials for a service with another user.";
+                break;
 
-        case "unshare": helpMsg = "unshare <service> <username>: stop sharing credentials for a service with another user.";
-            break;
-
-        case "lsshares": helpMsg = "lsshares: show all shared credentials and with whom they are shared.";
-            break;
-            
-        case "register": helpMsg = "register: initiates the creation of a new account.";
-            break;
-            
-        case "add": helpMsg = "add <service>: stores the username and password for the service.";
-            break;
+            case "lsshares": helpMsg = "lsshares: show all shared credentials and with whom they are shared.";
+                break;
                 
-        case "get":
-        case "creds": helpMsg = command + " <all | service>: displays the names of all stored services, or the username and password associated with a certain service.";
-        break;
-                
-        case "delete": helpMsg = "delete <service>: deletes the credentials associated with the service.  Asks for confirmation before deleting.";
+            case "add": helpMsg = "add <service>: stores the username and password for the service.";
+                break;
+                    
+            case "get": helpMsg = command + " <all | service>: displays the names of all stored services, or the username and password associated with a certain service.";
             break;
-                
-        case "change": helpMsg = "change <service>: changes the username and password associated with the service.";
-            break;
-                
-        case "exit": helpMsg = command + ": logs you out and exits PassHerd.";
-            break;
-        case "logout": helpMsg = command + ": logs you out.";
-            break;
-        case "update": helpMsg = command + ": updates your list of shared credentials.";
-            break;
-                
-        case "unregister": helpMsg = "unregister: deletes the logged-in account and all stored credentials.  Asks for confirmation before deleting.";
-            break;
-                
-        case "chpass": helpMsg = "chpass: initiates a change to your account master password.";
-            break;
-        case "help": helpMsg = "help <command>: display help about a certain command."; break;
-        default: helpMsg = "Error: command not recognized.";
+                    
+            case "delete": helpMsg = "delete <service>: deletes the credentials associated with the service.  Asks for confirmation before deleting.";
+                break;
+                    
+            case "change": helpMsg = "change <service>: changes the username and password associated with the service.";
+                break;
+                    
+            case "exit": helpMsg = command + ": logs you out and exits PassHerd.";
+                break;
+            case "logout": helpMsg = command + ": logs you out.";
+                break;
+            case "update": helpMsg = command + ": updates your list of shared credentials.";
+                break;
+                    
+            case "unregister": helpMsg = "unregister: deletes the logged-in account and all stored credentials.  Asks for confirmation before deleting.";
+                break;
+                    
+            case "chpass": helpMsg = "chpass: initiates a change to your account master password.";
+                break;
+            case "help": helpMsg = "help <command>: display help about a certain command."; break;
+            default: helpMsg = "Error: command not recognized.";
+            }
         }
-
         System.out.println(helpMsg);
     }
 
