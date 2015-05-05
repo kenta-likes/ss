@@ -471,6 +471,7 @@ public class Client {
             .endObject();
         sockWriter.println();
         sockWriter.flush();
+        System.out.println("client sent get transactions command");
         respPacket = new JSONObject(sockReader.readLine());
       } catch (Exception e) {
           e.printStackTrace();
@@ -480,11 +481,37 @@ public class Client {
         return Response.FAIL;
       }
       err = responseFromString(respPacket.getString("response"));
-      if(err.equals(SUCCESS)){
-        //encrypt the public keys, send back
+      if(!err.equals(Response.SUCCESS)){
+        return err;
       }
-      System.out.println("was able to get the transactions");
-      return err;
+      System.out.println("client received list, now iterating over it");
+      //encrypt the public keys, send back
+      JSONArray pub_keys = respPacket.getJSONArray("pub_keys");
+      ArrayList<String> pub_keys_encrypted = new ArrayList<String>();
+      for (int i = 0; i < pub_keys.length(); i++) {
+          String pubkey = pub_keys.getString(i);
+          // Encrypt pubkey using PBE
+          pub_keys_encrypted.add(encryptPassword(pubkey));
+      }
+      sockJS = new JSONWriter(sockWriter);
+      sockJS.object().key("command").value("SET_PUB")
+                  .key("pub_keys").value(new JSONArray(pub_keys_encrypted.toArray()))
+                  .endObject();
+      sockWriter.println();
+      sockWriter.flush();
+      System.out.println("client sent re-encrypted stuff");
+      // Receive results from the server 
+      try {
+        respPacket = new JSONObject(sockReader.readLine());
+        if (respPacket == null){
+          return Response.FAIL;
+        }
+        err = responseFromString(respPacket.getString("response"));
+        return err;
+      } catch (Exception e){
+        e.printStackTrace();
+        return Response.FAIL;
+      }
       
     }
 
