@@ -764,7 +764,7 @@ public class Client {
                 for (int i = 0; i < jsCreds.length(); i++) {
                     Pair<String, String> sharedService;
                     String owner, service;
-                    JSONObject o = new JSONObject(jsCreds.getString(i));
+                    JSONObject o = jsCreds.getJSONObject(i);
 
                     owner = o.getString("owner");
                     service = o.getString("service");
@@ -773,6 +773,9 @@ public class Client {
 
                     creds.add(sharedService);
                 }
+
+                return new Pair<Response, List<Pair<String, String>>>(err, creds);
+                
             } catch (Exception e) {
                 e.printStackTrace();
                 return new Pair<Response, List<Pair<String, String>>>(Response.FAIL, null);

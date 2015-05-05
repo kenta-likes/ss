@@ -201,10 +201,10 @@ public class ServerConnection implements Runnable {
                                        .array();
 
                                     for (Pair<String, String> s : shared_creds){
-                                        JSONObject sub_js = new JSONObject();
-                                        sub_js.accumulate("owner", s.first());
-                                        sub_js.accumulate("service", s.second());
-                                        js.value(sub_js);
+                                        js.object()
+                                            .key("owner").value(s.first())
+                                            .key("service").value(s.second())
+                                            .endObject();
                                     }
 
                                     js.endArray();
