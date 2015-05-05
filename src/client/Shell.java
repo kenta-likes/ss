@@ -235,7 +235,7 @@ public class Shell {
 
         if (err == Response.SUCCESS) {
             usr = username;
-            //err = Client.consumeTransactions(usr); // CONSUME TRANSACTIONS
+            err = Client.getTransactions(); // CONSUME TRANSACTIONS
         }
 
         /* Clear the password from memory. */
@@ -367,8 +367,8 @@ public class Shell {
 
         service = command[2];
 
-        //err = Client.consumeTransactions(usr); // CONSUME TRANSACTIONS
-        //printErr(err);
+        err = Client.getTransactions(); // CONSUME TRANSACTIONS
+        printErr(err);
             
         if (service.equals("all")) {
             resp = Client.requestSharedCreds();
