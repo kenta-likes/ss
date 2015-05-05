@@ -149,6 +149,9 @@ public class ServerConnection implements Runnable {
                                     .key("response")
                                     .value(revokeShared(revoke_usr, revoke_service).name()).endObject();
                                 break;
+                            case "TRANSACTION":
+                                authName = req.getString("username"); 
+                                break;
                             case "GET1":
                                 ArrayList<String> creds;
                                 Pair<Response, ArrayList<String>> pair = retrieveCredentials();

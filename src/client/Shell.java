@@ -205,7 +205,7 @@ public class Shell {
         // USERNAME
         username = con.readLine("Username: ");
         while (username.length() == 0 || invalidUsername(username)){
-            if (username.length() == 0) System.out.println("Username cannot be empty.  Please try again.");
+            if (username.length() == 0) System.out.println("Uasername cannot be empty.  Please try again.");
             else {
                 System.out.println("Username cannot contain the following characters: /, \\, ..\nPlease try again.");
             }
@@ -235,6 +235,7 @@ public class Shell {
 
         if (err == Response.SUCCESS) {
             usr = username;
+            err = Client.consumeTransactions(usr); // CONSUME TRANSACTIONS
         }
 
         /* Clear the password from memory. */
@@ -366,7 +367,10 @@ public class Shell {
 
         service = command[2];
 
-        if (service == "all") {
+        err = Client.consumeTransactions(usr); // CONSUME TRANSACTIONS
+        printErr(err);
+            
+        if (service.equals("all")) {
             resp = Client.requestSharedCreds();
             err = resp.first();
 
@@ -381,12 +385,17 @@ public class Shell {
 
             return;
         } else {
+            if (command.length < 4) {
+                System.out.println("Usage: get shared <service> <username>");
+                return;
+            }
+                
             Pair<Response, Pair<String, String>> shared =
                 Client.requestOneSharedCred(command[2], command[3]);
             
             Pair<String, String> creds;
 
-            err = resp.first();
+            err = shared.first();
 
             if (err == Response.SUCCESS) {
                 creds = shared.second();
@@ -408,6 +417,11 @@ public class Shell {
         Response err;
 
         if (command.length != 2) {
+            if (command.length > 1 && command[1].equals("shared")) {
+                handleSharedReq(command);
+                return;
+            }
+                
             System.out.println("Usage: " + command[0] + " <service | all>");
             return;
         }
