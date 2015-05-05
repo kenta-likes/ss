@@ -4,6 +4,7 @@ import util.*;
 
 import java.io.Console;
 import java.util.List;
+import java.util.Random;
 
 import password.PasswordClassifier;
 
@@ -14,6 +15,7 @@ public class Shell {
     public static void run() {
         String command;
         String[] splitCommand;
+
         
         con = System.console();
         
@@ -35,6 +37,11 @@ public class Shell {
                 case "login": handleLogin(); break;
                 case "register": handleRegister(); break;
                 case "exit": handleExit(); return;
+                case "passHerd": 
+                case "passherd":
+                case "PassHerd":
+                case "Passherd":
+                    passHerdLogo();break;
                 case "help": if (splitCommand.length == 1) help(); else help(splitCommand[1]);
                     break;
                 default: System.out.println("  - Please type 'register' to create a new account.\n  - Please type 'login' if you already have an account.");
@@ -58,9 +65,13 @@ public class Shell {
                 case "unregister": handleUnregister(); break;
                 case "chpass": handleMasterChange(); break;
                 case "share": handleShare(splitCommand); break;
-                case "update": handleGetTransactions(splitCommand); break;
                 case "unshare": handleUnshare(splitCommand); break;
                 case "lsshared": handleListShares(); break;
+                case "passHerd": 
+                case "passherd":
+                case "PassHerd":
+                case "Passherd":
+                    passHerdLogo();break;
                 case "help": if (splitCommand.length == 1) help(); else help(splitCommand[1]);
                     break;
                 default: System.out.println("Command not recognized: " + splitCommand[0]);
@@ -69,16 +80,31 @@ public class Shell {
             }
         }
     }
-
+    
+    private static Random r = new Random();
     private static void passHerdLogo(){
-        System.out.println("\n $$$$$$$\\                               $$\\   $$\\                           $$\\ ");
-        System.out.println(" $$  __$$\\                              $$ |  $$ |                          $$ |");
-        System.out.println(" $$ |  $$ |$$$$$$\\   $$$$$$$\\  $$$$$$$\\ $$ |  $$ | $$$$$$\\   $$$$$$\\   $$$$$$$ |");
-        System.out.println(" $$$$$$$  |\\____$$\\ $$  _____|$$  _____|$$$$$$$$ |$$  __$$\\ $$  __$$\\ $$  __$$ |");
-        System.out.println(" $$  ____/ $$$$$$$ |\\$$$$$$\\  \\$$$$$$\\  $$  __$$ |$$$$$$$$ |$$ |  \\__|$$ /  $$ |");
-        System.out.println(" $$ |     $$  __$$ | \\____$$\\  \\____$$\\ $$ |  $$ |$$   ____|$$ |      $$ |  $$ |");
-        System.out.println(" $$ |     \\$$$$$$$ |$$$$$$$  |$$$$$$$  |$$ |  $$ |\\$$$$$$$\\ $$ |      \\$$$$$$$ |");
-        System.out.println(" \\__|      \\_______|\\_______/ \\_______/ \\__|  \\__| \\_______|\\__|       \\_______|\n");
+        if (r.nextBoolean()){
+            System.out.println("\n $$$$$$$\\                               $$\\   $$\\                           $$\\ ");
+            System.out.println(" $$  __$$\\                              $$ |  $$ |                          $$ |");
+            System.out.println(" $$ |  $$ |$$$$$$\\   $$$$$$$\\  $$$$$$$\\ $$ |  $$ | $$$$$$\\   $$$$$$\\   $$$$$$$ |");
+            System.out.println(" $$$$$$$  |\\____$$\\ $$  _____|$$  _____|$$$$$$$$ |$$  __$$\\ $$  __$$\\ $$  __$$ |");
+            System.out.println(" $$  ____/ $$$$$$$ |\\$$$$$$\\  \\$$$$$$\\  $$  __$$ |$$$$$$$$ |$$ |  \\__|$$ /  $$ |");
+            System.out.println(" $$ |     $$  __$$ | \\____$$\\  \\____$$\\ $$ |  $$ |$$   ____|$$ |      $$ |  $$ |");
+            System.out.println(" $$ |     \\$$$$$$$ |$$$$$$$  |$$$$$$$  |$$ |  $$ |\\$$$$$$$\\ $$ |      \\$$$$$$$ |");
+            System.out.println(" \\__|      \\_______|\\_______/ \\_______/ \\__|  \\__| \\_______|\\__|       \\_______|\n");
+        }else{
+            System.out.println(" @@@@@@@    @@@@@@    @@@@@@   @@@@@@   @@@  @@@  @@@@@@@@  @@@@@@@   @@@@@@@   ");
+            System.out.println(" @@@@@@@@  @@@@@@@@  @@@@@@@  @@@@@@@   @@@  @@@  @@@@@@@@  @@@@@@@@  @@@@@@@@  ");
+            System.out.println(" @@!  @@@  @@!  @@@  !@@      !@@       @@!  @@@  @@!       @@!  @@@  @@!  @@@  ");
+            System.out.println(" !@!  @!@  !@!  @!@  !@!      !@!       !@!  @!@  !@!       !@!  @!@  !@!  @!@  ");
+            System.out.println(" @!@@!@!   @!@!@!@!  !!@@!!   !!@@!!    @!@!@!@!  @!!!:!    @!@!!@!   @!@  !@!  ");
+            System.out.println(" !!@!!!    !!!@!!!!   !!@!!!   !!@!!!   !!!@!!!!  !!!!!:    !!@!@!    !@!  !!!  ");
+            System.out.println(" !!:       !!:  !!!       !:!      !:!  !!:  !!!  !!:       !!: :!!   !!:  !!!  ");
+            System.out.println(" :!:       :!:  !:!      !:!      !:!   :!:  !:!  :!:       :!:  !:!  :!:  !:!  ");
+            System.out.println("  ::       ::   :::  :::: ::  :::: ::   ::   :::   :: ::::  ::   :::   :::: ::  ");
+            System.out.println("  :         :   : :  :: : :   :: : :     :   : :  : :: ::    :   : :  :: :  :   ");
+        }
+            
     }
 
 
@@ -569,7 +595,7 @@ public class Shell {
             System.out.println("-----------------------------------------------------------------------------");
             System.out.println(" * Share your credentials *");
             System.out.println("-----------------------------------------------------------------------------");
-            System.out.println("    - share\t\t- unshare\n    - update\t\t- lsshared");
+            System.out.println("    - share\t\t- unshare\n    - lsshared");
             System.out.println("-----------------------------------------------------------------------------");
             System.out.println(" * Manage your PassHerd account *");
             System.out.println("-----------------------------------------------------------------------------");
@@ -584,6 +610,11 @@ public class Shell {
         String helpMsg;
         if (usr == null){
             switch (command) {
+            case "passherd":
+            case "Passherd":
+            case "PassHerd":
+            case "passHerd": helpMsg= "passHerd: displays a beautiful PassHerd ascii art.";
+                break;
             case "login": helpMsg = "login: initiates a login prompt.  Enter your username and password to gain access to your stored credentials.";
                 break;
             case "register": helpMsg = "register: initiates the creation of a new account.";
@@ -618,8 +649,6 @@ public class Shell {
             case "exit": helpMsg = command + ": logs you out and exits PassHerd.";
                 break;
             case "logout": helpMsg = command + ": logs you out.";
-                break;
-            case "update": helpMsg = command + ": updates your list of shared credentials.";
                 break;
                     
             case "unregister": helpMsg = "unregister: deletes the logged-in account and all stored credentials.  Asks for confirmation before deleting.";
