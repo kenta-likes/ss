@@ -459,6 +459,34 @@ public class Client {
         return err;
     }
 
+    protected static Response getTransactions(){
+      Response err;
+      JSONObject respPacket = null;
+      try{
+        sockJS = new JSONWriter(sockWriter);
+        sockJS.object()
+            .key("command").value("GET_TRANS")
+            //            .key("mac").value(DatatypeConverter.printBase64Binary(code))
+            .endObject();
+        sockWriter.println();
+        sockWriter.flush();
+        respPacket = new JSONObject(sockReader.readLine());
+      } catch (Exception e) {
+          e.printStackTrace();
+          return Response.FAIL; //failed
+      }
+      if (respPacket == null) {
+        return Response.FAIL;
+      }
+      err = responseFromString(respPacket.getString("response"));
+      if(err.equals(SUCCESS)){
+        //encrypt the public keys, send back
+      }
+      System.out.println("was able to get the transactions");
+      return err;
+      
+    }
+
     /*Used for generating key pair using PBE and the service name*/
     protected static KeyPair getKeyPair(String service, char[] pass){
         try {

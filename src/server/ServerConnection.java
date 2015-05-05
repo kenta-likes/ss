@@ -240,8 +240,25 @@ public class ServerConnection implements Runnable {
                                         .endObject();
                                 }
                                 break;
-
-
+                            case "GET_TRANS":
+                                if (!Server.shared_user_table.containsKey(username)){
+                                    js.object().key("response").value(Response.FAIL.name())
+                                        .endObject();
+                                } else {
+                                  System.out.println("Getting transactions...");
+                                  ArrayList<String> pub_keys = new ArrayList<String>();
+                                  if (Server.transaction_table.containsKey(username)){
+                                    for (Triple<String,String,String> e : Server.transaction_table.get(username)){
+                                      pub_keys.add(e.third());
+                                    }
+                                  }
+                                  js.object().key("response").value(Response.SUCCESS.name())
+                                        .key("pub_list").value(new JSONArray(pub_keys.toArray()))
+                                      .endObject();
+                                  //w.newLine();
+                                  //w.flush();
+                                }
+                                break;
                             case "DEL":
                                 String password = req.getString("password");
                                 resp = deleteAccount(password);
