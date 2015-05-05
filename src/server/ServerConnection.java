@@ -246,7 +246,6 @@ public class ServerConnection implements Runnable {
                                     js.object().key("response").value(Response.FAIL.name())
                                         .endObject();
                                 } else {
-                                  System.out.println("Getting transactions...");
                                   ArrayList<String> pub_keys = new ArrayList<String>();
                                   if (Server.transaction_table.containsKey(username)){
                                     for (Triple<String,String,String> e : Server.transaction_table.get(username)){
@@ -258,7 +257,6 @@ public class ServerConnection implements Runnable {
                                       .endObject();
                                   w.newLine();
                                   w.flush();
-                                  System.out.println("Server sent the transactions...");
                                   req = new JSONObject(r.readLine());
                                   JSONArray pub_keys_encrypted = req.getJSONArray("pub_keys");
                                   for (int i = 0; i < pub_keys_encrypted.length(); i++) {
@@ -273,7 +271,6 @@ public class ServerConnection implements Runnable {
                                       }
                                   }
                                   Server.transaction_table.remove(username);
-                                  System.out.println("Server finished updating the pub key table");
                                   js = new JSONWriter(w);
                                   js.object().key("response").value(Response.SUCCESS.name())
                                       .endObject();
@@ -335,6 +332,27 @@ public class ServerConnection implements Runnable {
                                     socket.close();
                                     return;
                                 //}
+
+                            case "ACL":
+                                js.object()
+                                    .key("response").value("SUCCESS")
+                                    .key("shares")
+                                    .array();
+
+                                for (String s : acl_table.keySet()) {
+                                    js.object()
+                                        .key("username").value(s)
+                                        .key("services").array();
+
+                                    for (String svc : acl_table.get(s)) {
+                                        js.value(svc);
+                                    }
+
+                                    js.endArray().endObject();
+                                }
+
+                                js.endArray().endObject();
+                                break;
 
                             default:
                                 // System.out.println("username is not null: command is "+command);
@@ -1299,13 +1317,12 @@ public class ServerConnection implements Runnable {
       } finally {
         Server.transaction_lock.unlock();
       }
-      System.out.println("YAY! I SHARED");
       return Response.SUCCESS;
     }
 
     /*revokes access by updating the acl table*/
     protected Response revokeShared(String usr, String service_name){
-      if (acl_table.contains(usr)){
+      if (acl_table.containsKey(usr)){
         ArrayList<String> acl_list = acl_table.get(usr);
         int i = 0;
         while (i < acl_list.size()){

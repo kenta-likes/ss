@@ -619,10 +619,11 @@ public class Client {
     }
 
     /*Sends command to revoke access for a user who had been shared a credential*/
-    protected static Response unshareCreds(String revoked_user, String service){
+    protected static Response unshareCreds(String service, String revoked_user ){
       JSONObject respPacket = null;
       Response err;
       try {
+        System.out.println("client side revoking...");
         sockJS = new JSONWriter(sockWriter);
         sockJS.object()
             .key("command").value("REVOKE")
@@ -632,6 +633,7 @@ public class Client {
             .endObject();
         sockWriter.println();
         sockWriter.flush();
+        System.out.println("client sent revoke...");
         respPacket = new JSONObject(sockReader.readLine());
       } catch (Exception e) {
           e.printStackTrace();
@@ -814,22 +816,22 @@ public class Client {
         err = responseFromString(respPacket.getString("response"));
         
         if (err == Response.SUCCESS) {
-            JSONArray jsShares = respPacket.getJSONObject("shares").getJSONArray("creds");
+            JSONArray jsShares = respPacket.getJSONArray("shares");
             shares = new ArrayList<Pair<String, List<String>>>();
 
             for (int i = 0; i < jsShares.length(); i++) {
-                JSONObject cred = new JSONObject(jsShares.get(i));
-                String service;
-                List<String> users = new ArrayList<String>();
-                JSONArray jsUsers = cred.getJSONArray("users");
+                JSONObject cred = jsShares.getJSONObject(i);
+                String username;
+                List<String> services = new ArrayList<String>();
+                JSONArray jsUsers = cred.getJSONArray("services");
 
-                service = cred.getString("service");
+                username = cred.getString("username");
 
                 for (int j = 0; j < jsUsers.length(); j++) {
-                    users.add(jsUsers.getString(j));
+                    services.add(jsUsers.getString(j));
                 }
 
-                shares.add(new Pair<String, List<String>>(service, users));
+                shares.add(new Pair<String, List<String>>(username, services));
             }
 
             return new Pair<Response, List<Pair<String, List<String>>>>(err, shares);
@@ -838,31 +840,6 @@ public class Client {
         return new Pair<Response, List<Pair<String, List<String>>>>(err, null);
     }
 
-    protected static Response unshare(String service, String username) {
-        JSONObject respPacket = null;
-
-        sockJS = new JSONWriter(sockWriter);
-
-        sockJS.object()
-            .key("command").value("REVOKE")
-            .key("revoked_service").value(service)
-            .key("revoked_user").value(username)
-            .endObject();
-
-        try {
-            respPacket = new JSONObject(sockReader.readLine());
-        } catch (Exception e) {
-            e.printStackTrace();
-            return Response.FAIL;
-        }
-
-        if (respPacket == null)
-            return Response.FAIL;
-
-        return responseFromString(respPacket.getString("response"));
-    }
-    
-    
 
     protected static Pair<Response, Pair<String, String>>
         requestOneSharedCred(String service, String owner) {
@@ -898,7 +875,7 @@ public class Client {
             password = respPacket.getString("password");
 
             try {
-                byte[] pubKeyBytes = DatatypeConverter.parseBase64Binary(encPublicKey);
+                byte[] pubKeyBytes = DatatypeConverter.parseBase64Binary(new String(decryptPassword(encPublicKey)));
                 X509EncodedKeySpec k = new X509EncodedKeySpec(pubKeyBytes);
             
                 PublicKey publicKey = KeyFactory.getInstance("RSA").generatePublic(k);
