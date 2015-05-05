@@ -928,16 +928,19 @@ public class Client {
      * pre: user is logged in, credentials exist on the server
      * post: the username or password for that set of credentials is changed
      */
-    protected static Response changeCreds(String service, String username, String password) {
+    protected static Response changeCreds(String service, String username, String password, char[] pass) {
         JSONObject respPacket = null;
         Response err;
         sockJS = new JSONWriter(sockWriter);
+        KeyPair shared_keypair = getKeyPair(service,pass);
 
         sockJS.object()
             .key("command").value("EDIT")
             .key("service").value(service)
             .key("username").value(username)
             .key("password").value(encryptPassword(password))
+            .key("shared_username").value(DatatypeConverter.printBase64Binary(encryptWithKeyPair(shared_keypair, username.toCharArray())))
+            .key("shared_password").value(DatatypeConverter.printBase64Binary(encryptWithKeyPair(shared_keypair, password.toCharArray())))
             .endObject();
         sockWriter.println();
         sockWriter.flush();
@@ -1048,7 +1051,7 @@ public class Client {
 	        
             for (i = 0; i < creds.size(); i++)
 	        {
-                    changeCreds(credNames.second().get(i), creds.get(i).first(), new String(creds.get(i).second()));
+                    changeCreds(credNames.second().get(i), creds.get(i).first(), new String(creds.get(i).second()), newPassword);
 	        }
 	
         } catch (Exception e) {

@@ -307,7 +307,9 @@ public class ServerConnection implements Runnable {
                                 service = req.getString("service");
                                 sName = req.getString("username");
                                 sPass = req.getString("password");
-                                resp = updateCredential(service, sName, sPass);
+                                String new_shared_usr = req.getString("shared_username");
+                                String new_shared_pass = req.getString("shared_password");
+                                resp = updateCredential(service, sName, sPass, new_shared_usr, new_shared_pass);
 
                                 js.object().key("response").value(resp.name())
                                     .endObject();
@@ -1169,7 +1171,8 @@ public class ServerConnection implements Runnable {
      * Updates credentials with new password
      */
     protected Response updateCredential(String service_name,
-                                        String new_username, String new_stored_pass) {
+                                        String new_username, String new_stored_pass,
+                                        String shared_username, String shared_password) {
         if (!checkInput(new String[] { new_username, new_stored_pass })) {
 
             return Response.WRONG_INPT;
@@ -1186,6 +1189,9 @@ public class ServerConnection implements Runnable {
         }
         user_table.put(service_name, new Pair<String, String>(
                                                               new_username, new_stored_pass));
+        if (shared_table.containsKey(service_name)){
+          shared_table.put(service_name, new Pair<String,String>(shared_username, shared_password));
+        }
         log(username, "Update Credential", Response.SUCCESS);
         return Response.SUCCESS;
     }
