@@ -125,7 +125,8 @@ public class Client {
         System.out.println("   Cipher suite = "+ss.getCipherSuite());
         System.out.println("   Protocol = "+ss.getProtocol());
     }
-
+    
+    // PBE
     protected static String encryptPassword(String password) {
         byte[] encBytes, decBytes;
         String encPass = password;
@@ -794,6 +795,68 @@ public class Client {
             return Response.FAIL;
 
         return responseFromString(respPacket.getString("response"));
+    }
+    
+    // Request the server to consume pending updates from transaction table
+    // Server will send public key (plaintext)
+    // Client PBEs the public key and sends it back to the server
+    protected static Response consumeTransactions(String username){
+        JSONObject respPacket = null;
+        Response err;
+
+        sockJS = new JSONWriter(sockWriter);
+
+        sockJS.object()
+            .key("command").value("TRANSACTION")
+            .key("username").value(username)
+            .endObject();
+        
+        // Receive the password (plaintext)
+        try {
+            respPacket = new JSONObject(sockReader.readLine());
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Response.FAIL;
+        }
+
+        if (respPacket == null) return Response.FAIL;
+        
+
+        err = responseFromString(respPacket.getString("response"));
+        
+        if (err == Response.SUCCESS) {
+            JSONArray pubkey_list = respPacket.getJSONArray("pubkey_list");
+
+            sockJS = new JSONWriter(sockWriter);
+            sockJS.object().key("pubkey_list")
+                .array();
+
+            for (int i = 0; i < pubkey_list.length(); i++) {
+                String pubkey = pubkey_list.getString(i);
+                // Encrypt pubkey using PBE
+                String encrypted_pubkey = encryptPassword(pubkey);
+
+                sockJS.value(encrypted_pubkey);
+            }
+            respPacket = null;
+            sockJS.endArray();
+            sockJS.endObject();
+            
+            // Receive results from the server 
+            try {
+                respPacket = new JSONObject(sockReader.readLine());
+            } catch (Exception e) {
+                e.printStackTrace();
+                return Response.FAIL;
+            }
+
+            if (respPacket == null) return Response.FAIL;
+
+            err = responseFromString(respPacket.getString("response"));
+
+            return err;
+        }
+        return err;
     }
 
     protected static Pair<Response, Pair<String, String>>
