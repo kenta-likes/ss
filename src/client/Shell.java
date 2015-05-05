@@ -613,7 +613,7 @@ public class Shell {
             case "passherd":
             case "Passherd":
             case "PassHerd":
-            case "passHerd": helpMsg= "passHerd: displays a beautiful PassHerd ascii art.";
+            case "passHerd": helpMsg= command+": displays a beautiful PassHerd ascii art.";
                 break;
             case "login": helpMsg = "login: initiates a login prompt.  Enter your username and password to gain access to your stored credentials.";
                 break;
@@ -624,6 +624,11 @@ public class Shell {
             }
         }else{
             switch (command) {
+            case "passherd":
+            case "Passherd":
+            case "PassHerd":
+            case "passHerd": helpMsg= command+": displays a beautiful PassHerd ascii art.";
+                break;
             case "share": helpMsg = "share <service> <username>: share credentials for a service with another user.";
                 break;
 

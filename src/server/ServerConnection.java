@@ -68,7 +68,6 @@ public class ServerConnection implements Runnable {
     protected JSONWriter js;
     protected BufferedReader r = null;
     protected BufferedWriter w = null;
-    protected JSONWriter js;
 
     public ServerConnection(SSLSocket s) {
         this.socket = s;
@@ -618,18 +617,11 @@ public class ServerConnection implements Runnable {
                                                        curr_dir.concat("/mac.txt"), "UTF-8");
             creds_writer.close();
 
-            /* create new file for logs */
-            PrintWriter logger = new PrintWriter(
-                                                 curr_dir.concat("/user_log.txt"), "UTF-8");
-            logger.close();
+
         } catch (Exception e) {
             e.printStackTrace();
             return Response.FAIL;
         }
-        /*
-        user_table = new Hashtable<String, Pair<String, String>>();
-        shared_table = new Hashtable<String, Triple<String, String, String>>();
-        */
 
         /* set the session to be logged in successfully */
         // username = new_usr; //don't do this actually
