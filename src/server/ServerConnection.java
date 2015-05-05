@@ -64,6 +64,9 @@ public class ServerConnection implements Runnable {
     protected BufferedReader audit_reader;
     protected boolean verified_password = false;
     protected String two_step_code;
+    protected BufferedReader r = null;
+    protected BufferedWriter w = null;
+    protected JSONWriter js;
 
     public ServerConnection(SSLSocket s) {
         this.socket = s;
@@ -98,10 +101,9 @@ public class ServerConnection implements Runnable {
     public void run() {
         try {
             // writer,reader for comm with client
-            BufferedWriter w = new BufferedWriter(
+            w = new BufferedWriter(
                                   new OutputStreamWriter(socket.getOutputStream()));
-            JSONWriter js;
-            BufferedReader r = new BufferedReader(
+            r = new BufferedReader(
                                   new InputStreamReader(socket.getInputStream()));
             String m, command;
             JSONObject req; String authName;
@@ -681,7 +683,72 @@ public class ServerConnection implements Runnable {
             log(username, "Change Account Password", Response.FAIL);
             return Response.FAIL; // should never happen
         }
+
+        js = new JSONWriter(w);
+
+        System.out.println("Initializing craziness...");
+        js.object()
+            .key("keys").array();
+
+        for (String user : pubkey_table.keySet()) {
+            List<Pair<String, String>> l = pubkey_table.get(user);
+            js.object()
+                .key("username").value(user)
+                .key("keys").array();
+
+            for (Pair<String, String> p : l) {
+                String service = p.first();
+                String pubKey = p.second();
+
+                js.object()
+                    .key("service").value(service)
+                    .key("public_key").value(pubKey)
+                    .endObject();
+            }
+
+            js.endArray().endObject();
+        }
+        
+        js.endArray()
+            .key("response").value("SUCCESS")
+            .endObject();
+
+        try {
+            w.newLine();
+            w.flush();
+            System.out.println("Done being crazy.");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        try {
+            JSONObject o = new JSONObject(r.readLine());
+            System.out.println(o);
+            JSONArray arr = o.getJSONArray("keys");
+
+            for (int i = 0; i < arr.length(); i++) {
+                JSONObject keyObj = arr.getJSONObject(i);
+                ArrayList<Pair<String, String>> keyList = new ArrayList<Pair<String, String>>();
+                JSONArray keys = keyObj.getJSONArray("keys");
+                String user = keyObj.getString("username");
+                
+                for (int j = 0; j < keys.length(); j++) {
+                    JSONObject serviceObj = keys.getJSONObject(j);
+                    String service = serviceObj.getString("service");
+                    String key = serviceObj.getString("public_key");
+                    
+                    keyList.add(new Pair<String, String>(service, key));
+                }
+
+                pubkey_table.put(user, keyList);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Response.FAIL;
+        }
+        
         log(username, "Change Account Password", Response.SUCCESS);
+        js = new JSONWriter(w);
         return Response.SUCCESS;
     }
 

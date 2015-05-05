@@ -471,7 +471,6 @@ public class Client {
             .endObject();
         sockWriter.println();
         sockWriter.flush();
-        System.out.println("client sent get transactions command");
         respPacket = new JSONObject(sockReader.readLine());
       } catch (Exception e) {
           e.printStackTrace();
@@ -484,14 +483,20 @@ public class Client {
       if(!err.equals(Response.SUCCESS)){
         return err;
       }
-      System.out.println("client received list, now iterating over it");
+
       //encrypt the public keys, send back
       JSONArray pub_keys = respPacket.getJSONArray("pub_keys");
       ArrayList<String> pub_keys_encrypted = new ArrayList<String>();
       for (int i = 0; i < pub_keys.length(); i++) {
           String pubkey = pub_keys.getString(i);
-          // Encrypt pubkey using PBE
-          pub_keys_encrypted.add(encryptPassword(pubkey));
+          try {
+              // Encrypt pubkey using PBE
+              byte[] pubKeyBytes = encoder.doFinal(DatatypeConverter.parseBase64Binary(pubkey));
+          
+              pub_keys_encrypted.add(DatatypeConverter.printBase64Binary(pubKeyBytes));
+          } catch (Exception e) {
+              e.printStackTrace();
+          }
       }
       sockJS = new JSONWriter(sockWriter);
       sockJS.object().key("command").value("SET_PUB")
@@ -499,7 +504,7 @@ public class Client {
                   .endObject();
       sockWriter.println();
       sockWriter.flush();
-      System.out.println("client sent re-encrypted stuff");
+
       // Receive results from the server 
       try {
         respPacket = new JSONObject(sockReader.readLine());
@@ -580,6 +585,12 @@ public class Client {
     protected static Response shareNewCreds(String service, String user_shared, char[] pass) {
       Response err;
       JSONObject respPacket = null;
+
+      if (user_shared.equals(username)) {
+          System.out.println("Error: you cannot share credentials with yourself!");
+          return Response.SUCCESS; // a hack so we don't print anything
+      }   
+      
       Pair<Response, Pair<String, char[]>> creds = requestCreds(service);
       if (creds.first() != Response.SUCCESS){
         return creds.first(); //send failed response
@@ -622,6 +633,12 @@ public class Client {
     protected static Response unshareCreds(String service, String revoked_user ){
       JSONObject respPacket = null;
       Response err;
+
+      if (revoked_user.equals(username)) {
+          System.out.println("Error: you cannot unshare credentials from yourself!");
+          return Response.SUCCESS; // a hack so we don't print anything
+      }   
+      
       try {
         System.out.println("client side revoking...");
         sockJS = new JSONWriter(sockWriter);
@@ -875,8 +892,10 @@ public class Client {
             password = respPacket.getString("password");
 
             try {
-                byte[] pubKeyBytes = DatatypeConverter.parseBase64Binary(new String(decryptPassword(encPublicKey)));
-                X509EncodedKeySpec k = new X509EncodedKeySpec(pubKeyBytes);
+                byte[] encKeyBytes = DatatypeConverter.parseBase64Binary(encPublicKey);
+                byte[] decKeyBytes = decoder.doFinal(encKeyBytes);
+                
+                X509EncodedKeySpec k = new X509EncodedKeySpec(decKeyBytes);
             
                 PublicKey publicKey = KeyFactory.getInstance("RSA").generatePublic(k);
                 Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
@@ -996,11 +1015,86 @@ public class Client {
 
         if (respPacket == null)
             return Response.FAIL;
-        
+
+        redoSharedCredentialEncryption(newPassword, respPacket);
         redoCredentialEncryption(newPassword);
+        
         err = responseFromString(respPacket.getString("response"));
-        System.out.println(err);
         return err;
+    }
+
+    private static void redoSharedCredentialEncryption(char[] newPassword, JSONObject respPacket) {
+        try {
+            sockJS = new JSONWriter(sockWriter);
+           
+            JSONArray keyArr = respPacket.getJSONArray("keys");
+
+            FileInputStream fin = new FileInputStream(System.getProperty("user.home")
+                                                      + "/" + username + ".conf");
+            byte[] salt = new byte[16];
+            fin.read(salt);
+
+            /* Skip newline */
+            fin.skip(1);
+            byte[] iv = new byte[16];
+            fin.read(iv);
+            fin.close();
+
+            IvParameterSpec ivSpec = new IvParameterSpec(iv);
+
+            SecretKeyFactory keyFact = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
+            KeySpec spec = new PBEKeySpec(newPassword, salt, 65536, 256);
+            SecretKey tmp = keyFact.generateSecret(spec);
+            SecretKeySpec newSpec = new SecretKeySpec(tmp.getEncoded(), "AES");
+            
+            encoder = Cipher.getInstance("AES/CBC/PKCS5Padding");
+            encoder.init(Cipher.ENCRYPT_MODE, newSpec, ivSpec);
+
+            sockJS.object()
+                .key("keys").array();
+
+            for (int i = 0; i < keyArr.length(); i++) {
+                JSONObject userObj = keyArr.getJSONObject(i);
+                JSONArray userKeys = userObj.getJSONArray("keys");
+                String username = userObj.getString("username");
+
+                sockJS.object()
+                    .key("username").value(username)
+                    .key("keys").array();
+
+                for (int j = 0; j < userKeys.length(); j++) {
+                    JSONObject svcObj = userKeys.getJSONObject(j);
+                    String service = svcObj.getString("service");
+                    String key = svcObj.getString("public_key");
+                    byte[] encKeyBytes = DatatypeConverter.parseBase64Binary(key);
+
+                    byte[] keyBytes = decoder.doFinal(encKeyBytes);
+                    String newKey = DatatypeConverter.printBase64Binary(encoder.doFinal(keyBytes));
+
+                    sockJS.object()
+                        .key("service").value(service)
+                        .key("public_key").value(newKey)
+                        .endObject();
+                }
+
+                sockJS.endArray().endObject();
+            }
+
+            sockJS.endArray().endObject();
+
+            sockWriter.println();
+            sockWriter.flush();
+
+            /* Again with the please no...we need to consume a packet so that the next
+             * reencryption command (in the chpass handler) works
+             */
+            sockReader.readLine();
+            
+            
+        } catch (Exception e) {
+            // oh god...please no
+            e.printStackTrace();
+        }
     }
 
     /*
