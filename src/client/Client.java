@@ -314,6 +314,21 @@ public class Client {
                 decoder = Cipher.getInstance("AES/CBC/PKCS5Padding");
                 decoder.init(Cipher.DECRYPT_MODE, key, ivSpec);
 
+                //check MAC
+                try {
+                  String acl_txt = respPacket.getString("acl");
+                  String mac_txt = respPacket.getString("mac");
+                  if (mac_txt != null && acl_txt != null && mac_txt.length() > 0 && acl_txt.length() > 0){
+                    String mac_from_acl = encryptPassword(acl_txt);
+                    if (!mac_from_acl.equals(mac_txt)){
+                      System.out.println("WARNING: Your personal files may have been corrupted.\nPlease notify an admin to have your account checked.");
+                    }
+                  }
+                } catch (Exception e){
+                  e.printStackTrace();
+                  return Response.FAIL;
+                }
+
             } catch (Exception e) {
                 System.out.println("Issues finding the key!");
                 e.printStackTrace();
@@ -1124,7 +1139,6 @@ public class Client {
         JSONObject respPacket = null;
         
         sockJS = new JSONWriter(sockWriter);
-
         sockJS.object()
             .key("command").value("LOGOUT")
             .endObject();
@@ -1134,14 +1148,32 @@ public class Client {
 
         try {
             respPacket = new JSONObject(sockReader.readLine());
+            if (respPacket.getString("response").equals("SUCCESS")){
+              String acl_txt = respPacket.getString("acl");
+              String mac = "";
+              if (acl_txt == null || acl_txt.length() == 0){
+                mac = "";
+              } else {
+                mac = encryptPassword(acl_txt);
+              }
+              sockJS = new JSONWriter(sockWriter);
+              sockJS.object()
+                  .key("mac").value(mac)
+                  .endObject();
+              sockWriter.println();
+              sockWriter.flush();
+            } else {
+              username = null;
+              return Response.FAIL;
+            }
+            respPacket = new JSONObject(sockReader.readLine());
         } catch (IOException e) {
             e.printStackTrace();
+            username = null;
             return responseFromString("IO Error getting response from server");
         }
-
         err = responseFromString(respPacket.getString("response"));
         username = null;
-        
         return err;
     }
 

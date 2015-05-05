@@ -65,6 +65,9 @@ public class ServerConnection implements Runnable {
     protected BufferedReader audit_reader;
     protected Pair<String, Long> two_step_code;
     protected boolean verified_password = false;
+    protected JSONWriter js;
+    BufferedWriter w;
+    BufferedReader r;
 
     public ServerConnection(SSLSocket s) {
         this.socket = s;
@@ -99,10 +102,9 @@ public class ServerConnection implements Runnable {
     public void run() {
         try {
             // writer,reader for comm with client
-            BufferedWriter w = new BufferedWriter(
+            w = new BufferedWriter(
                                   new OutputStreamWriter(socket.getOutputStream()));
-            JSONWriter js;
-            BufferedReader r = new BufferedReader(
+            r = new BufferedReader(
                                   new InputStreamReader(socket.getInputStream()));
             String m, command;
             JSONObject req; String authName;
@@ -325,6 +327,7 @@ public class ServerConnection implements Runnable {
 
                             case "LOGOUT":
                                 resp = logout();
+                                js = new JSONWriter(w);
                                 js.object().key("response").value(resp.name())
                                     .endObject();
                                 break;
@@ -390,8 +393,11 @@ public class ServerConnection implements Runnable {
                                 authName = req.getString("username");
                                 authPass = req.getString("password");
                                 String code = req.getString("code");
-                                resp = authAccount(authName, authPass, code);
+                                Pair<Response, Pair<String,String>> auth_result = authAccount(authName, authPass, code);
+                                resp = auth_result.first();
                                 js.object().key("response").value(resp.name())
+                                          .key("acl").value(auth_result.second().first())
+                                          .key("mac").value(auth_result.second().second())
                                     .endObject();
                                 break;
 
@@ -613,6 +619,10 @@ public class ServerConnection implements Runnable {
             PrintWriter pubkey_writer = new PrintWriter(
                                                        curr_dir.concat("/pubkey.txt"), "UTF-8");
             pubkey_writer.close();
+
+            PrintWriter mac_writer = new PrintWriter(
+                                                       curr_dir.concat("/mac.txt"), "UTF-8");
+            creds_writer.close();
 
             /* create new file for logs */
             PrintWriter logger = new PrintWriter(
@@ -951,14 +961,14 @@ public class ServerConnection implements Runnable {
     /*
      * Authenticate user to system
      */
-    protected Response authAccount(String auth_usr, String password, String code) {
+    protected Pair<Response, Pair<String,String>> authAccount(String auth_usr, String password, String code) {
         Long elapsed_time = System.nanoTime() - two_step_code.second();
         System.out.println(elapsed_time);
         if (username != null) {// already logged in
-            return Response.LOGGED_IN;
+            return new Pair<Response, Pair<String,String>>(Response.LOGGED_IN, new Pair<String,String>("",""));
         }
         if (!verified_password) {
-            return Response.FAIL;
+            return new Pair<Response, Pair<String,String>>(Response.FAIL, new Pair<String,String>("",""));
         }
 
         /*
@@ -970,14 +980,14 @@ public class ServerConnection implements Runnable {
             test = rdr.read() - '0'; // use this later
         } catch (IOException e) {
             e.printStackTrace();
-            return Response.FAIL;
+            return new Pair<Response, Pair<String,String>>(Response.FAIL, new Pair<String,String>("",""));
         }
         /*End of Test purpose code*/
 
         if (test == 0){ //if this is not a testing instance
             // this should be the second step in two step verification
             if (!this.two_step_code.first().equals(code) || elapsed_time > TWO_FACTOR_TIMEOUT) {
-                return Response.BAD_CODE;
+                return new Pair<Response, Pair<String,String>>(Response.BAD_CODE, new Pair<String,String>("",""));
             }
         }
 
@@ -1001,7 +1011,7 @@ public class ServerConnection implements Runnable {
                 if (curr_cred.length != 3) {
                     cred_reader.close();
                     log(username, "Authenticate Account", Response.FAIL);
-                    return Response.FAIL;
+                    return new Pair<Response, Pair<String,String>>(Response.FAIL, new Pair<String,String>("",""));
                 }
                 // System.out.println("Loaded creds for " + curr_cred[0]);
                 user_table.put(curr_cred[0],
@@ -1031,12 +1041,33 @@ public class ServerConnection implements Runnable {
 
             // Logging
             log(auth_usr, "Authenticate Account", Response.SUCCESS);
-            return Response.SUCCESS;
+
+            try {
+                String mac_txt = "";
+                BufferedReader mac_reader = new BufferedReader(new FileReader(
+                                                                  curr_dir.concat("/mac.txt")));
+                while ((line = mac_reader.readLine()) != null){
+                  mac_txt += line;
+                }
+                mac_reader.close();
+                String acl_txt = "";
+                BufferedReader acl_reader = new BufferedReader(new FileReader(
+                                                                  curr_dir.concat("/acl.txt")));
+                while ((line = acl_reader.readLine()) != null){
+                  acl_txt += line + "\n";
+                }
+                acl_reader.close();
+                return new Pair<Response, Pair<String, String>>(Response.SUCCESS, 
+                              new Pair<String,String>(acl_txt, mac_txt)); //return MAC here
+            } catch (IOException e) {
+              e.printStackTrace();
+              return new Pair<Response, Pair<String,String>>(Response.FAIL, new Pair<String,String>("",""));
+            }
 
         } catch (IOException e2) {
             e2.printStackTrace();
             log(auth_usr, "Authenticate Account", Response.FAIL);
-            return Response.FAIL;
+            return new Pair<Response, Pair<String,String>>(Response.FAIL, new Pair<String,String>("",""));
         }
     }
 
@@ -1318,16 +1349,44 @@ public class ServerConnection implements Runnable {
             /*Finally write back the ACL TODO: add another method to get MAC for ACL*/
             BufferedWriter acl_writer = new BufferedWriter(new FileWriter(
                                                                       curr_dir.concat("/acl.txt")));
+            
+            
             /*write all of the service names for each user*/
+            String acl_txt = "";
             for (String k : acl_table.keySet()) {
                 acl_writer.write(k);
+                acl_txt += k;
                 for (String service_name : acl_table.get(k)){
                   acl_writer.write("\t" + service_name);
+                  acl_txt += "\t" + service_name;
                 }
                 acl_writer.write("\n");
+                acl_txt += "\n";
             }
             acl_writer.flush();
             acl_writer.close();
+
+            //send over the acl to client to get MAC'd
+            js = new JSONWriter(w);
+            js.object().key("response").value(Response.SUCCESS.name())
+                        .key("acl").value(acl_txt)
+                .endObject();
+            w.newLine();
+            w.flush();
+            JSONObject req = new JSONObject(r.readLine());
+            if (req == null){
+              return Response.FAIL;
+            }
+            String mac_txt = req.getString("mac");
+            if (mac_txt == null){
+              return Response.FAIL;
+            }
+            BufferedWriter mac_writer = new BufferedWriter(new FileWriter(
+                                                                      curr_dir.concat("/mac.txt")));
+            mac_writer.write(mac_txt);
+            mac_writer.flush();
+            mac_writer.close();
+            
 
         } catch (IOException e) {
             e.printStackTrace();
