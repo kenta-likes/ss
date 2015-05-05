@@ -110,6 +110,9 @@ public class Server {
         f.mkdirs(); // create the directory if doesn't exist
         /*load ACL/shared credentials into a hashtable for all users*/
         String[] dirs = f.list();
+        if (dirs == null || dirs.length == 0){
+          return;
+        }
         for (String username : dirs){
           String curr_dir = System.getProperty("user.dir") + "/users/" + username;
           File user_dir = new File(curr_dir);

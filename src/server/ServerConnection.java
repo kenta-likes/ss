@@ -1130,44 +1130,6 @@ public class ServerConnection implements Runnable {
         }
     }
 
-    /* 
-     * Receive public key for shared credentials and update pubkey_table.
-     * Called when user authenticates and attempts to retrieve credentials 
-     */
-    protected void receivePubKey(){
-        // ArrayList of (Passherd username (owner of cred), service name, public key)
-        ArrayList<Triple<String,String,String>> transactions;
-
-        //1. look up transaction table by username
-        if (Server.transaction_table.contains(username)){
-
-            Server.transaction_lock.lock();
-            try{
-                // 2. Get the list of pending transactions
-                transactions = Server.transaction_table.get(username);
-
-                // 3. Process each transaction, update the pubkey_table
-                for (Triple<String,String,String> tr : transactions) {
-                    String owner      = tr.first();
-                    String servicename = tr.second();
-                    String pubkey      = tr.third();
-
-                    if (!pubkey_table.contains(owner)){
-                        pubkey_table.put(owner, new ArrayList<Pair<String, String>>());
-                    }
-                    
-                    // note: doesn't check for duplicates but shouldn't matter since pubkey is deterministic
-                    pubkey_table.get(owner).add(new Pair(servicename, pubkey)); 
-                }
-                // 4. Delete the entry from transaction_table
-                Server.transaction_table.remove(username);
-            
-            }finally {
-                Server.transaction_lock.unlock();
-            }
-        }
-    }
-
     /*
      * Returns a list of services for which credentials stored on server.
      */
