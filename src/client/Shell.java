@@ -109,9 +109,7 @@ public class Shell {
             System.out.println("Usage: unshare <service> <username>");
             return;
         }
-
-        err = Client.unshare(command[1], command[2]);
-
+        err = Client.unshareCreds(command[1], command[2]);
         printErr(err);
     }
 
