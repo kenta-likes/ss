@@ -898,7 +898,7 @@ public class Client {
             password = respPacket.getString("password");
 
             try {
-                byte[] pubKeyBytes = DatatypeConverter.parseBase64Binary(encPublicKey);
+                byte[] pubKeyBytes = decryptPassword(encPublicKey);
                 X509EncodedKeySpec k = new X509EncodedKeySpec(pubKeyBytes);
             
                 PublicKey publicKey = KeyFactory.getInstance("RSA").generatePublic(k);
