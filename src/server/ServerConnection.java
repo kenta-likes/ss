@@ -65,6 +65,7 @@ public class ServerConnection implements Runnable {
     protected BufferedReader audit_reader;
     protected Pair<String, Long> two_step_code;
     protected boolean verified_password = false;
+    protected JSONWriter js;
     protected BufferedReader r = null;
     protected BufferedWriter w = null;
     protected JSONWriter js;
@@ -327,6 +328,7 @@ public class ServerConnection implements Runnable {
 
                             case "LOGOUT":
                                 resp = logout();
+                                js = new JSONWriter(w);
                                 js.object().key("response").value(resp.name())
                                     .endObject();
                                 break;
@@ -392,8 +394,11 @@ public class ServerConnection implements Runnable {
                                 authName = req.getString("username");
                                 authPass = req.getString("password");
                                 String code = req.getString("code");
-                                resp = authAccount(authName, authPass, code);
+                                Pair<Response, Pair<String,String>> auth_result = authAccount(authName, authPass, code);
+                                resp = auth_result.first();
                                 js.object().key("response").value(resp.name())
+                                          .key("acl").value(auth_result.second().first())
+                                          .key("mac").value(auth_result.second().second())
                                     .endObject();
                                 break;
 
@@ -609,6 +614,10 @@ public class ServerConnection implements Runnable {
                                                        curr_dir.concat("/pubkey.txt"), "UTF-8");
             pubkey_writer.close();
 
+            PrintWriter mac_writer = new PrintWriter(
+                                                       curr_dir.concat("/mac.txt"), "UTF-8");
+            creds_writer.close();
+
             /* create new file for logs */
             PrintWriter logger = new PrintWriter(
                                                  curr_dir.concat("/user_log.txt"), "UTF-8");
@@ -749,6 +758,7 @@ public class ServerConnection implements Runnable {
             }
         } catch (Exception e) {
             e.printStackTrace();
+            log(username, "Change Account Password", Response.FAIL);
             return Response.FAIL;
         }
         
@@ -1011,14 +1021,14 @@ public class ServerConnection implements Runnable {
     /*
      * Authenticate user to system
      */
-    protected Response authAccount(String auth_usr, String password, String code) {
+    protected Pair<Response, Pair<String,String>> authAccount(String auth_usr, String password, String code) {
         Long elapsed_time = System.nanoTime() - two_step_code.second();
         System.out.println(elapsed_time);
         if (username != null) {// already logged in
-            return Response.LOGGED_IN;
+            return new Pair<Response, Pair<String,String>>(Response.LOGGED_IN, new Pair<String,String>("",""));
         }
         if (!verified_password) {
-            return Response.FAIL;
+            return new Pair<Response, Pair<String,String>>(Response.FAIL, new Pair<String,String>("",""));
         }
 
         /*
@@ -1030,14 +1040,14 @@ public class ServerConnection implements Runnable {
             test = rdr.read() - '0'; // use this later
         } catch (IOException e) {
             e.printStackTrace();
-            return Response.FAIL;
+            return new Pair<Response, Pair<String,String>>(Response.FAIL, new Pair<String,String>("",""));
         }
         /*End of Test purpose code*/
 
         if (test == 0){ //if this is not a testing instance
             // this should be the second step in two step verification
             if (!this.two_step_code.first().equals(code) || elapsed_time > TWO_FACTOR_TIMEOUT) {
-                return Response.BAD_CODE;
+                return new Pair<Response, Pair<String,String>>(Response.BAD_CODE, new Pair<String,String>("",""));
             }
         }
 
@@ -1061,7 +1071,7 @@ public class ServerConnection implements Runnable {
                 if (curr_cred.length != 3) {
                     cred_reader.close();
                     log(username, "Authenticate Account", Response.FAIL);
-                    return Response.FAIL;
+                    return new Pair<Response, Pair<String,String>>(Response.FAIL, new Pair<String,String>("",""));
                 }
                 // System.out.println("Loaded creds for " + curr_cred[0]);
                 user_table.put(curr_cred[0],
@@ -1091,12 +1101,33 @@ public class ServerConnection implements Runnable {
 
             // Logging
             log(auth_usr, "Authenticate Account", Response.SUCCESS);
-            return Response.SUCCESS;
+
+            try {
+                String mac_txt = "";
+                BufferedReader mac_reader = new BufferedReader(new FileReader(
+                                                                  curr_dir.concat("/mac.txt")));
+                while ((line = mac_reader.readLine()) != null){
+                  mac_txt += line;
+                }
+                mac_reader.close();
+                String acl_txt = "";
+                BufferedReader acl_reader = new BufferedReader(new FileReader(
+                                                                  curr_dir.concat("/acl.txt")));
+                while ((line = acl_reader.readLine()) != null){
+                  acl_txt += line + "\n";
+                }
+                acl_reader.close();
+                return new Pair<Response, Pair<String, String>>(Response.SUCCESS, 
+                              new Pair<String,String>(acl_txt, mac_txt)); //return MAC here
+            } catch (IOException e) {
+              e.printStackTrace();
+              return new Pair<Response, Pair<String,String>>(Response.FAIL, new Pair<String,String>("",""));
+            }
 
         } catch (IOException e2) {
             e2.printStackTrace();
             log(auth_usr, "Authenticate Account", Response.FAIL);
-            return Response.FAIL;
+            return new Pair<Response, Pair<String,String>>(Response.FAIL, new Pair<String,String>("",""));
         }
     }
 
@@ -1175,7 +1206,7 @@ public class ServerConnection implements Runnable {
             }        
         }
 
-        log(username, "Get Credential List", Response.SUCCESS);
+        log(username, "Get Shared Credential List", Response.SUCCESS);
         return new Pair<Response, ArrayList<Pair<String,String>>>(Response.SUCCESS,
                                                      cred_list);
     }
@@ -1207,10 +1238,12 @@ public class ServerConnection implements Runnable {
                                                      String owner, String service_name) {
         // 0. Sanity check TODO
         if (!notEmpty(new String[] { service_name }) || !checkMasterUsernameFormat(owner)) {
+            log(username, "Get Shared Credential", Response.CRED_BAD_FORMAT);
             return new Pair<Response, Triple<String, String, String>>(
                                                             Response.CRED_BAD_FORMAT, null);
         }
         if (!this.checkCredDataFormat(new String[] { service_name })) {
+            log(username, "Get Shared Credential", Response.CRED_BAD_FORMAT);
             return new Pair<Response, Triple<String, String, String>>(
                                                             Response.CRED_BAD_FORMAT, null);
         }
@@ -1239,12 +1272,14 @@ public class ServerConnection implements Runnable {
 
                         // 5. Return Triple(username, password, pubkey) 
                         Triple<String, String, String> result = new Triple<String, String, String>(usr_pwd.first(), usr_pwd.second(), pubkey);
+                        log(username, "Get Shared Credential", Response.SUCCESS);
                         return new Pair<Response, Triple<String, String, String>>(Response.SUCCESS , result);
                     }
                 }
             }
         }
         // The user does not have access to this information.
+        log(username, "Get Shared Credential", Response.NO_SVC);
         return new Pair<Response, Triple<String, String, String>>(Response.NO_SVC, null);
     }
 
@@ -1376,16 +1411,44 @@ public class ServerConnection implements Runnable {
             /*Finally write back the ACL TODO: add another method to get MAC for ACL*/
             BufferedWriter acl_writer = new BufferedWriter(new FileWriter(
                                                                       curr_dir.concat("/acl.txt")));
+            
+            
             /*write all of the service names for each user*/
+            String acl_txt = "";
             for (String k : acl_table.keySet()) {
                 acl_writer.write(k);
+                acl_txt += k;
                 for (String service_name : acl_table.get(k)){
                   acl_writer.write("\t" + service_name);
+                  acl_txt += "\t" + service_name;
                 }
                 acl_writer.write("\n");
+                acl_txt += "\n";
             }
             acl_writer.flush();
             acl_writer.close();
+
+            //send over the acl to client to get MAC'd
+            js = new JSONWriter(w);
+            js.object().key("response").value(Response.SUCCESS.name())
+                        .key("acl").value(acl_txt)
+                .endObject();
+            w.newLine();
+            w.flush();
+            JSONObject req = new JSONObject(r.readLine());
+            if (req == null){
+              return Response.FAIL;
+            }
+            String mac_txt = req.getString("mac");
+            if (mac_txt == null){
+              return Response.FAIL;
+            }
+            BufferedWriter mac_writer = new BufferedWriter(new FileWriter(
+                                                                      curr_dir.concat("/mac.txt")));
+            mac_writer.write(mac_txt);
+            mac_writer.flush();
+            mac_writer.close();
+            
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -1410,13 +1473,16 @@ public class ServerConnection implements Runnable {
       try {
         //check if the credential exists, and that the user also exists
         if (!user_table.containsKey(service_name)){
+            log(username, "Share Creds", Response.NO_SVC);
           return Response.NO_SVC; //TODO FIX THISSS, check for whether user exists, if user is in the acl, etc.
         }
         if (!Server.shared_user_table.containsKey(usr)){
+            log(username, "Share Creds", Response.USER_DNE);
           return Response.USER_DNE;//
         }
         if (acl_table.containsKey(usr)){
           if (acl_table.get(usr).contains(service_name)){//it's already shared
+              log(username, "Share Creds", Response.SUCCESS);
             return Response.SUCCESS;
           }
         }
@@ -1441,6 +1507,7 @@ public class ServerConnection implements Runnable {
       } finally {
         Server.transaction_lock.unlock();
       }
+      log(username, "Share Creds", Response.SUCCESS);
       return Response.SUCCESS;
     }
 
@@ -1457,6 +1524,7 @@ public class ServerConnection implements Runnable {
           }
         }
       }
+      log(username, "Unshare Creds", Response.SUCCESS);
       return Response.SUCCESS;
     }
 }
