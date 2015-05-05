@@ -513,6 +513,7 @@ public class Shell {
     private static void handleChange(String[] command) {
         String service, username, password;
         Response err;
+        char pass[];
         
         if (command.length != 2) {
             System.out.println("Usage: change <service>");
@@ -523,7 +524,8 @@ public class Shell {
         username = con.readLine("Username: ");
         password = con.readLine("Password: ");
 
-        err = Client.changeCreds(service, username, password);
+        pass = con.readPassword("Password: ");
+        err = Client.changeCreds(service, username, password, pass);
         printErr(err);
     }
 

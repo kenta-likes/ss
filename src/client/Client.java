@@ -475,7 +475,6 @@ public class Client {
             .endObject();
         sockWriter.println();
         sockWriter.flush();
-        System.out.println("client sent get transactions command");
         respPacket = new JSONObject(sockReader.readLine());
       } catch (Exception e) {
           e.printStackTrace();
@@ -488,7 +487,6 @@ public class Client {
       if(!err.equals(Response.SUCCESS)){
         return err;
       }
-      System.out.println("client received list, now iterating over it");
       //encrypt the public keys, send back
       JSONArray pub_keys = respPacket.getJSONArray("pub_keys");
       ArrayList<String> pub_keys_encrypted = new ArrayList<String>();
@@ -503,7 +501,6 @@ public class Client {
                   .endObject();
       sockWriter.println();
       sockWriter.flush();
-      System.out.println("client sent re-encrypted stuff");
       // Receive results from the server 
       try {
         respPacket = new JSONObject(sockReader.readLine());
@@ -584,6 +581,36 @@ public class Client {
     protected static Response shareNewCreds(String service, String user_shared, char[] pass) {
       Response err;
       JSONObject respPacket = null;
+      byte[] hashedPassword;
+      byte[] passwordBytes = charToBytes(pass);
+      try { //first check if login credentials check out
+          MessageDigest digest = MessageDigest.getInstance("SHA-256");
+          digest.update(passwordBytes);
+          hashedPassword = digest.digest();
+      } catch (NoSuchAlgorithmException e1) {
+          e1.printStackTrace();
+          return Response.FAIL;
+      }
+      sockJS = new JSONWriter(sockWriter);
+      sockJS.object()
+          .key("command").value("CHECK_LOGIN")
+          .key("username").value(username)
+          .key("password").value(new String(hashedPassword))
+          .endObject();
+      sockWriter.println();
+      sockWriter.flush();
+      try {
+          respPacket = new JSONObject(sockReader.readLine());
+      } catch (IOException e) {
+          e.printStackTrace();
+          return responseFromString("IO Error getting response from server");
+      }
+      err = responseFromString(respPacket.getString("response"));
+      if (err != Response.SUCCESS) {
+        return err;
+      }
+
+
       Pair<Response, Pair<String, char[]>> creds = requestCreds(service);
       if (creds.first() != Response.SUCCESS){
         return creds.first(); //send failed response
@@ -932,16 +959,47 @@ public class Client {
      * pre: user is logged in, credentials exist on the server
      * post: the username or password for that set of credentials is changed
      */
-    protected static Response changeCreds(String service, String username, String password) {
+    protected static Response changeCreds(String service, String username, String password, char[] pass) {
         JSONObject respPacket = null;
         Response err;
         sockJS = new JSONWriter(sockWriter);
+        byte[] hashedPassword;
+        byte[] passwordBytes = charToBytes(pass);
+        try { //first check if login credentials check out
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            digest.update(passwordBytes);
+            hashedPassword = digest.digest();
+        } catch (NoSuchAlgorithmException e1) {
+            e1.printStackTrace();
+            return Response.FAIL;
+        }
+        sockJS = new JSONWriter(sockWriter);
+        sockJS.object()
+            .key("command").value("CHECK_LOGIN")
+            .key("username").value(username)
+            .key("password").value(new String(hashedPassword))
+            .endObject();
+        sockWriter.println();
+        sockWriter.flush();
+        try {
+            respPacket = new JSONObject(sockReader.readLine());
+        } catch (IOException e) {
+            e.printStackTrace();
+            return responseFromString("IO Error getting response from server");
+        }
+        err = responseFromString(respPacket.getString("response"));
+        if (err != Response.SUCCESS) {
+          return err;
+        }
 
+        KeyPair shared_keypair = getKeyPair(service,pass);
         sockJS.object()
             .key("command").value("EDIT")
             .key("service").value(service)
             .key("username").value(username)
             .key("password").value(encryptPassword(password))
+            .key("shared_username").value(DatatypeConverter.printBase64Binary(encryptWithKeyPair(shared_keypair, username.toCharArray())))
+            .key("shared_password").value(DatatypeConverter.printBase64Binary(encryptWithKeyPair(shared_keypair, password.toCharArray())))
             .endObject();
         sockWriter.println();
         sockWriter.flush();
@@ -1052,7 +1110,7 @@ public class Client {
 	        
             for (i = 0; i < creds.size(); i++)
 	        {
-                    changeCreds(credNames.second().get(i), creds.get(i).first(), new String(creds.get(i).second()));
+                    changeCreds(credNames.second().get(i), creds.get(i).first(), new String(creds.get(i).second()), newPassword);
 	        }
 	
         } catch (Exception e) {

@@ -124,6 +124,13 @@ public class ServerConnection implements Runnable {
                             case "RGST":
                                 js.object().key("response").value(Response.DUP_LOGIN).endObject();
                             break;
+                            case "CHECK_LOGIN":
+                                authName = req.getString("username");
+                                authPass = req.getString("password");
+                                resp = check_login(authName, authPass);
+                                js.object().key("response").value(resp.name())
+                                    .endObject();
+                                break;
                             case "ADD":
                                 String service = req.getString("service");
                                 String sName = req.getString("username");
@@ -263,7 +270,9 @@ public class ServerConnection implements Runnable {
                                       Triple<String,String,String> entry = Server.transaction_table.get(username).get(i);
                                       String pubkey = pub_keys_encrypted.getString(i);
                                       if (pubkey_table.containsKey(entry.first())){
-                                        pubkey_table.get(entry.first()).add(new Pair<String,String>(entry.second(),pubkey));
+                                        if (!pubkey_table.get(entry.first()).contains(entry.second())){
+                                          pubkey_table.get(entry.first()).add(new Pair<String,String>(entry.second(),pubkey));
+                                        }
                                       } else {
                                         ArrayList<Pair<String,String>> new_keys = new ArrayList<Pair<String,String>>();
                                         new_keys.add(new Pair<String,String>(entry.second(), pubkey));
@@ -305,7 +314,9 @@ public class ServerConnection implements Runnable {
                                 service = req.getString("service");
                                 sName = req.getString("username");
                                 sPass = req.getString("password");
-                                resp = updateCredential(service, sName, sPass);
+                                String new_shared_usr = req.getString("shared_username");
+                                String new_shared_pass = req.getString("shared_password");
+                                resp = updateCredential(service, sName, sPass, new_shared_usr, new_shared_pass);
 
                                 js.object().key("response").value(resp.name())
                                     .endObject();
@@ -628,8 +639,8 @@ public class ServerConnection implements Runnable {
         char carrier;
         
         if (!notEmpty(new String[] { old_password, new_password })) {
-            log(username, "Change Account Password", Response.WRONG_INPT);
-            return Response.WRONG_INPT;
+            log(username, "Change Account Password", Response.MASTER_EMPTY);
+            return Response.MASTER_EMPTY;
         }
         if (this.verifyPassword(this.username, old_password) != Response.SUCCESS) {
             // Logging
@@ -804,6 +815,49 @@ public class ServerConnection implements Runnable {
         return intCode;
     }
 
+    /*Only checks the login*/
+    protected Response check_login(String auth_usr, String password){
+        if (!notEmpty(new String[] { auth_usr, password })) {
+            return Response.MASTER_EMPTY;
+        }
+        if (!this.checkMasterUsernameFormat(auth_usr)) {
+            return Response.MASTER_BAD_FORMAT;
+        }
+        // Note: Not thread-safe
+        if (!(new File("users/" + auth_usr).isDirectory())) {
+            // Logging
+            log(auth_usr, "Check login", Response.WRONG_INPT);
+            return Response.WRONG_INPT;
+        }
+
+        byte salt[] = new byte[SALT_LEN];
+        byte stored_pass[] = new byte[PASS_LEN];
+        FileInputStream reader;
+        try {
+            reader = new FileInputStream(
+                                         ("users/" + auth_usr).concat("/master.txt"));
+            reader.read(stored_pass, 0, PASS_LEN);
+            reader.read(salt, 0, SALT_LEN);
+            reader.close();
+
+            byte[] hashedpassword = saltAndHash(password, salt);
+            if (!Arrays.equals(hashedpassword, stored_pass)) {
+                // Logging
+                log(auth_usr, "Check login", Response.WRONG_INPT);
+                return Response.WRONG_INPT;
+            }
+        } catch (IOException e2) {
+            e2.printStackTrace();
+            log(auth_usr, "Check login", Response.FAIL);
+            return Response.FAIL;
+        } catch (NoSuchAlgorithmException e1) { // should never happen
+            e1.printStackTrace();
+            log(auth_usr, "Check login", Response.FAIL);
+            return Response.FAIL;
+        }
+        return Response.SUCCESS;
+    }
+
 
     protected Response verifyPassword(String auth_usr, String password) {
         if (!notEmpty(new String[] { auth_usr, password })) {
@@ -966,7 +1020,7 @@ public class ServerConnection implements Runnable {
             pubkey_reader.close();
 
             // update pubkey_table
-            receivePubKey();
+            //receivePubKey();
 
             // Logging
             log(auth_usr, "Authenticate Account", Response.SUCCESS);
@@ -1156,8 +1210,10 @@ public class ServerConnection implements Runnable {
      * Updates credentials with new password
      */
     protected Response updateCredential(String service_name,
-                                        String new_username, String new_stored_pass) {
+                                        String new_username, String new_stored_pass,
+                                        String shared_username, String shared_password) {
         if (!notEmpty(new String[] { new_username, new_stored_pass })) {
+
             log(username, "Update Credential", Response.CRED_BAD_FORMAT);
             return Response.CRED_BAD_FORMAT;
         }
@@ -1173,6 +1229,9 @@ public class ServerConnection implements Runnable {
         }
         user_table.put(service_name, new Pair<String, String>(
                                                               new_username, new_stored_pass));
+        if (shared_table.containsKey(service_name)){
+          shared_table.put(service_name, new Pair<String,String>(shared_username, shared_password));
+        }
         log(username, "Update Credential", Response.SUCCESS);
         return Response.SUCCESS;
     }
@@ -1194,6 +1253,14 @@ public class ServerConnection implements Runnable {
             return Response.NO_SVC;
         }
         user_table.remove(service_name);
+        for (String key : acl_table.keySet()){
+          while (acl_table.get(key).contains(service_name)){
+            acl_table.get(key).remove(service_name);
+          }
+        }
+        if (shared_table.containsKey(service_name)){
+          shared_table.remove(service_name);
+        }
         log(username, "Delete Credential", Response.SUCCESS);
         return Response.SUCCESS;
     }
@@ -1280,7 +1347,7 @@ public class ServerConnection implements Runnable {
         if (!Server.shared_user_table.containsKey(usr)){
           return Response.USER_DNE;//
         }
-        if (acl_table.contains(usr)){
+        if (acl_table.containsKey(usr)){
           if (acl_table.get(usr).contains(service_name)){//it's already shared
             return Response.SUCCESS;
           }
