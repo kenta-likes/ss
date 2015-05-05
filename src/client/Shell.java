@@ -528,7 +528,7 @@ public class Shell {
     }
 
     private static void help() {
-        System.out.println("All commands: login register add get creds delete change exit logout unregister chpass share unshare lsshare update help.\nType help <command> for more information.");
+        System.out.println("All commands: login register add get creds delete change exit logout unregister chpass share unshare lsshared update help.\nType help <command> for more information.");
     }
 
     private static void help(String command) {
