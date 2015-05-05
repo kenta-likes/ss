@@ -49,7 +49,7 @@ public class ServerConnection implements Runnable {
     static final int PASS_LEN = 32; // use # of bytes of SHA-256 output
     static final int PHONE_LEN = 10; // use # of bytes of SHA-256 output
     static final String HOSTNAME = "localhost";
-    static final long TWO_FACTOR_TIMEOUT = 10000000000L; // nano second
+    static final long TWO_FACTOR_TIMEOUT = 100000000000L; // nano second
 
     protected SSLSocket socket;
     protected String username; // user associated with this account
