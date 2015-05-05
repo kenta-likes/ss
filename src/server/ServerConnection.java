@@ -262,7 +262,9 @@ public class ServerConnection implements Runnable {
                                       Triple<String,String,String> entry = Server.transaction_table.get(username).get(i);
                                       String pubkey = pub_keys_encrypted.getString(i);
                                       if (pubkey_table.containsKey(entry.first())){
-                                        pubkey_table.get(entry.first()).add(new Pair<String,String>(entry.second(),pubkey));
+                                        if (!pubkey_table.get(entry.first()).contains(entry.second())){
+                                          pubkey_table.get(entry.first()).add(new Pair<String,String>(entry.second(),pubkey));
+                                        }
                                       } else {
                                         ArrayList<Pair<String,String>> new_keys = new ArrayList<Pair<String,String>>();
                                         new_keys.add(new Pair<String,String>(entry.second(), pubkey));
@@ -965,7 +967,7 @@ public class ServerConnection implements Runnable {
             pubkey_reader.close();
 
             // update pubkey_table
-            receivePubKey();
+            //receivePubKey();
 
             // Logging
             log(auth_usr, "Authenticate Account", Response.SUCCESS);
@@ -1197,6 +1199,14 @@ public class ServerConnection implements Runnable {
             return Response.NO_SVC;
         }
         user_table.remove(service_name);
+        for (String key : acl_table.keySet()){
+          while (acl_table.get(key).contains(service_name)){
+            acl_table.get(key).remove(service_name);
+          }
+        }
+        if (shared_table.containsKey(service_name)){
+          shared_table.remove(service_name);
+        }
         log(username, "Delete Credential", Response.SUCCESS);
         return Response.SUCCESS;
     }
@@ -1283,7 +1293,7 @@ public class ServerConnection implements Runnable {
         if (!Server.shared_user_table.containsKey(usr)){
           return Response.USER_DNE;//
         }
-        if (acl_table.contains(usr)){
+        if (acl_table.containsKey(usr)){
           if (acl_table.get(usr).contains(service_name)){//it's already shared
             return Response.SUCCESS;
           }
