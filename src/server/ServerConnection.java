@@ -1017,15 +1017,24 @@ public class ServerConnection implements Runnable {
      */
     protected Pair<Response, ArrayList<Pair<String,String>>> retrieveSharedCredentials() {
 
-        receivePubKey(); // update the pubkey_table
-
         ArrayList<Pair<String,String>> cred_list = new ArrayList<Pair<String,String>>(); 
         for (String owner : pubkey_table.keySet()) {
-            for (Pair<String, String> shared_info : pubkey_table.get(owner)){
-                cred_list.add(new Pair(owner, shared_info.first()));
-            }
-            
+            // Check ACL to see if access is allowed
+            Pair<Hashtable<String,ArrayList<String>>, Hashtable<String, Pair<String,String>>> pair 
+                    = Server.shared_user_table.get(owner);
+            Hashtable<String, ArrayList<String>> owners_acl_table = pair.first();
+
+            if (owners_acl_table.containsKey(username)){ 
+                ArrayList<String> shared_creds = owners_acl_table.get(username);
+
+                for (Pair<String, String> shared_info : pubkey_table.get(owner)){
+                    if (shared_creds.contains(shared_info.first())){
+                        cred_list.add(new Pair(owner, shared_info.first()));
+                    }
+                }
+            }        
         }
+
         log(username, "Get Credential List", Response.SUCCESS);
         return new Pair<Response, ArrayList<Pair<String,String>>>(Response.SUCCESS,
                                                      cred_list);
@@ -1071,7 +1080,7 @@ public class ServerConnection implements Runnable {
         }
 
         // 1. Update pubkey_table
-        receivePubKey(); 
+        // receivePubKey(); 
         // 2. Get the list of owners who shared credentials with me
         //    Check if owner - service_name is in the pubkey_table.
         if (pubkey_table.containsKey(owner)){ // owner
