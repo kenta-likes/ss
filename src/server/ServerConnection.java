@@ -749,6 +749,7 @@ public class ServerConnection implements Runnable {
             }
         } catch (Exception e) {
             e.printStackTrace();
+            log(username, "Change Account Password", Response.FAIL);
             return Response.FAIL;
         }
         
@@ -1175,7 +1176,7 @@ public class ServerConnection implements Runnable {
             }        
         }
 
-        log(username, "Get Credential List", Response.SUCCESS);
+        log(username, "Get Shared Credential List", Response.SUCCESS);
         return new Pair<Response, ArrayList<Pair<String,String>>>(Response.SUCCESS,
                                                      cred_list);
     }
@@ -1207,10 +1208,12 @@ public class ServerConnection implements Runnable {
                                                      String owner, String service_name) {
         // 0. Sanity check TODO
         if (!notEmpty(new String[] { service_name }) || !checkMasterUsernameFormat(owner)) {
+            log(username, "Get Shared Credential", Response.CRED_BAD_FORMAT);
             return new Pair<Response, Triple<String, String, String>>(
                                                             Response.CRED_BAD_FORMAT, null);
         }
         if (!this.checkCredDataFormat(new String[] { service_name })) {
+            log(username, "Get Shared Credential", Response.CRED_BAD_FORMAT);
             return new Pair<Response, Triple<String, String, String>>(
                                                             Response.CRED_BAD_FORMAT, null);
         }
@@ -1239,12 +1242,14 @@ public class ServerConnection implements Runnable {
 
                         // 5. Return Triple(username, password, pubkey) 
                         Triple<String, String, String> result = new Triple<String, String, String>(usr_pwd.first(), usr_pwd.second(), pubkey);
+                        log(username, "Get Shared Credential", Response.SUCCESS);
                         return new Pair<Response, Triple<String, String, String>>(Response.SUCCESS , result);
                     }
                 }
             }
         }
         // The user does not have access to this information.
+        log(username, "Get Shared Credential", Response.NO_SVC);
         return new Pair<Response, Triple<String, String, String>>(Response.NO_SVC, null);
     }
 
@@ -1409,13 +1414,16 @@ public class ServerConnection implements Runnable {
       try {
         //check if the credential exists, and that the user also exists
         if (!user_table.containsKey(service_name)){
+            log(username, "Share Creds", Response.NO_SVC);
           return Response.NO_SVC; //TODO FIX THISSS, check for whether user exists, if user is in the acl, etc.
         }
         if (!Server.shared_user_table.containsKey(usr)){
+            log(username, "Share Creds", Response.USER_DNE);
           return Response.USER_DNE;//
         }
         if (acl_table.containsKey(usr)){
           if (acl_table.get(usr).contains(service_name)){//it's already shared
+              log(username, "Share Creds", Response.SUCCESS);
             return Response.SUCCESS;
           }
         }
@@ -1440,6 +1448,7 @@ public class ServerConnection implements Runnable {
       } finally {
         Server.transaction_lock.unlock();
       }
+      log(username, "Share Creds", Response.SUCCESS);
       return Response.SUCCESS;
     }
 
@@ -1456,6 +1465,7 @@ public class ServerConnection implements Runnable {
           }
         }
       }
+      log(username, "Unshare Creds", Response.SUCCESS);
       return Response.SUCCESS;
     }
 }
