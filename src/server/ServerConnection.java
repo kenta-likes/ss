@@ -332,6 +332,27 @@ public class ServerConnection implements Runnable {
                                     return;
                                 //}
 
+                            case "ACL":
+                                js.object()
+                                    .key("response").value("SUCCESS")
+                                    .key("shares")
+                                    .array();
+
+                                for (String s : acl_table.keySet()) {
+                                    js.object()
+                                        .key("username").value(s)
+                                        .key("services").array();
+
+                                    for (String svc : acl_table.get(s)) {
+                                        js.value(svc);
+                                    }
+
+                                    js.endArray().endObject();
+                                }
+
+                                js.endArray().endObject();
+                                break;
+
                             default:
                                 // System.out.println("username is not null: command is "+command);
                                 // TODO: this is a stub to prevent json from

@@ -816,22 +816,22 @@ public class Client {
         err = responseFromString(respPacket.getString("response"));
         
         if (err == Response.SUCCESS) {
-            JSONArray jsShares = respPacket.getJSONObject("shares").getJSONArray("creds");
+            JSONArray jsShares = respPacket.getJSONArray("shares");
             shares = new ArrayList<Pair<String, List<String>>>();
 
             for (int i = 0; i < jsShares.length(); i++) {
-                JSONObject cred = new JSONObject(jsShares.get(i));
-                String service;
-                List<String> users = new ArrayList<String>();
-                JSONArray jsUsers = cred.getJSONArray("users");
+                JSONObject cred = jsShares.getJSONObject(i);
+                String username;
+                List<String> services = new ArrayList<String>();
+                JSONArray jsUsers = cred.getJSONArray("services");
 
-                service = cred.getString("service");
+                username = cred.getString("username");
 
                 for (int j = 0; j < jsUsers.length(); j++) {
-                    users.add(jsUsers.getString(j));
+                    services.add(jsUsers.getString(j));
                 }
 
-                shares.add(new Pair<String, List<String>>(service, users));
+                shares.add(new Pair<String, List<String>>(username, services));
             }
 
             return new Pair<Response, List<Pair<String, List<String>>>>(err, shares);
