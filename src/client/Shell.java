@@ -739,7 +739,8 @@ public class Shell {
 
             case "lsshared": helpMsg = "lsshared: show all shared credentials and with whom they are shared.";
                 break;
-            case "getshared": helpMsg= "getshared {all | <service> <username>}: displays the names of all shared services, or the username and password associated with a certain service and user.";
+            case "getshared": helpMsg = "getshared {all | <service> <username>}: displays the names of all shared services, or the username and password associated with a certain service and user.";
+                break;
                 
             case "add": helpMsg = "add <service>: stores the username and password for the service.";
                 break;
