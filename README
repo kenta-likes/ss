@@ -1,11 +1,19 @@
 To compile the system, enter the src/ directory and run 'make all'.  This will rebuild all jarfiles.
 
-We have provided you with some jarfiles of the current build of the system.
+We have provided you with some jarfiles of the current build of the system.  The log server must be
+the first system to be running, followed by the server.  The log server requires a hostname argument, which
+is the name of the host on which the regular server will be running.
 To run the server, run the server jarfile.  To run the client, run the client
 jarfile with command-line argument for the hostname of the server.
 
-We have also provided manifest files for the two jar files in src/server and src/client.
+e.g.
+$ make all
+$ java -jar LogServer.jar localhost &
+$ java -jar Server.jar localhost &
+$ java -jar Client.jar localhost
 
+Note that in order to run the log client you must have the provided "logserver_master.conf" in the directory from which you run LogClient.jar.  The password for the log client is systemsecurity
+and the supported commands are ' get all ' to retrieve all log lines and ' get n ' to get up to the first n lines of the log.
 
 TESTING
 To test the system in JUnit, you must first change two files: test.txt and src/test.txt. The contents of both of these files should be set to 1 if you want to enable testing environments. In addition, the src/users directory must be empty prior to each test run
