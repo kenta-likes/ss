@@ -1289,6 +1289,7 @@ public class ServerConnection implements Runnable {
             }
             shared_writer.flush();
             shared_writer.close();
+            
 
             /*Then write back the pubkeys*/
             BufferedWriter pubkey_writer = new BufferedWriter(new FileWriter(
