@@ -124,6 +124,13 @@ public class ServerConnection implements Runnable {
                             case "RGST":
                                 js.object().key("response").value(Response.DUP_LOGIN).endObject();
                             break;
+                            case "CHECK_LOGIN":
+                                authName = req.getString("username");
+                                authPass = req.getString("password");
+                                resp = check_login(authName, authPass);
+                                js.object().key("response").value(resp.name())
+                                    .endObject();
+                                break;
                             case "ADD":
                                 String service = req.getString("service");
                                 String sName = req.getString("username");
@@ -813,6 +820,49 @@ public class ServerConnection implements Runnable {
         }
 
         return intCode;
+    }
+
+    /*Only checks the login*/
+    protected Response check_login(String auth_usr, String password){
+        if (!checkInput(new String[] { auth_usr, password })) {
+            return Response.WRONG_INPT;
+        }
+        if (!this.checkUsernameFormat(auth_usr)) {
+            return Response.BAD_FORMAT;
+        }
+        // Note: Not thread-safe
+        if (!(new File("users/" + auth_usr).isDirectory())) {
+            // Logging
+            log(auth_usr, "Check login", Response.WRONG_INPT);
+            return Response.WRONG_INPT;
+        }
+
+        byte salt[] = new byte[SALT_LEN];
+        byte stored_pass[] = new byte[PASS_LEN];
+        FileInputStream reader;
+        try {
+            reader = new FileInputStream(
+                                         ("users/" + auth_usr).concat("/master.txt"));
+            reader.read(stored_pass, 0, PASS_LEN);
+            reader.read(salt, 0, SALT_LEN);
+            reader.close();
+
+            byte[] hashedpassword = saltAndHash(password, salt);
+            if (!Arrays.equals(hashedpassword, stored_pass)) {
+                // Logging
+                log(auth_usr, "Check login", Response.WRONG_INPT);
+                return Response.WRONG_INPT;
+            }
+        } catch (IOException e2) {
+            e2.printStackTrace();
+            log(auth_usr, "Check login", Response.FAIL);
+            return Response.FAIL;
+        } catch (NoSuchAlgorithmException e1) { // should never happen
+            e1.printStackTrace();
+            log(auth_usr, "Check login", Response.FAIL);
+            return Response.FAIL;
+        }
+        return Response.SUCCESS;
     }
 
 
