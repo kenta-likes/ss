@@ -139,6 +139,11 @@ public class Shell {
             return;
         }
 
+        if (usr.equals(command[2])){
+            System.out.println("Cannot share a credentials to yourself");
+            return;
+        }
+
         password = con.readPassword("Password: ");
         err = Client.shareNewCreds(command[1], command[2], password);
 
