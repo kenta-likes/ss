@@ -54,6 +54,7 @@ public class Shell {
                 case "unregister": handleUnregister(); break;
                 case "chpass": handleMasterChange(); break;
                 case "share": handleShare(splitCommand); break;
+                case "update": handleGetTransactions(splitCommand); break;
                 case "unshare": handleUnshare(splitCommand); break;
                 case "lsshares": handleListShares(); break;
                 case "help": if (splitCommand.length == 1) help(); else help(splitCommand[1]);
@@ -63,6 +64,19 @@ public class Shell {
                 }
             }
         }
+    }
+    private static void handleGetTransactions(String[] command) {
+        Response err;
+        if (command.length != 1) {
+            System.out.println("Usage: share update");
+            return;
+        }
+
+        err = Client.getTransactions();
+        if (err != Response.SUCCESS)
+            printErr(err);
+
+        return;
     }
 
     private static void handleListShares() {
@@ -221,7 +235,7 @@ public class Shell {
 
         if (err == Response.SUCCESS) {
             usr = username;
-            err = Client.consumeTransactions(usr); // CONSUME TRANSACTIONS
+            err = Client.getTransactions(); // CONSUME TRANSACTIONS
         }
 
         /* Clear the password from memory. */
@@ -353,7 +367,7 @@ public class Shell {
 
         service = command[2];
 
-        err = Client.consumeTransactions(usr); // CONSUME TRANSACTIONS
+        err = Client.getTransactions(); // CONSUME TRANSACTIONS
         printErr(err);
             
         if (service.equals("all")) {
@@ -514,7 +528,7 @@ public class Shell {
     }
 
     private static void help() {
-        System.out.println("All commands: login register add get creds delete change exit logout unregister chpass share unshare lsshare help.\nType help <command> for more information.");
+        System.out.println("All commands: login register add get creds delete change exit logout unregister chpass share unshare lsshare update help.\nType help <command> for more information.");
     }
 
     private static void help(String command) {
@@ -552,6 +566,8 @@ public class Shell {
         case "exit": helpMsg = command + ": logs you out and exits PassHerd.";
             break;
         case "logout": helpMsg = command + ": logs you out.";
+            break;
+        case "update": helpMsg = command + ": updates your list of shared credentials.";
             break;
                 
         case "unregister": helpMsg = "unregister: deletes the logged-in account and all stored credentials.  Asks for confirmation before deleting.";

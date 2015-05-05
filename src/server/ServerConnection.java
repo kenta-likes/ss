@@ -150,9 +150,6 @@ public class ServerConnection implements Runnable {
                                     .key("response")
                                     .value(revokeShared(revoke_usr, revoke_service).name()).endObject();
                                 break;
-                            case "TRANSACTION":
-                                authName = req.getString("username"); 
-                                break;
                             case "GET1":
                                 ArrayList<String> creds;
                                 Pair<Response, ArrayList<String>> pair = retrieveCredentials();
@@ -205,10 +202,10 @@ public class ServerConnection implements Runnable {
                                        .array();
 
                                     for (Pair<String, String> s : shared_creds){
-                                        JSONObject sub_js = new JSONObject();
-                                        sub_js.accumulate("owner", s.first());
-                                        sub_js.accumulate("service", s.second());
-                                        js.value(sub_js);
+                                        js.object()
+                                            .key("owner").value(s.first())
+                                            .key("service").value(s.second())
+                                            .endObject();
                                     }
 
                                     js.endArray();
@@ -244,8 +241,44 @@ public class ServerConnection implements Runnable {
                                         .endObject();
                                 }
                                 break;
-
-
+                            case "GET_TRANS":
+                                if (!Server.shared_user_table.containsKey(username)){
+                                    js.object().key("response").value(Response.FAIL.name())
+                                        .endObject();
+                                } else {
+                                  System.out.println("Getting transactions...");
+                                  ArrayList<String> pub_keys = new ArrayList<String>();
+                                  if (Server.transaction_table.containsKey(username)){
+                                    for (Triple<String,String,String> e : Server.transaction_table.get(username)){
+                                      pub_keys.add(e.third());
+                                    }
+                                  }
+                                  js.object().key("response").value(Response.SUCCESS.name())
+                                        .key("pub_keys").value(new JSONArray(pub_keys.toArray()))
+                                      .endObject();
+                                  w.newLine();
+                                  w.flush();
+                                  System.out.println("Server sent the transactions...");
+                                  req = new JSONObject(r.readLine());
+                                  JSONArray pub_keys_encrypted = req.getJSONArray("pub_keys");
+                                  for (int i = 0; i < pub_keys_encrypted.length(); i++) {
+                                      Triple<String,String,String> entry = Server.transaction_table.get(username).get(i);
+                                      String pubkey = pub_keys_encrypted.getString(i);
+                                      if (pubkey_table.containsKey(entry.first())){
+                                        pubkey_table.get(entry.first()).add(new Pair<String,String>(entry.second(),pubkey));
+                                      } else {
+                                        ArrayList<Pair<String,String>> new_keys = new ArrayList<Pair<String,String>>();
+                                        new_keys.add(new Pair<String,String>(entry.second(), pubkey));
+                                        pubkey_table.put(entry.first(), new_keys);
+                                      }
+                                  }
+                                  Server.transaction_table.remove(username);
+                                  System.out.println("Server finished updating the pub key table");
+                                  js = new JSONWriter(w);
+                                  js.object().key("response").value(Response.SUCCESS.name())
+                                      .endObject();
+                                }
+                                break;
                             case "DEL":
                                 String password = req.getString("password");
                                 resp = deleteAccount(password);

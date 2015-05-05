@@ -460,6 +460,61 @@ public class Client {
         return err;
     }
 
+    protected static Response getTransactions(){
+      Response err;
+      JSONObject respPacket = null;
+      try{
+        sockJS = new JSONWriter(sockWriter);
+        sockJS.object()
+            .key("command").value("GET_TRANS")
+            //            .key("mac").value(DatatypeConverter.printBase64Binary(code))
+            .endObject();
+        sockWriter.println();
+        sockWriter.flush();
+        System.out.println("client sent get transactions command");
+        respPacket = new JSONObject(sockReader.readLine());
+      } catch (Exception e) {
+          e.printStackTrace();
+          return Response.FAIL; //failed
+      }
+      if (respPacket == null) {
+        return Response.FAIL;
+      }
+      err = responseFromString(respPacket.getString("response"));
+      if(!err.equals(Response.SUCCESS)){
+        return err;
+      }
+      System.out.println("client received list, now iterating over it");
+      //encrypt the public keys, send back
+      JSONArray pub_keys = respPacket.getJSONArray("pub_keys");
+      ArrayList<String> pub_keys_encrypted = new ArrayList<String>();
+      for (int i = 0; i < pub_keys.length(); i++) {
+          String pubkey = pub_keys.getString(i);
+          // Encrypt pubkey using PBE
+          pub_keys_encrypted.add(encryptPassword(pubkey));
+      }
+      sockJS = new JSONWriter(sockWriter);
+      sockJS.object().key("command").value("SET_PUB")
+                  .key("pub_keys").value(new JSONArray(pub_keys_encrypted.toArray()))
+                  .endObject();
+      sockWriter.println();
+      sockWriter.flush();
+      System.out.println("client sent re-encrypted stuff");
+      // Receive results from the server 
+      try {
+        respPacket = new JSONObject(sockReader.readLine());
+        if (respPacket == null){
+          return Response.FAIL;
+        }
+        err = responseFromString(respPacket.getString("response"));
+        return err;
+      } catch (Exception e){
+        e.printStackTrace();
+        return Response.FAIL;
+      }
+      
+    }
+
     /*Used for generating key pair using PBE and the service name*/
     protected static KeyPair getKeyPair(String service, char[] pass){
         try {
@@ -709,7 +764,7 @@ public class Client {
                 for (int i = 0; i < jsCreds.length(); i++) {
                     Pair<String, String> sharedService;
                     String owner, service;
-                    JSONObject o = new JSONObject(jsCreds.getString(i));
+                    JSONObject o = jsCreds.getJSONObject(i);
 
                     owner = o.getString("owner");
                     service = o.getString("service");
@@ -718,6 +773,9 @@ public class Client {
 
                     creds.add(sharedService);
                 }
+
+                return new Pair<Response, List<Pair<String, String>>>(err, creds);
+                
             } catch (Exception e) {
                 e.printStackTrace();
                 return new Pair<Response, List<Pair<String, String>>>(Response.FAIL, null);
@@ -804,69 +862,6 @@ public class Client {
         return responseFromString(respPacket.getString("response"));
     }
     
-    // Request the server to consume pending updates from transaction table
-    // Server will send public key (plaintext)
-    // Client PBEs the public key and sends it back to the server
-    protected static Response consumeTransactions(String username){
-        JSONObject respPacket = null;
-        Response err;
-
-        sockJS = new JSONWriter(sockWriter);
-
-        sockJS.object()
-            .key("command").value("TRANSACTION")
-            .key("username").value(username)
-            .endObject();
-        
-        // Receive the password (plaintext)
-        try {
-            respPacket = new JSONObject(sockReader.readLine());
-        } catch (Exception e) {
-            e.printStackTrace();
-            return Response.FAIL;
-        }
-
-        if (respPacket == null) return Response.FAIL;
-        
-
-        err = responseFromString(respPacket.getString("response"));
-        
-        if (err == Response.SUCCESS) {
-            JSONArray pubkey_list = respPacket.getJSONArray("pubkey_list");
-
-            sockJS = new JSONWriter(sockWriter);
-            sockJS.object().key("pubkey_list")
-                .array();
-
-            for (int i = 0; i < pubkey_list.length(); i++) {
-                String pubkey = pubkey_list.getString(i);
-                // Encrypt pubkey using PBE
-                String encrypted_pubkey = encryptPassword(pubkey);
-
-                sockJS.value(encrypted_pubkey);
-            }
-            respPacket = null;
-            sockJS.endArray();
-            sockJS.endObject();
-            
-            // Receive results from the server 
-            try {
-                respPacket = new JSONObject(sockReader.readLine());
-            } catch (Exception e) {
-                e.printStackTrace();
-                return Response.FAIL;
-            }
-
-            if (respPacket == null) return Response.FAIL;
-
-            err = responseFromString(respPacket.getString("response"));
-
-            return err;
-        }
-        return err;
-    }
-
-
     
 
     protected static Pair<Response, Pair<String, String>>
