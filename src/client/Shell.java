@@ -19,7 +19,11 @@ public class Shell {
         
         if (con == null)return;
 
-        System.out.println("Welcome to PassHerd!\n  - Please type 'register' to create a new account.\n  - Please type 'login' if you already have an account.");
+        System.out.println("Welcome to ...");
+        passHerdLogo();
+        System.out.println("  - Please type 'register' to create a new account.");
+        System.out.println("  - Please type 'login' if you already have an account.");
+        System.out.println("  - Please type 'help <command>' for more information");
         
 
         while (true) {
@@ -45,10 +49,10 @@ public class Shell {
                 case "login":
                 case "register": System.out.println("Already logged in."); break;
                 case "add": handleAdd(splitCommand); break;
-                case "get":
-                case "creds": handleReq(splitCommand); break;
+                case "get": handleReq(splitCommand); break;
                 case "delete": handleDel(splitCommand); break;
                 case "change": handleChange(splitCommand); break;
+                case "getshared": handleSharedReq(splitCommand);break;
                 case "exit":   handleExit(); return;
                 case "logout": handleLogout(); break;
                 case "unregister": handleUnregister(); break;
@@ -65,6 +69,19 @@ public class Shell {
             }
         }
     }
+
+    private static void passHerdLogo(){
+        System.out.println("\n $$$$$$$\\                               $$\\   $$\\                           $$\\ ");
+        System.out.println(" $$  __$$\\                              $$ |  $$ |                          $$ |");
+        System.out.println(" $$ |  $$ |$$$$$$\\   $$$$$$$\\  $$$$$$$\\ $$ |  $$ | $$$$$$\\   $$$$$$\\   $$$$$$$ |");
+        System.out.println(" $$$$$$$  |\\____$$\\ $$  _____|$$  _____|$$$$$$$$ |$$  __$$\\ $$  __$$\\ $$  __$$ |");
+        System.out.println(" $$  ____/ $$$$$$$ |\\$$$$$$\\  \\$$$$$$\\  $$  __$$ |$$$$$$$$ |$$ |  \\__|$$ /  $$ |");
+        System.out.println(" $$ |     $$  __$$ | \\____$$\\  \\____$$\\ $$ |  $$ |$$   ____|$$ |      $$ |  $$ |");
+        System.out.println(" $$ |     \\$$$$$$$ |$$$$$$$  |$$$$$$$  |$$ |  $$ |\\$$$$$$$\\ $$ |      \\$$$$$$$ |");
+        System.out.println(" \\__|      \\_______|\\_______/ \\_______/ \\__|  \\__| \\_______|\\__|       \\_______|\n");
+    }
+
+
     private static void handleGetTransactions(String[] command) {
         Response err;
         if (command.length != 1) {
@@ -195,6 +212,9 @@ public class Shell {
         return username.contains(" ") || username.contains("*") || username.contains("/") || username.contains("\\") || username.contains("..");
     }
 
+    private static String invalidUsernameWarning =
+      "Username cannot contain the following characters: <space>, <tab>, *, /, \\, ..\nPlease try again.";
+
     private static int handleLogin() {
         String username;
         char[] password;
@@ -205,7 +225,7 @@ public class Shell {
         while (username.length() == 0 || invalidUsername(username)){
             if (username.length() == 0) System.out.println("Uasername cannot be empty.  Please try again.");
             else {
-                System.out.println("Username cannot contain the following characters: /, \\, ..\nPlease try again.");
+                System.out.println(invalidUsernameWarning);
             }
             username = con.readLine("Username: ");
         }
@@ -233,6 +253,8 @@ public class Shell {
 
         if (err == Response.SUCCESS) {
             usr = username;
+            passHerdLogo();
+            help();
             err = Client.getTransactions(); // CONSUME TRANSACTIONS
         }
 
@@ -257,7 +279,7 @@ public class Shell {
 
             if (username.length() == 0) System.out.println("Username cannot be empty.  Please try again.");
             else {
-                System.out.println("Username cannot contain the following characters: /, \\, ..\nPlease try again.");
+                System.out.println(invalidUsernameWarning);
             }
             username = con.readLine("Username: ");
         }
@@ -272,7 +294,7 @@ public class Shell {
                 strongPassword = false;
             } else if (!strongPassword){
                 System.out.println("That password is too weak! Please use a stronger password.");
-                System.out.println("Hint:\n - Make it longer\n - Include numbers and special characters \n - Avoid common English words");
+                System.out.println("Hint:\n - Make it longer (>10 characters)\n - Include numbers and special characters \n - Avoid common English words");
                 password0 = con.readPassword("Password: ");
                 strongPassword = passTest.isStrong(new String(password0));
             } 
@@ -353,22 +375,22 @@ public class Shell {
         printErr(err);
     }
 
-    private static void handleSharedReq(String[] command) {
+    private static void handleSharedReq(String[] command) {//GETSHARED
         String service;
         Response err;
         Pair<Response, List<Pair<String, String>>> resp = null;
         
-        if (command.length < 3 && command.length > 4) {
-            System.out.println("Usage: " + command[0] + " shared {<service> <username>} | all");
+        if (command.length != 2 && command.length != 3) {
+            System.out.println("Usage: " + command[0] + " shared {all | <service> <username>}");
             return;
         }
 
-        service = command[2];
+        service = command[1];
 
         err = Client.getTransactions(); // CONSUME TRANSACTIONS
         printErr(err);
             
-        if (service.equals("all")) {
+        if (service.equals("all")) { // getshared all
             resp = Client.requestSharedCreds();
             err = resp.first();
 
@@ -382,14 +404,14 @@ public class Shell {
             }
 
             return;
-        } else {
-            if (command.length < 4) {
-                System.out.println("Usage: get shared <service> <username>");
+        } else { // getshared <service> <username>
+            if (command.length != 3) {
+                System.out.println("Usage: getshared <service> <username>");
                 return;
             }
                 
             Pair<Response, Pair<String, String>> shared =
-                Client.requestOneSharedCred(command[2], command[3]);
+                Client.requestOneSharedCred(command[1], command[2]);
             
             Pair<String, String> creds;
 
@@ -399,7 +421,7 @@ public class Shell {
                 creds = shared.second();
                 
                 System.out.println("Credentials for " +
-                                   service + " shared from " + command[3] + ":");
+                                   service + " shared from " + command[2] + ":");
                 System.out.println("Username: " + creds.first());
                 System.out.println("Password: " + creds.second());
 
@@ -410,15 +432,11 @@ public class Shell {
         }
     }
 
-    private static void handleReq(String[] command) {
+    private static void handleReq(String[] command) { // GET
         String service;
         Response err;
 
         if (command.length != 2) {
-            if (command.length > 1 && command[1].equals("shared")) {
-                handleSharedReq(command);
-                return;
-            }
                 
             System.out.println("Usage: " + command[0] + " <service | all>");
             return;
@@ -495,6 +513,7 @@ public class Shell {
     private static void handleChange(String[] command) {
         String service, username, password;
         Response err;
+        char pass[];
         
         if (command.length != 2) {
             System.out.println("Usage: change <service>");
@@ -505,7 +524,8 @@ public class Shell {
         username = con.readLine("Username: ");
         password = con.readLine("Password: ");
 
-        err = Client.changeCreds(service, username, password);
+        pass = con.readPassword("Password: ");
+        err = Client.changeCreds(service, username, password, pass);
         printErr(err);
     }
 
@@ -526,57 +546,86 @@ public class Shell {
     }
 
     private static void help() {
-        System.out.println("All commands: login register add get creds delete change exit logout unregister chpass share unshare lsshared update help.\nType help <command> for more information.");
+        if (usr == null){
+            System.out.println("  - Please type 'register' to create a new account.");
+            System.out.println("  - Please type 'login' if you already have an account.");
+            System.out.println("  - Please type 'help <command>' for more information");
+        }else{
+            System.out.println("=============================================================================");
+            System.out.println("All commands: Type help <command> for more information.");
+            System.out.println("=============================================================================");
+            System.out.println(" * Manage your credentials *");
+            System.out.println("-----------------------------------------------------------------------------");
+            System.out.println("    - add\t\t- get\n    - delete\t\t- change");
+            System.out.println("-----------------------------------------------------------------------------");
+            System.out.println(" * View credentials shared with you *");
+            System.out.println("-----------------------------------------------------------------------------");
+            System.out.println("    - getshared\n");
+            System.out.println("-----------------------------------------------------------------------------");
+            System.out.println(" * Share your credentials *");
+            System.out.println("-----------------------------------------------------------------------------");
+            System.out.println("    - share\t\t- unshare\n    - update\t\t- lsshared");
+            System.out.println("-----------------------------------------------------------------------------");
+            System.out.println(" * Manage your PassHerd account *");
+            System.out.println("-----------------------------------------------------------------------------");
+            System.out.println("    - chpass\t\t- logout\n    - exit\t\t- unregister");
+            System.out.println("-----------------------------------------------------------------------------");
+        }       
     }
+
+    
 
     private static void help(String command) {
         String helpMsg;
-        
-        switch (command) {
-        case "login": helpMsg = "login: initiates a login prompt.  Enter your username and password to gain access to your stored credentials.";
-            break;
+        if (usr == null){
+            switch (command) {
+            case "login": helpMsg = "login: initiates a login prompt.  Enter your username and password to gain access to your stored credentials.";
+                break;
+            case "register": helpMsg = "register: initiates the creation of a new account.";
+                break;
+            case "help": helpMsg = "help <command>: display help about a certain command."; break;
+            default: helpMsg = "Error: command not recognized.";
+            }
+        }else{
+            switch (command) {
+            case "share": helpMsg = "share <service> <username>: share credentials for a service with another user.";
+                break;
 
-        case "share": helpMsg = "share <service> <username>: share credentials for a service with another user.";
-            break;
+            case "unshare": helpMsg = "unshare <service> <username>: stop sharing credentials for a service with another user.";
+                break;
 
-        case "unshare": helpMsg = "unshare <service> <username>: stop sharing credentials for a service with another user.";
-            break;
-
-        case "lsshares": helpMsg = "lsshares: show all shared credentials and with whom they are shared.";
-            break;
-            
-        case "register": helpMsg = "register: initiates the creation of a new account.";
-            break;
-            
-        case "add": helpMsg = "add <service>: stores the username and password for the service.";
-            break;
+            case "lsshared": helpMsg = "lsshared: show all shared credentials and with whom they are shared.";
+                break;
+            case "getshared": helpMsg= "getshared {all | <service> <username>}: displays the names of all shared services, or the username and password associated with a certain service and user.";
                 
-        case "get":
-        case "creds": helpMsg = command + " <all | service>: displays the names of all stored services, or the username and password associated with a certain service.";
-        break;
-                
-        case "delete": helpMsg = "delete <service>: deletes the credentials associated with the service.  Asks for confirmation before deleting.";
+            case "add": helpMsg = "add <service>: stores the username and password for the service.";
+                break;
+                    
+            case "get": helpMsg = command + " <all | service>: displays the names of all stored services, or the username and password associated with a certain service.";
             break;
-                
-        case "change": helpMsg = "change <service>: changes the username and password associated with the service.";
-            break;
-                
-        case "exit": helpMsg = command + ": logs you out and exits PassHerd.";
-            break;
-        case "logout": helpMsg = command + ": logs you out.";
-            break;
-        case "update": helpMsg = command + ": updates your list of shared credentials.";
-            break;
-                
-        case "unregister": helpMsg = "unregister: deletes the logged-in account and all stored credentials.  Asks for confirmation before deleting.";
-            break;
-                
-        case "chpass": helpMsg = "chpass: initiates a change to your account master password.";
-            break;
-        case "help": helpMsg = "help <command>: display help about a certain command."; break;
-        default: helpMsg = "Error: command not recognized.";
+                    
+            case "delete": helpMsg = "delete <service>: deletes the credentials associated with the service.  Asks for confirmation before deleting.";
+                break;
+                    
+            case "change": helpMsg = "change <service>: changes the username and password associated with the service.";
+                break;
+                    
+            case "exit": helpMsg = command + ": logs you out and exits PassHerd.";
+                break;
+            case "logout": helpMsg = command + ": logs you out.";
+                break;
+            case "update": helpMsg = command + ": updates your list of shared credentials.";
+                break;
+                    
+            case "unregister": helpMsg = "unregister: deletes the logged-in account and all stored credentials.  Asks for confirmation before deleting.";
+                break;
+                    
+            case "chpass": helpMsg = "chpass: initiates a change to your account master password.";
+                break;
+            case "help": helpMsg = "help <command>: display help about a certain command."; break;
+            default: helpMsg = "Error: command not recognized.";
+            }
         }
-
         System.out.println(helpMsg);
     }
 
@@ -589,8 +638,17 @@ public class Shell {
             System.out.println("Error: you are not logged in!");
             return;
 
-        case BAD_FORMAT:
-            System.out.println("Error: the <tab>, '..', '/', and ''\\'' characters are not allowed.");
+        case MASTER_EMPTY:
+            System.out.println("Error: username and password cannot be empty.");
+            return;
+
+        case MASTER_BAD_FORMAT:
+            System.out.println("Error: "+invalidUsernameWarning);
+            return;
+
+
+        case CRED_BAD_FORMAT:
+            System.out.println("Error: Credential servicename, username and password cannot be empty or contain <tab>.");
             return;
             
         case WRONG_INPT: /* fall through.  Generic error message in this case. */
@@ -605,6 +663,10 @@ public class Shell {
 
         case CRED_EXISTS: /* the credential that you tried to add is already in the server */
             System.out.println("Error: a set of credentials with that name already exists.");
+            return;
+
+        case BAD_CODE:
+            System.out.println("Error: 2-factor authentication code is incorrect or expired.");
             return;
 
         case USER_EXISTS: /* could not register an account with that username as one exists */

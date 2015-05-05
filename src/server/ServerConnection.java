@@ -49,6 +49,7 @@ public class ServerConnection implements Runnable {
     static final int PASS_LEN = 32; // use # of bytes of SHA-256 output
     static final int PHONE_LEN = 10; // use # of bytes of SHA-256 output
     static final String HOSTNAME = "localhost";
+    static final long TWO_FACTOR_TIMEOUT = 120000000000L; // 2 minutes
 
     protected SSLSocket socket;
     protected String username; // user associated with this account
@@ -62,8 +63,8 @@ public class ServerConnection implements Runnable {
     protected String curr_dir;
     protected PrintWriter audit_writer;
     protected BufferedReader audit_reader;
+    protected Pair<String, Long> two_step_code;
     protected boolean verified_password = false;
-    protected String two_step_code;
     protected BufferedReader r = null;
     protected BufferedWriter w = null;
     protected JSONWriter js;
@@ -125,6 +126,13 @@ public class ServerConnection implements Runnable {
                             case "RGST":
                                 js.object().key("response").value(Response.DUP_LOGIN).endObject();
                             break;
+                            case "CHECK_LOGIN":
+                                authName = req.getString("username");
+                                authPass = req.getString("password");
+                                resp = check_login(authName, authPass);
+                                js.object().key("response").value(resp.name())
+                                    .endObject();
+                                break;
                             case "ADD":
                                 String service = req.getString("service");
                                 String sName = req.getString("username");
@@ -264,7 +272,9 @@ public class ServerConnection implements Runnable {
                                       Triple<String,String,String> entry = Server.transaction_table.get(username).get(i);
                                       String pubkey = pub_keys_encrypted.getString(i);
                                       if (pubkey_table.containsKey(entry.first())){
-                                        pubkey_table.get(entry.first()).add(new Pair<String,String>(entry.second(),pubkey));
+                                        if (!pubkey_table.get(entry.first()).contains(entry.second())){
+                                          pubkey_table.get(entry.first()).add(new Pair<String,String>(entry.second(),pubkey));
+                                        }
                                       } else {
                                         ArrayList<Pair<String,String>> new_keys = new ArrayList<Pair<String,String>>();
                                         new_keys.add(new Pair<String,String>(entry.second(), pubkey));
@@ -306,7 +316,9 @@ public class ServerConnection implements Runnable {
                                 service = req.getString("service");
                                 sName = req.getString("username");
                                 sPass = req.getString("password");
-                                resp = updateCredential(service, sName, sPass);
+                                String new_shared_usr = req.getString("shared_username");
+                                String new_shared_pass = req.getString("shared_password");
+                                resp = updateCredential(service, sName, sPass, new_shared_usr, new_shared_pass);
 
                                 js.object().key("response").value(resp.name())
                                     .endObject();
@@ -437,9 +449,9 @@ public class ServerConnection implements Runnable {
     }
 
     /*
-     * Helper fxn for simple string input checking
+     * Returns true if not empty or null
      */
-    protected boolean checkInput(String inputs[]) {
+    protected boolean notEmpty(String inputs[]) {
         for (String s : inputs) {
             if (s == null || s.isEmpty()) // disallow directory
                 return false;
@@ -447,28 +459,21 @@ public class ServerConnection implements Runnable {
         return true;
     }
     
-    /*
-     * Returns true if a string is alphanumeric
+
+    /* Returns true if bad
+     * Username cannot contain the following characters: 
+     * <space>, <tab>, *, /, \\, ..\nPlease try again.
      */
-    public boolean isAlphaNumeric(String s){
-    String pattern= "^[a-zA-Z0-9]*$";
-        if(s.matches(pattern)){
-            return true;
-        }
-        return false;   
+    protected boolean checkMasterUsernameFormat(String usr) {
+        System.out.println(usr.contains(" ") || usr.contains("*") || usr.contains("/") || usr.contains("\\") || usr.contains(".."));
+
+        return !(usr.contains(" ") || usr.contains("*") || usr.contains("/") || usr.contains("\\") || usr.contains(".."));
     }
 
     /*
-     * Helper fxn for checking valid usernames
+     * Returns true if credential data is not empty or does not contain tab spaces
      */
-    protected boolean checkUsernameFormat(String usr) {
-        return !(usr.contains("/") || usr.contains("\\") || usr.contains(".."));
-    }
-
-    /*
-     * helper fxn for checking data format to not contain tab spaces
-     */
-    protected boolean checkDataFormat(String data[]) {
+    protected boolean checkCredDataFormat(String data[]) {
         for (String d : data) {
             if (d.isEmpty() || d.contains("\t")) // disallow directory
                 return false;
@@ -535,13 +540,13 @@ public class ServerConnection implements Runnable {
      */
     protected Response createAccount(String new_usr, String password,
                                      String phone, String carrier) {
-        if (!checkInput(new String[] { new_usr, password }) ) {
-            return Response.WRONG_INPT;
+        if (!notEmpty(new String[] { new_usr, password }) ) {
+            return Response.MASTER_BAD_FORMAT;
         }
-        if (!this.checkUsernameFormat(new_usr)
+        if (!this.checkMasterUsernameFormat(new_usr)
             || !(phone.matches("[0-9]+") && phone.length() == 10)
             || !(carrier.matches("[0-9]+") && Integer.parseInt(carrier) >= 0 && Integer.parseInt(carrier) <= 2) ) {
-            return Response.BAD_FORMAT;
+            return Response.MASTER_BAD_FORMAT;
         }
         // Directory already exists
         // Note: Not thread-safe
@@ -635,9 +640,9 @@ public class ServerConnection implements Runnable {
         byte[] phone;
         char carrier;
         
-        if (!checkInput(new String[] { old_password, new_password })) {
-            log(username, "Change Account Password", Response.WRONG_INPT);
-            return Response.WRONG_INPT;
+        if (!notEmpty(new String[] { old_password, new_password })) {
+            log(username, "Change Account Password", Response.MASTER_EMPTY);
+            return Response.MASTER_EMPTY;
         }
         if (this.verifyPassword(this.username, old_password) != Response.SUCCESS) {
             // Logging
@@ -756,7 +761,7 @@ public class ServerConnection implements Runnable {
      * Delete this account and log out the user.
      */
     protected Response deleteAccount(String password) {
-        if (!checkInput(new String[] { password })) {
+        if (!notEmpty(new String[] { password })) {
             return Response.WRONG_INPT;
         }
         Response r = this.verifyPassword(this.username, password);
@@ -877,13 +882,56 @@ public class ServerConnection implements Runnable {
         return intCode;
     }
 
-
-    protected Response verifyPassword(String auth_usr, String password) {
-        if (!checkInput(new String[] { auth_usr, password })) {
+    /*Only checks the login*/
+    protected Response check_login(String auth_usr, String password){
+        if (!notEmpty(new String[] { auth_usr, password })) {
+            return Response.MASTER_EMPTY;
+        }
+        if (!this.checkMasterUsernameFormat(auth_usr)) {
+            return Response.MASTER_BAD_FORMAT;
+        }
+        // Note: Not thread-safe
+        if (!(new File("users/" + auth_usr).isDirectory())) {
+            // Logging
+            log(auth_usr, "Check login", Response.WRONG_INPT);
             return Response.WRONG_INPT;
         }
-        if (!this.checkUsernameFormat(auth_usr)) {
-            return Response.BAD_FORMAT;
+
+        byte salt[] = new byte[SALT_LEN];
+        byte stored_pass[] = new byte[PASS_LEN];
+        FileInputStream reader;
+        try {
+            reader = new FileInputStream(
+                                         ("users/" + auth_usr).concat("/master.txt"));
+            reader.read(stored_pass, 0, PASS_LEN);
+            reader.read(salt, 0, SALT_LEN);
+            reader.close();
+
+            byte[] hashedpassword = saltAndHash(password, salt);
+            if (!Arrays.equals(hashedpassword, stored_pass)) {
+                // Logging
+                log(auth_usr, "Check login", Response.WRONG_INPT);
+                return Response.WRONG_INPT;
+            }
+        } catch (IOException e2) {
+            e2.printStackTrace();
+            log(auth_usr, "Check login", Response.FAIL);
+            return Response.FAIL;
+        } catch (NoSuchAlgorithmException e1) { // should never happen
+            e1.printStackTrace();
+            log(auth_usr, "Check login", Response.FAIL);
+            return Response.FAIL;
+        }
+        return Response.SUCCESS;
+    }
+
+
+    protected Response verifyPassword(String auth_usr, String password) {
+        if (!notEmpty(new String[] { auth_usr, password })) {
+            return Response.MASTER_EMPTY;
+        }
+        if (!this.checkMasterUsernameFormat(auth_usr)) {
+            return Response.MASTER_BAD_FORMAT;
         }
         // Note: Not thread-safe
         if (!(new File("users/" + auth_usr).isDirectory())) {
@@ -942,8 +990,13 @@ public class ServerConnection implements Runnable {
               phone_reader.skip(PASS_LEN + SALT_LEN);
               phone_reader.read(phone, 0, PHONE_LEN);
               carrier = phone_reader.read() - '0'; // use this later
-              two_step_code = Integer.toString(sendSmsCode(new String(phone),
-                                                           Carrier.values()[carrier])); // TODO: change ATT to user's carrier
+              two_step_code = new Pair<String, Long>(Integer.toString(sendSmsCode(new String(phone),
+                                            Carrier.values()[carrier])), new Long(System.nanoTime())); 
+                                                           // TODO: change ATT to user's carrier
+              //System.out.println(two_step_code.first());
+              //System.out.println(two_step_code.second());
+
+
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -959,6 +1012,8 @@ public class ServerConnection implements Runnable {
      * Authenticate user to system
      */
     protected Response authAccount(String auth_usr, String password, String code) {
+        Long elapsed_time = System.nanoTime() - two_step_code.second();
+        System.out.println(elapsed_time);
         if (username != null) {// already logged in
             return Response.LOGGED_IN;
         }
@@ -981,7 +1036,7 @@ public class ServerConnection implements Runnable {
 
         if (test == 0){ //if this is not a testing instance
             // this should be the second step in two step verification
-            if (!this.two_step_code.equals(code)) {
+            if (!this.two_step_code.first().equals(code) || elapsed_time > TWO_FACTOR_TIMEOUT) {
                 return Response.BAD_CODE;
             }
         }
@@ -1032,7 +1087,7 @@ public class ServerConnection implements Runnable {
             pubkey_reader.close();
 
             // update pubkey_table
-            receivePubKey();
+            //receivePubKey();
 
             // Logging
             log(auth_usr, "Authenticate Account", Response.SUCCESS);
@@ -1130,13 +1185,9 @@ public class ServerConnection implements Runnable {
      */
     protected Pair<Response, Pair<String, String>> getPassword(
                                                                String service_name) {
-        if (!checkInput(new String[] { service_name })) {
+        if (!notEmpty(new String[] { service_name }) || !this.checkCredDataFormat(new String[] { service_name })) {
             return new Pair<Response, Pair<String, String>>(
-                                                            Response.WRONG_INPT, null);
-        }
-        if (!this.checkDataFormat(new String[] { service_name })) {
-            return new Pair<Response, Pair<String, String>>(
-                                                            Response.BAD_FORMAT, null);
+                                                            Response.CRED_BAD_FORMAT, null);
         }
         if (!user_table.containsKey(service_name)) { // credentials not listed
             // in server
@@ -1155,13 +1206,13 @@ public class ServerConnection implements Runnable {
     protected Pair<Response, Triple<String, String, String>> getSharedPassword(
                                                      String owner, String service_name) {
         // 0. Sanity check TODO
-        if (!checkInput(new String[] { service_name }) || !checkUsernameFormat(owner)) {
+        if (!notEmpty(new String[] { service_name }) || !checkMasterUsernameFormat(owner)) {
             return new Pair<Response, Triple<String, String, String>>(
-                                                            Response.WRONG_INPT, null);
+                                                            Response.CRED_BAD_FORMAT, null);
         }
-        if (!this.checkDataFormat(new String[] { service_name })) {
+        if (!this.checkCredDataFormat(new String[] { service_name })) {
             return new Pair<Response, Triple<String, String, String>>(
-                                                            Response.BAD_FORMAT, null);
+                                                            Response.CRED_BAD_FORMAT, null);
         }
 
         // 1. Update pubkey_table
@@ -1202,14 +1253,14 @@ public class ServerConnection implements Runnable {
      */
     protected Response addCredential(String service_name,
                                      String stored_username, String stored_password) {
-        if (!checkInput(new String[] { stored_username, stored_password })) {
-            log(username, "Add Credential", Response.WRONG_INPT);
-            return Response.WRONG_INPT;
+        if (!notEmpty(new String[] { stored_username, stored_password })) {
+            log(username, "Add Credential", Response.CRED_BAD_FORMAT);
+            return Response.CRED_BAD_FORMAT;
         }
-        if (!this.checkDataFormat(new String[] { service_name, stored_username,
+        if (!this.checkCredDataFormat(new String[] { service_name, stored_username,
                                                  stored_password })) {
-            log(username, "Add Credential", Response.BAD_FORMAT);
-            return Response.BAD_FORMAT;
+            log(username, "Add Credential", Response.CRED_BAD_FORMAT);
+            return Response.CRED_BAD_FORMAT;
         }
         if (user_table.containsKey(service_name)) {
             log(username, "Add Credential", Response.CRED_EXISTS);
@@ -1226,15 +1277,17 @@ public class ServerConnection implements Runnable {
      * Updates credentials with new password
      */
     protected Response updateCredential(String service_name,
-                                        String new_username, String new_stored_pass) {
-        if (!checkInput(new String[] { new_username, new_stored_pass })) {
+                                        String new_username, String new_stored_pass,
+                                        String shared_username, String shared_password) {
+        if (!notEmpty(new String[] { new_username, new_stored_pass })) {
 
-            return Response.WRONG_INPT;
+            log(username, "Update Credential", Response.CRED_BAD_FORMAT);
+            return Response.CRED_BAD_FORMAT;
         }
-        if (!this.checkDataFormat(new String[] { service_name, new_username,
+        if (!this.checkCredDataFormat(new String[] { service_name, new_username,
                                                  new_stored_pass })) {
-            log(username, "Update Credential", Response.BAD_FORMAT);
-            return Response.BAD_FORMAT;
+            log(username, "Update Credential", Response.CRED_BAD_FORMAT);
+            return Response.CRED_BAD_FORMAT;
         }
         if (!user_table.containsKey(service_name)) {
             // System.out.println("Service " + service_name + " not in table.");
@@ -1243,6 +1296,9 @@ public class ServerConnection implements Runnable {
         }
         user_table.put(service_name, new Pair<String, String>(
                                                               new_username, new_stored_pass));
+        if (shared_table.containsKey(service_name)){
+          shared_table.put(service_name, new Pair<String,String>(shared_username, shared_password));
+        }
         log(username, "Update Credential", Response.SUCCESS);
         return Response.SUCCESS;
     }
@@ -1251,19 +1307,27 @@ public class ServerConnection implements Runnable {
      * Deletes specific credential for specified service
      */
     protected Response deleteCredential(String service_name) {
-        if (!checkInput(new String[] { service_name })) {
-            log(username, "Delete Credential", Response.WRONG_INPT);
-            return Response.WRONG_INPT;
+        if (!notEmpty(new String[] { service_name })) {
+            log(username, "Delete Credential", Response.CRED_BAD_FORMAT);
+            return Response.CRED_BAD_FORMAT;
         }
-        if (!this.checkDataFormat(new String[] { service_name })) {
-            log(username, "Delete Credential", Response.BAD_FORMAT);
-            return Response.BAD_FORMAT;
+        if (!this.checkCredDataFormat(new String[] { service_name })) {
+            log(username, "Delete Credential", Response.CRED_BAD_FORMAT);
+            return Response.CRED_BAD_FORMAT;
         }
         if (!user_table.containsKey(service_name)) {
             log(username, "Delete Credential", Response.NO_SVC);
             return Response.NO_SVC;
         }
         user_table.remove(service_name);
+        for (String key : acl_table.keySet()){
+          while (acl_table.get(key).contains(service_name)){
+            acl_table.get(key).remove(service_name);
+          }
+        }
+        if (shared_table.containsKey(service_name)){
+          shared_table.remove(service_name);
+        }
         log(username, "Delete Credential", Response.SUCCESS);
         return Response.SUCCESS;
     }
@@ -1350,7 +1414,7 @@ public class ServerConnection implements Runnable {
         if (!Server.shared_user_table.containsKey(usr)){
           return Response.USER_DNE;//
         }
-        if (acl_table.contains(usr)){
+        if (acl_table.containsKey(usr)){
           if (acl_table.get(usr).contains(service_name)){//it's already shared
             return Response.SUCCESS;
           }
