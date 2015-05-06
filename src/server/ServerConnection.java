@@ -67,6 +67,7 @@ public class ServerConnection implements Runnable {
     protected boolean verified_password = false;
     protected BufferedReader r = null;
     protected BufferedWriter w = null;
+    protected JSONWriter js;
 
     public ServerConnection(SSLSocket s) {
         this.socket = s;
